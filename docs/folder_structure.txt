@@ -1,0 +1,65 @@
+lebens-rhythmus/                 ← корень репозитория
+├── backend/                     ← весь Gradle/Spring-код
+│   ├── .gradle
+│   ├── .idea
+│   ├── build
+│   ├── gradle
+│   ├── src
+│   │   ├── main
+│   │   └── test
+│   ├── build.gradle
+│   ├── settings.gradle
+│   ├── gradlew
+│   ├── gradlew.bat
+│   ├── compose.yaml             ← Docker-compose для локального подъёма БД + MinIO
+│   └── HELP.md
+├── frontend/                    ← чистый HTML5/CSS/JS (MVP)
+│   ├── src
+│   │   ├── css
+│   │   ├── js
+│   │   ├── img
+│   │   ├── i18n
+│   │   ├── pages
+│   │   │   ├── index.html
+│   │   │   ├── order.html
+│   │   │   └── admin
+│   │   │       └── orders.html   ← Thymeleaf-шаблон, но лежит тут для удобства
+│   │   └── manifest.json
+│   ├── package.json             ← опционально (если позже добавим npm-скрипты)
+│   └── README.md
+├── devops/                      ← всё, что «езжает» на сервер
+│   ├── docker
+│   │   ├── backend.Dockerfile
+│   │   ├── frontend.Dockerfile  ← nginx:alpine для статики
+│   │   └── nginx.conf
+│   ├── k8s
+│   │   ├── namespace.yaml
+│   │   ├── app
+│   │   │   ├── deployment.yaml
+│   │   │   ├── service.yaml
+│   │   │   └── ingress.yaml
+│   │   └── postgres
+│   │       ├── pv.yaml
+│   │       └── statefulset.yaml
+│   ├── helm
+│   │   └── lebens-rhythmus/
+│   │       ├── Chart.yaml
+│   │       ├── values.yaml
+│   │       └── templates/
+│   └── github
+│       └── workflows/
+│           ├── ci-backend.yml
+│           └── ci-frontend.yml
+├── docs/                        ← вся документация (вне classpath)
+│   ├── architecture/
+│   ├── db/
+│   │   ├── erm.drawio
+│   │   └── rdm.drawio
+│   ├── api/
+│   └── README.md
+├── .github/
+│   └── workflows/               ← можно оставить здесь верхнеуровневый CI
+│       └── release.yml
+├── .gitignore
+├── .gitattributes
+└── README.md                    ← корневой readme со ссылками на backend/frontend/docs
