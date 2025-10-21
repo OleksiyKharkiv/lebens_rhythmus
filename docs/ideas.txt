@@ -1,0 +1,77 @@
+Lebens Rhythmus - Project Specification
+
+Project Overview:
+A functional website with PWA capabilities for Olena's creative studio project in Bergheim, Germany.
+
+Business Logic:
+1. Core Purpose:
+- Creative development studio for children, teenagers and adults
+- Focus on unlocking creative potential through various approaches
+
+2. Activities:
+- Creative-arts studio helping children, teenagers and adults unlock their potential through:
+  * Theater
+  * Gymnastics
+  * Choreography
+  * Playback theater
+  * Collaborative art sessions
+
+The platform supports:
+- Group enrollment
+- City-sponsored programmes (e.g. Stadt Bergheim)
+- Private/corporate event requests
+- Multi-language courses (Ukrainian, German, English)
+- Small-scale public performances (20-200 spectators)
+
+Core Entities:
+
+1. User Management:
+   - User (base entity with authentication)
+   - Participant (extends User)
+   - Teacher (extends User)
+   - UserProfile (contact info, preferences)
+   - Role (ADMIN, TEACHER, PARTICIPANT)
+
+2. Course Management:
+   - Activity (base class for all activities)
+   - Workshop (extends Activity)
+   - Course (regular scheduled activities)
+   - Group (collection of participants)
+   - AgeGroup (age categories)
+   - Schedule (timing and frequency)
+
+3. Event Management:
+   - Event (base class for all events)
+   - Performance (extends Event)
+   - Venue (location details)
+   - Ticket (event access)
+
+4. Business Operations:
+   - Order (booking/purchase)
+   - Payment (transaction details)
+   - Contract (agreements)
+   - Invoice (billing)
+
+5. Support Entities:
+   - Language (supported languages)
+   - Feedback (reviews/ratings)
+   - Media (files, images, videos)
+   - Notification (system messages)
+   - ContactRequest (inquiries)
+
+3. Performance Structure:
+- Regular public performances (3-6 month intervals)
+- Venue capacity: 20-200 viewers
+- Option for off-site performances
+
+4. Business Model:
+- Initial phase: City of Bergheim funded project
+- Later phase: Self-funded course registrations
+- Additional service: Olena available as a contractor for private/corporate events
+
+5. Website Features:
+- Course registration system
+- Group session management
+- Event organization
+- Multilingual support
+- Booking system for private/corporate events
