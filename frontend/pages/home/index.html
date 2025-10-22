@@ -13,13 +13,13 @@
         LR Lebens Rhythmus
     </div>
     <nav>
-        <button onclick="ScrolltoSection('home')">Startseite</button>
-        <button onclick="ScrolltoSection('about')">über uns</button>
-        <button onclick="ScrolltoSection('activities')">Aktivitäten</button>
-        <button onclick="ScrolltoSection('workshops')">Workshops</button>
-        <button onclick="ScrolltoSection('performances')">Aufführungen</button>
-        <button onclick="ScrolltoSection('corporate')">Für Unternehmen</button>
-        <button onclick="ScrolltoSection('contact')">Kontakt</button>
+        <button onclick="scrollToSection('home')">Startseite</button>
+        <button onclick="scrollToSection('about')">über uns</button>
+        <button onclick="scrollToSection('activities')">Aktivitäten</button>
+        <button onclick="scrollToSection('workshops')">Workshops</button>
+        <button onclick="scrollToSection('performances')">Aufführungen</button>
+        <button onclick="scrollToSection('corporate')">Für Unternehmen</button>
+        <button onclick="scrollToSection('contact')">Kontakt</button>
     </nav>
     <div class="langs">
         <button class="active">DE</button>
@@ -27,20 +27,32 @@
         <button>UA</button>
     </div>
 
+    <!--Toggle mobile menu-->
     <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
 </header>
 
 <!--Mobile menu-->
 <div class="mobile-menu" id="mobileMenu" style="display: none;">
-    <button onclick="ScrolltoSection('home')">Startseite</button>
-    <button onclick="ScrolltoSection('about')">über uns</button>
-    <button onclick="ScrolltoSection('activities')">Aktivitäten</button>
-    <button onclick="ScrolltoSection('workshops')">Workshops</button>
-    <button onclick="ScrolltoSection('performances')">Aufführungen</button>
-    <button onclick="ScrolltoSection('corporate')">Für Unternehmen</button>
-    <button onclick="ScrolltoSection('contact')">Kontakt</button>
+    <button onclick="scrollToSection('home')">Startseite</button>
+    <button onclick="scrollToSection('about')">über uns</button>
+    <button onclick="scrollToSection('activities')">Aktivitäten</button>
+    <button onclick="scrollToSection('workshops')">Workshops</button>
+    <button onclick="scrollToSection('performances')">Aufführungen</button>
+    <button onclick="scrollToSection('corporate')">Für Unternehmen</button>
+    <button onclick="scrollToSection('contact')">Kontakt</button>
 </div>
+<!--Hero section-->
+<section class="hero" id="home ">
+    <h1>Lebens Rhythmus</h1>
+    <h3>Entdecke dein kreatives Potenzial!</h3>
+    <p> Studio für kreative Entwicklung von Kindern, Jugendlichen und Erwachsenen durch Theater, Tanz, Gymnastik und
+        mehr </p>
 
-
+    <div class="buttons">
+        <button class="primary">Jetzt anmelden</button>
+        <button class="secondary">Mehr erfahren</button>
+    </div>
+</section>
+<script src = "../../js/main.js"></script>
 </body>
 </html>
