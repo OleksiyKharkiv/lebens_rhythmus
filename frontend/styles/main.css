@@ -14,6 +14,8 @@ html, body {
 }
 
 main {
+    display: flex;
+    flex-direction: column;
     flex: 1;
 }
 
@@ -93,7 +95,7 @@ nav button.hover {
 
 /* ===== Hero ===== */
 .hero {
-    min-height: 100vh;
+    min-height: 97vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -151,6 +153,22 @@ nav button.hover {
 .hero .buttons button:hover {
     opacity: 0.8;
 }
+footer {
+    display: flex;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    height: 3vh;
+    font-size: 0.8rem;
+    color: #666;
+    background-color: #f4f4f4;
+}
+.impressum {
+    background: linear-gradient(135deg, #ffffff 0%, #f2f4f9 100%);
+    color: #222;
+    padding: 4rem 2rem;
+}
+
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
@@ -165,13 +183,5 @@ nav button.hover {
 
     .mobile-menu {
         display: flex;
-    }
-
-    footer {
-        text-align: center;
-        padding: 1rem;
-        font-size: 0.8rem;
-        color: #666;
-        background-color: #f4f4f4;
     }
 }
