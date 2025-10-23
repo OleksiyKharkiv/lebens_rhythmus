@@ -132,7 +132,7 @@ nav button.hover {
 }
 
 .hero .buttons .secondary {
-    background: transparent;
+    background: linear-gradient(to right, #E6E6FA, #FFB6C1);
     border: 2px solid purple;
     color: purple;
 }
