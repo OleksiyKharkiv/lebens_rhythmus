@@ -1,8 +1,12 @@
 node_modules
 HELP.md
 .gradle
-.idea
+### OS specific ###
+.DS_Store
+Thumbs.db
 build/
+backend/.gradle
+backend/build
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
@@ -20,7 +24,6 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
-.idea
 *.iws
 *.iml
 *.ipr
@@ -35,5 +38,28 @@ out/
 /nbdist/
 /.nb-gradle/
 
+### Logs ###
+/logs/
+*.log
+
 ### VS Code ###
 .vscode/
+
+### Coverage reports ###
+/coverage/
+/htmlcov/
+.coverage
+
+### Maven ###
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+### Application Properties ###
+application-local.properties
+application-local.yml
+application-prod.properties
+application-prod.yml
