@@ -1,16 +1,18 @@
 package com.be.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.Set;
 
 @Entity
 @Table(name = "activities")
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class Activity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
