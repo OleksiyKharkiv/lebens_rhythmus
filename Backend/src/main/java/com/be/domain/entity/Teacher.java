@@ -5,8 +5,6 @@ import lombok.*;
 
 import java.util.Set;
 
-import static jakarta.persistence.FetchType.LAZY;
-
 @Entity
 @Table(name = "teachers")
 @Getter
