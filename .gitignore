@@ -10,7 +10,9 @@ backend/build
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
-
+backend/.gradle/vcs-1/
+backend/gradle/wrapper/gradle-wrapper.jar
+backend/gradle/wrapper/gradle-wrapper.properties
 ### STS ###
 .apt_generated
 .classpath
@@ -24,6 +26,7 @@ bin/
 !**/src/test/**/bin/
 
 ### IntelliJ IDEA ###
+.idea/
 *.iws
 *.iml
 *.ipr
