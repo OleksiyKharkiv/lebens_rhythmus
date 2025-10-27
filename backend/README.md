@@ -1,8 +1,8 @@
 ```xml
 <readme>
-<![CDATA[
-# 🧱 Lebens-Rhythmus Backend — Run Guide & Port 8080 Fix  
-> Developer reference for **lebens-rhythmus/backend**
+
+# 🧱 Lebens-Rhythmus Backend — Run Guide &amp; Port 8080 Fix  
+&gt; Developer reference for **lebens-rhythmus/backend**
 
 ---
 
@@ -11,7 +11,7 @@
 ### ▶️ Option 1 — Run Locally (Gradle)
 **Windows / Linux**
 ```bash
-./gradlew bootRun
+./gradlew bootRun 
 ```
 > Make sure Docker (if used) and your database containers are already running.
 
@@ -106,7 +106,7 @@ docker compose up --build -d
 ## 📘 5. Common Gradle Commands
 
 | Action                | Command             |
-| --------------------- | ------------------- |
+|-----------------------|---------------------|
 | Build project         | `./gradlew build`   |
 | Run app               | `./gradlew bootRun` |
 | Clean build directory | `./gradlew clean`   |
@@ -116,19 +116,19 @@ docker compose up --build -d
 
 ## 🧩 6. Docker Container Management
 
-| Action            | Command                                 |
-| ----------------- | --------------------------------------- |
-| Check containers  | `docker ps`                             |
-| Stop container    | `docker stop lr-backend-container`      |
-| Remove container  | `docker rm -f lr-backend-container`     |
-| Rebuild & restart | `docker compose up --build -d`          |
+| Action            | Command                             |
+|-------------------|-------------------------------------|
+| Check containers  | `docker ps`                         |
+| Stop container    | `docker stop lr-backend-container`  |
+| Remove container  | `docker rm -f lr-backend-container` |
+| Rebuild & restart | `docker compose up --build -d`      |
 
 ---
 
 ## 🧠 Troubleshooting
 
 | Issue                                                  | Possible Fix                                                |
-| ------------------------------------------------------ | ----------------------------------------------------------- |
+|--------------------------------------------------------|-------------------------------------------------------------|
 | ❌ `error during connect: ... dockerDesktopLinuxEngine` | Restart Docker Desktop or run `wsl --shutdown`              |
 | ❌ Port 8080 in use                                     | Follow steps in section 2                                   |
 | ❌ `gradlew` not executable (Linux)                     | Run `chmod +x gradlew`                                      |
@@ -141,7 +141,7 @@ docker compose up --build -d
 * Default Spring Boot port: **8080**
 * Default container name: **lr-backend-container**
 * Recommended JDK: **Java 21+**
-* Always verify Docker daemon is running before container build.
+* Always verify the Docker daemon is running before the container build.
 
 ---
 
