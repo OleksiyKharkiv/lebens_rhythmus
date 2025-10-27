@@ -134,6 +134,7 @@ docker compose up --build -d
 | ❌ `gradlew` not executable (Linux)                     | Run `chmod +x gradlew`                                      |
 | ❌ Out of memory                                        | Increase Docker resource limits in **Settings → Resources** |
 
+
 ---
 
 ## 📎 Notes
