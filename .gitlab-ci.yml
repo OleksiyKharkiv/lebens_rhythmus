@@ -3,9 +3,9 @@ stages:
 
 test-registry:
   stage: test-registry
-  image: docker:24-alpine
+  image: docker:20.10-alpine
   services:
-    - docker:24-dind
+    - docker:20.10-dind
   script:
     - echo $REGISTRY_PASSWORD | docker login -u $REGISTRY_USER --password-stdin $REGISTRY
     - docker pull alpine:3.19
