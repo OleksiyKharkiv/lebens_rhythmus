@@ -1,0 +1,16 @@
+stages:
+  - test-registry
+
+test-registry:
+  stage: test-registry
+  image: docker:24-alpine
+  services:
+    - docker:24-dind
+  script:
+    - echo $REGISTRY_PASSWORD | docker login -u $REGISTRY_USER --password-stdin $REGISTRY
+    - docker pull alpine:3.19
+    - docker tag alpine:3.19 $REGISTRY/lr-test:$CI_COMMIT_SHORT_SHA
+    - docker push $REGISTRY/lr-test:$CI_COMMIT_SHORT_SHA
+    - echo "✅ Registry push OK"
+  tags:
+    - lr-runner
