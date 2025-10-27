@@ -3,7 +3,7 @@ stages:
 
 test-registry:
   stage: test-registry
-  image: docker:24-alpine
+  image: docker:24
   services:
     - docker:24-dind
   script:
