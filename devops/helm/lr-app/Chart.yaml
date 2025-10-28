@@ -1,0 +1,7 @@
+name: lr-app
+version: 0.1.0
+description: A Helm chart for Kubernetes for Lebensrhythmus
+application
+type: application
+appVersion: 1.0.0
+apiVersion: v2
