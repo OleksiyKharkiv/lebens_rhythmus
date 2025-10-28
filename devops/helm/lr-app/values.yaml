@@ -1,12 +1,12 @@
 global:
   imageRegistry: "localhost:5000"
   imageTag: "latest"
-  
+
 backend:
   replicaCount: 1
   image:
     repository: "lr-backend"
-    tag: "{{.values.global.imageTag}}"
+    tag: "{{ .Values.global.imageTag }}"
   service:
     type: ClusterIP
     port: 8080
@@ -15,7 +15,7 @@ frontend:
   replicaCount: 1
   image:
     repository: "lr-frontend"
-    tag: "{{.values.global.imageTag}}"
+    tag: "{{ .Values.global.imageTag }}"
   service:
     type: ClusterIP
     port: 80

@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: lr-frontend
 spec:
-  replicas: {{.Values.frontend.replicaCount}}
+  replicas: {{ .Values.frontend.replicaCount }}
   selector:
     matchLabels:
       app: lr-frontend
@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
         - name: lr-frontend
-          image: {{.Values.global.imageRegistry}}/{{.Values.frontend.image.repository}}:{{.Values.frontend.image.tag}}
+          image: {{ .Values.global.imageRegistry }}/{{ .Values.frontend.image.repository }}:{{ .Values.global.imageTag }}
           ports:
-            - containerPort: {{.Values.frontend.service.port}}
+            - containerPort: {{ .Values.frontend.service.port }}
