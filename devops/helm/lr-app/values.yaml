@@ -1,20 +1,21 @@
 global:
   imageRegistry: "localhost:5000"
   imageTag: "latest"
-  imagePullPolicy: "Always"
-  serviceType: "NodePort"
+  
 backend:
   replicaCount: 1
   image:
     repository: "lr-backend"
-    tag:"{{.values.global.imageTag}}"
+    tag: "{{.values.global.imageTag}}"
   service:
+    type: ClusterIP
     port: 8080
 
 frontend:
   replicaCount: 1
   image:
     repository: "lr-frontend"
-    tag:"{{.values.global.imageTag}}"
+    tag: "{{.values.global.imageTag}}"
   service:
+    type: ClusterIP
     port: 80
