@@ -5,11 +5,11 @@ A functional website with PWA capabilities for Olena's creative studio project i
 
 Business Logic:
 1. Core Purpose:
-- Creative development studio for children, teenagers and adults
+- Creative development studio for children, teenagers, and adults
 - Focus on unlocking creative potential through various approaches
 
 2. Activities:
-- Creative-arts studio helping children, teenagers and adults unlock their potential through:
+- Creative-arts studio helping children, teenagers, and adults unlock their potential through:
   * Theater
   * Gymnastics
   * Choreography
@@ -110,3 +110,192 @@ or initiating processes. They communicate interactivity and should have clear, a
   * Purpose : Used for the least important actions
   * Visual Style : Text-only with no border, using primary color
   * Usage : For actions that should be available but not emphasized
+
+  _____________________________________________________________________________________________________________________
+  ### RDM (Relational Database Model) для Lebens Rhythmus
+
+  #### 1. User Management
+  - **User**
+    - `user_id` (PK)
+    - `username` (VARCHAR, UNIQUE)
+    - `email` (VARCHAR, UNIQUE)
+    - `password_hash` (VARCHAR)
+    - `role` (ENUM: ADMIN, TEACHER, PARTICIPANT)
+    - `created_at` (TIMESTAMP)
+    - `updated_at` (TIMESTAMP)
+
+  - **Participant**
+    - `participant_id` (PK, FK -> User.user_id)
+    - `first_name` (VARCHAR)
+    - `last_name` (VARCHAR)
+    - `date_of_birth` (DATE)
+    - `parent_email` (VARCHAR)
+    - `parent_phone` (VARCHAR)
+
+  - **Teacher**
+    - `teacher_id` (PK, FK -> User.user_id)
+    - `first_name` (VARCHAR)
+    - `last_name` (VARCHAR)
+    - `bio` (TEXT)
+    - `profile_picture` (VARCHAR)
+
+  - **UserProfile**
+    - `profile_id` (PK, FK -> User.user_id)
+    - `contact_info` (VARCHAR)
+    - `preferences` (TEXT)
+    - `language` (VARCHAR)
+
+  - **Role**
+    - `role_id` (PK)
+    - `role_name` (VARCHAR)
+
+  #### 2. Course Management
+  - **Activity**
+    - `activity_id` (PK)
+    - `name` (VARCHAR)
+    - `description` (TEXT)
+    - `type` (ENUM: THEATER, GYMNASTICS, CHOREOGRAPHY, PLAYBACK_THEATER, ART_SESSION)
+
+  - **Workshop**
+    - `workshop_id` (PK, FK -> Activity.activity_id)
+    - `start_date` (DATE)
+    - `end_date` (DATE)
+    - `location` (VARCHAR)
+
+  - **Course**
+    - `course_id` (PK, FK -> Activity.activity_id)
+    - `schedule` (VARCHAR)
+    - `duration` (INTEGER)
+    - `language` (VARCHAR)
+
+  - **Group**
+    - `group_id` (PK)
+    - `name` (VARCHAR)
+    - `age_group_id` (FK -> AgeGroup.age_group_id)
+    - `teacher_id` (FK -> Teacher.teacher_id)
+
+  - **AgeGroup**
+    - `age_group_id` (PK)
+    - `age_range` (VARCHAR)
+
+  - **Schedule**
+    - `schedule_id` (PK)
+    - `start_time` (TIME)
+    - `end_time` (TIME)
+    - `frequency` (VARCHAR)
+
+  #### 3. Event Management
+  - **Event**
+    - `event_id` (PK)
+    - `name` (VARCHAR)
+    - `description` (TEXT)
+    - `start_date` (DATE)
+    - `end_date` (DATE)
+
+  - **Performance**
+    - `performance_id` (PK, FK -> Event.event_id)
+    - `venue_id` (FK -> Venue.venue_id)
+    - `ticket_price` (DECIMAL)
+
+  - **Venue**
+    - `venue_id` (PK)
+    - `name` (VARCHAR)
+    - `address` (VARCHAR)
+    - `capacity` (INTEGER)
+
+  - **Ticket**
+    - `ticket_id` (PK)
+    - `event_id` (FK -> Event.event_id)
+    - `user_id` (FK -> User.user_id)
+    - `purchase_date` (DATE)
+    - `seat_number` (VARCHAR)
+
+  #### 4. Business Operations
+  - **Order**
+    - `order_id` (PK)
+    - `user_id` (FK -> User.user_id)
+    - `order_date` (DATE)
+    - `total_amount` (DECIMAL)
+
+  - **Payment**
+    - `payment_id` (PK)
+    - `order_id` (FK -> Order.order_id)
+    - `payment_method_id` (FK -> PaymentMethod.payment_method_id)
+    - `amount` (DECIMAL)
+    - `payment_date` (DATE)
+
+  - **Contract**
+    - `contract_id` (PK)
+    - `user_id` (FK -> User.user_id)
+    - `course_id` (FK -> Course.course_id)
+    - `start_date` (DATE)
+    - `end_date` (DATE)
+
+  - **Invoice**
+    - `invoice_id` (PK)
+    - `order_id` (FK -> Order.order_id)
+    - `amount` (DECIMAL)
+    - `due_date` (DATE)
+    - `status` (ENUM: PENDING, PAID, OVERDUE)
+
+  #### 5. Support Entities
+  - **Language**
+    - `language_id` (PK)
+    - `name` (VARCHAR)
+
+  - **Feedback**
+    - `feedback_id` (PK)
+    - `user_id` (FK -> User.user_id)
+    - `event_id` (FK -> Event.event_id)
+    - `rating` (INTEGER)
+    - `comment` (TEXT)
+
+  - **Media**
+    - `media_id` (PK)
+    - `file_name` (VARCHAR)
+    - `file_type` (VARCHAR)
+    - `file_path` (VARCHAR)
+    - `uploaded_by` (FK -> User.user_id)
+    - `uploaded_at` (TIMESTAMP)
+
+  - **Notification**
+    - `notification_id` (PK)
+    - `user_id` (FK -> User.user_id)
+    - `message` (TEXT)
+    - `created_at` (TIMESTAMP)
+    - `read_status` (ENUM: READ, UNREAD)
+
+  - **ContactRequest**
+    - `contact_request_id` (PK)
+    - `user_id` (FK -> User.user_id)
+    - `message` (TEXT)
+    - `created_at` (TIMESTAMP)
+
+  ### Комментарии о поведении пользователей на сайте и отражении в БД
+
+  1. **Регистрация пользователя:**
+     - Когда пользователь регистрируется на сайте, запись создается в таблице `User`. Если пользователь регистрируется как участник (ребенок или взрослый), дополнительная информация сохраняется в таблице `Participant`. Если пользователь регистрируется как учитель, информация сохраняется в таблице `Teacher`.
+
+  2. **Запись на курс или мастер-класс:**
+     - Когда участник записывается на курс или мастер-класс, запись создается в промежуточной таблице `ParticipantGroup`. Это отражает связь между участником и группой, к которой он присоединился.
+
+  3. **Оплата и заказы:**
+     - Когда пользователь оплачивает курс или мастер-класс, создается запись в таблице `Order`, а затем в таблице `Payment`. Это отражает транзакцию и связь с заказом.
+
+  4. **Управление расписанием:**
+     - Расписание курсов и мастер-классов хранится в таблице `Schedule`. Когда учитель создает новый курс, расписание связывается с курсом через `course_id`.
+
+  5. **Управление событиями:**
+     - События, такие как выступления, хранятся в таблице `Event`. Когда создается новое событие, связанные сведения о месте проведения сохраняются в таблице `Venue`.
+
+  6. **Обратная связь и отзывы:**
+     - После участия в событии или курсе, пользователи могут оставлять отзывы, которые сохраняются в таблице `Feedback`. Это помогает улучшить качество предоставляемых услуг.
+
+  7. **Уведомления:**
+     - Системные уведомления, такие как подтверждение записи на курс или напоминания о предстоящих событиях, сохраняются в таблице `Notification`. Это позволяет пользователям быть в курсе важной информации.
+
+  8. **Мультимедиа и файлы:**
+     - Файлы, изображения и видео, загруженные пользователями или администрацией, сохраняются в таблице `Media`. Это позволяет хранить и управлять мультимедийным контентом на сайте.
+
+  ### Вывод
+  Эта структура БД обеспечивает гибкость и масштабируемость для управления различными аспектами платформы Lebens Rhythmus. Она позволяет эффективно управлять пользователями, курсами, событиями, оплатами и обратной связью, что является ключевыми функциями для успешной работы творческой студии.
