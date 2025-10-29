@@ -3,7 +3,7 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: sans-serif
+    font-family: sans-serif;
 }
 
 html, body {
@@ -24,7 +24,7 @@ header {
     top: 0;
     left: 0;
     width: 100%;
-    background: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.5);
     backdrop-filter: blur(10px);
     display: flex;
     justify-content: space-between;
@@ -43,21 +43,42 @@ header {
     font-weight: bold;
 }
 
+.logo-link {
+    text-decoration: none;
+    color: inherit;
+    font-size: 1.2rem;
+    transition: color 0.3s ease;
+}
+
+.logo-link:hover {
+    color: purple;
+}
 nav {
     display: flex;
     gap: 20px;
 }
 
-nav button {
+.nav-button {
     background: none;
     border: none;
     cursor: pointer;
     font-size: 0.9rem;
     transition: all 0.3s ease;
+    padding: 10px 20px;
+    border-radius: 4px;
+    color: #333;
+    background-color: #f0f0f0;
+    text-decoration: none;
 }
 
-nav button.hover {
-    color: purple
+.nav-button:hover {
+    background-color: #e0e0e0;
+    color: #222;
+}
+
+.nav-button.active {
+    background-color: #007BFF;
+    color: white;
 }
 
 .langs {
@@ -76,7 +97,7 @@ nav button.hover {
 
 .langs button.active {
     color: white;
-    background: linear-gradient(to right, purple, pink)
+    background: linear-gradient(to right, purple, pink);
 }
 
 /*Mobile menu*/
@@ -153,6 +174,7 @@ nav button.hover {
 .hero .buttons button:hover {
     opacity: 0.8;
 }
+
 footer {
     display: flex;
     text-align: center;
@@ -163,12 +185,13 @@ footer {
     color: #666;
     background-color: #f4f4f4;
 }
+
 .impressum {
     background: linear-gradient(135deg, #ffffff 0%, #f2f4f9 100%);
     color: #222;
     padding: 4rem 2rem;
+    min-height: 90vh;
 }
-
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
