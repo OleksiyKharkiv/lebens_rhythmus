@@ -7,7 +7,6 @@ import java.util.Set;
 
 import static jakarta.persistence.FetchType.LAZY;
 
-
 @Entity
 @Table(name = "groups")
 @Getter
