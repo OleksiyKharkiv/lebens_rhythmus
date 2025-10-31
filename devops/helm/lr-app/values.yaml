@@ -1,21 +1,19 @@
 global:
-  imageRegistry: "localhost:5000"
-  imageTag: "latest"
+  imageRegistry: ""   # передаём из CI
+  imageTag: ""        # передаём из CI
 
 backend:
   replicaCount: 1
   image:
-    repository: "lr-backend"
-    tag: "{{ .Values.global.imageTag }}"
+    repository: backend   # имя image без registry
+    tag: ""
   service:
-    type: ClusterIP
     port: 8080
 
 frontend:
   replicaCount: 1
   image:
-    repository: "lr-frontend"
-    tag: "{{ .Values.global.imageTag }}"
+    repository: frontend
+    tag: ""
   service:
-    type: ClusterIP
     port: 80

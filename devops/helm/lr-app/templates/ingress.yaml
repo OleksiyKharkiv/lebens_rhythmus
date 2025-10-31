@@ -2,9 +2,17 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: lr-ingress
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
+    cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
+  tls:
+    - hosts:
+        - tlab29.com
+        - api.tlab29.com
+      secretName: lr-tls
   rules:
-    - host: tlab29.com
+    - host: api.tlab29.com
       http:
         paths:
           - path: /
@@ -14,3 +22,13 @@ spec:
                 name: lr-backend
                 port:
                   number: 8080
+    - host: tlab29.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lr-frontend
+                port:
+                  number: 80

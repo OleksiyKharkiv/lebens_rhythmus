@@ -1,16 +1,81 @@
-stages:
-  - test-registry
+variables:
+  REGISTRY: "$CI_REGISTRY"
+  REGISTRY_USER: "$CI_REGISTRY_USER"
+  REGISTRY_PASS: "$CI_REGISTRY_PASSWORD"
+  BACKEND_IMAGE: "$CI_REGISTRY_IMAGE/backend"
+  FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
+  KUBECONFIG: "/tmp/kubeconfig"        # helm использует его же
 
-test-registry:
-  stage: test-registry
+stages:
+  - build
+  - package
+  - deploy
+  - smoke
+
+# ---------- 1. Build JAR ----------
+build-backend:
+  stage: build
+  image: gradle:8.5-jdk21
+  script:
+    - cd backend
+    - ./gradlew bootJar --no-daemon --build-cache
+  artifacts:
+    paths:
+      - backend/build/libs/*.jar
+    expire_in: 1 hour
+
+# ---------- 2. Make Docker-image ----------
+docker-backend:
+  stage: package
+  image: docker:24
+  services:
+    - docker:24-dind
+  needs: [ build-backend ]
+  script:
+    - cd backend
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $REGISTRY
+    - docker build -t $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker push  $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    # latest – чтобы не менять тег каждый раз в values
+    - docker tag $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA $BACKEND_IMAGE:latest
+    - docker push $BACKEND_IMAGE:latest
+
+docker-frontend:
+  stage: package
   image: docker:24
   services:
     - docker:24-dind
   script:
-    - echo $REGISTRY_PASSWORD | docker login -u $REGISTRY_USER --password-stdin $REGISTRY
-    - docker pull alpine:3.19
-    - docker tag alpine:3.19 $REGISTRY/lr-test:$CI_COMMIT_SHORT_SHA
-    - docker push $REGISTRY/lr-test:$CI_COMMIT_SHORT_SHA
-    - echo "✅ Registry push OK"
+    - cd frontend
+    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $REGISTRY
+    - docker build -t $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA .
+    - docker push  $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA
+    - docker tag $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA $FRONTEND_IMAGE:latest
+    - docker push $FRONTEND_IMAGE:latest
+
+deploy-dev:
+  stage: deploy
+  image: alpine/helm:3.13
+  needs: [ docker-backend, docker-frontend ]
+  before_script:
+    # copy kubeconfig from VM200
+    - echo "$KUBECONFIG_FILE" | base64 -d > $KUBECONFIG
+  script:
+    - helm upgrade --install lr-dev ./devops/helm/lr-app \
+      --namespace lr-dev --create-namespace \
+      --set global.imageRegistry=$REGISTRY \
+      --set global.imageTag=$CI_COMMIT_SHORT_SHA \
+      --wait --timeout=3m
+  tags:
+    - lr-runner
+
+# ---------- 4. Smoke-test ----------
+smoke-test:
+  stage: smoke
+  image: curlimages/curl:latest
+  needs: [ deploy-dev ]
+  script:
+    - curl -f -k https://api.tlab29.com/actuator/health || exit 1
+    - curl -f -k https://tlab29.com                          || exit 1
   tags:
     - lr-runner

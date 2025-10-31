@@ -14,6 +14,7 @@ spec:
     spec:
       containers:
         - name: lr-backend
-          image: {{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.global.imageTag }}
+          image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.global.imageTag }}"
+          imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.backend.service.port }}
