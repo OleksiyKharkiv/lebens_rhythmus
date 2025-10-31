@@ -18,6 +18,7 @@ build-backend:
   image: gradle:8.5-jdk21
   script:
     - cd backend
+    - chmod +x ./gradlew
     - ./gradlew bootJar --no-daemon --build-cache
   artifacts:
     paths:
