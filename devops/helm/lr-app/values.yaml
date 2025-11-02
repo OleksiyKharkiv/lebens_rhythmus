@@ -1,19 +1,23 @@
 global:
-  imageRegistry: ""   # передаём из CI
-  imageTag: ""        # передаём из CI
+  imageRegistry: ""   # from CI
+  imageTag: ""        # from CI
 
 backend:
   replicaCount: 1
   image:
-    repository: backend   # имя image без registry
+    repository: ""
     tag: ""
   service:
     port: 8080
+  imagePullSecrets:
+    - name: gitlab-registry
 
 frontend:
   replicaCount: 1
   image:
-    repository: frontend
+    repository: ""
     tag: ""
   service:
     port: 80
+  imagePullSecrets:
+    - name: gitlab-registry
