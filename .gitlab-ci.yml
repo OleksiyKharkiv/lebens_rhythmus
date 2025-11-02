@@ -71,7 +71,7 @@ deploy-dev:
         --set backend.image.repository=okh3/lebens_rhythmus/backend \
         --set frontend.image.repository=okh3/lebens_rhythmus/frontend \
         --set global.imageTag=$CI_COMMIT_SHORT_SHA \
-        --wait --timeout=10m
+        --wait --timeout=15m
   tags:
     - lr-runner
 
