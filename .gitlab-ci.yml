@@ -33,6 +33,8 @@ docker-backend:
     - docker:24-dind
   needs: [ build-backend ]
   script:
+    - echo "REGISTRY=$REGISTRY"
+    - echo "CI_REGISTRY=$CI_REGISTRY
     - cd backend
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $REGISTRY
     - docker build -t $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA .
