@@ -69,7 +69,7 @@ deploy-dev:
         --namespace lr-dev --create-namespace \
         --set global.imageRegistry=$REGISTRY \
         --set global.imageTag=$CI_COMMIT_SHORT_SHA \
-        --wait --timeout=3m
+        --wait --timeout=5m
   tags:
     - lr-runner
 
