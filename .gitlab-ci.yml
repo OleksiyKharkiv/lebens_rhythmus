@@ -62,6 +62,7 @@ deploy-dev:
     # copy kubeconfig from VM200
     - echo "$KUBECONFIG_FILE" | base64 -d > $KUBECONFIG
   script:
+    - echo "CI_REGISTRY=[$CI_REGISTRY]"
     - helm upgrade --install lr-dev ./devops/helm/lr-app \
       --namespace lr-dev --create-namespace \
       --set global.imageRegistry=$REGISTRY \
