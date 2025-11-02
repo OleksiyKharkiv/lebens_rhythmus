@@ -58,18 +58,18 @@ deploy-dev:
   stage: deploy
   image:
     name: alpine/helm:3.19.0
-    entrypoint: ["/bin/sh", "-c"]
+    entrypoint: [ "/bin/sh", "-c" ]
   needs: [ docker-backend, docker-frontend ]
   before_script:
     # copy kubeconfig from VM200
     - echo "$KUBECONFIG_FILE" | base64 -d > $KUBECONFIG
   script:
-    - echo "CI_REGISTRY=[$CI_REGISTRY]"
-    - helm upgrade --install lr-dev ./devops/helm/lr-app \
-      --namespace lr-dev --create-namespace \
-      --set global.imageRegistry=$REGISTRY \
-      --set global.imageTag=$CI_COMMIT_SHORT_SHA \
-      --wait --timeout=3m
+    - |
+      helm upgrade --install lr-dev ./devops/helm/lr-app \
+        --namespace lr-dev --create-namespace \
+        --set global.imageRegistry=$REGISTRY \
+        --set global.imageTag=$CI_COMMIT_SHORT_SHA \
+        --wait --timeout=3m
   tags:
     - lr-runner
 
