@@ -33,9 +33,6 @@ docker-backend:
     - docker:24-dind
   needs: [ build-backend ]
   script:
-    - echo "user=[$REGISTRY_USER]"      # увидим, какой username
-    - echo "pass=[$REGISTRY_PASS]"      # увидим, маска ли
-    - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $CI_REGISTRY
     - cd backend
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $REGISTRY
     - docker build -t $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA .
@@ -59,7 +56,7 @@ docker-frontend:
 
 deploy-dev:
   stage: deploy
-  image: alpine/helm:3.13
+  image: alpine/helm:3.19.0
   needs: [ docker-backend, docker-frontend ]
   before_script:
     # copy kubeconfig from VM200
