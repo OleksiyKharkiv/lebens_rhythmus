@@ -56,7 +56,9 @@ docker-frontend:
 
 deploy-dev:
   stage: deploy
-  image: alpine/helm:3.19.0
+  image:
+    name: alpine/helm:3.19.0
+    entrypoint: ["/bin/sh", "-c"]
   needs: [ docker-backend, docker-frontend ]
   before_script:
     # copy kubeconfig from VM200
