@@ -12,6 +12,8 @@ spec:
       labels:
         app: lr-backend
     spec:
+      imagePullSecrets:
+              {{- toYaml .Values.backend.imagePullSecrets | nindent 8 }}
       containers:
         - name: lr-backend
           image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.global.imageTag }}"
