@@ -21,7 +21,7 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: lr-db-credentials
+                  name: lr-db-credentials  # Secret
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
@@ -35,4 +35,4 @@ spec:
               mountPath: /var/lib/postgresql/data
       volumes:
         - name: pg-data
-          emptyDir: {}   # можно позже подключить PersistentVolumeClaim
+          emptyDir: {}  # temporary. Next: PersistentVolumeClaim
