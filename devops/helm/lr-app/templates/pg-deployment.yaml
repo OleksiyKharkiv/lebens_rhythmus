@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lr-postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: lr-postgres
+  template:
+    metadata:
+      labels:
+        app: lr-postgres
+    spec:
+      containers:
+        - name: lr-postgres
+          image: postgres:16-alpine
+          env:
+            - name: POSTGRES_DB
+              value: "{{ .Values.postgres.db }}"
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lr-db-credentials
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lr-db-credentials
+                  key: password
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: pg-data
+              mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: pg-data
+          emptyDir: {}   # можно позже подключить PersistentVolumeClaim

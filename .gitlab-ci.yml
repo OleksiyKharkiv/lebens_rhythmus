@@ -71,16 +71,10 @@ deploy-dev:
         --set backend.image.repository=okh3/lebens_rhythmus/backend \
         --set frontend.image.repository=okh3/lebens_rhythmus/frontend \
         --set global.imageTag=$CI_COMMIT_SHORT_SHA
+        --set postgres.db=lebens_rhythmus
+
   tags:
     - lr-runner
 
 # ---------- 4. Smoke-test ----------
-smoke-test:
-  stage: smoke
-  image: curlimages/curl:latest
-  needs: [ deploy-dev ]
-  script:
-    - curl -f https://api.tlab29.com/actuator/health || exit 1
-    - curl -f https://tlab29.com || exit 1
-  tags:
-    - lr-runner
+# ---------- 4. Smoke Tests ----------

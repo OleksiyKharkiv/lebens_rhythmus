@@ -11,6 +11,11 @@ backend:
     port: 8080
   imagePullSecrets:
     - name: gitlab-registry
+  env:
+    SPRING_DATASOURCE_URL: jdbc:postgresql://lr-postgres:5432/lebens_rhythmus
+
+postgres:
+  db: lebens_rhythmus
 
 frontend:
   replicaCount: 1

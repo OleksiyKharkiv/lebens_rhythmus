@@ -20,3 +20,16 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.backend.service.port }}
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: {{ .Values.backend.env.SPRING_DATASOURCE_URL }}
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: lr-db-credentials
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lr-db-credentials
+                  key: password
