@@ -79,8 +79,9 @@ smoke-test:
   stage: smoke
   image: curlimages/curl:latest
   needs: [ deploy-dev ]
-  script:
-    - curl -f -k https://api.tlab29.com/actuator/health || exit 1
-    - curl -f -k https://tlab29.com                          || exit 1
+  smoke-test:
+    script:
+      - curl -f https://api.tlab29.com/actuator/health || exit 1
+      - curl -f https://tlab29.com || exit 1
   tags:
     - lr-runner
