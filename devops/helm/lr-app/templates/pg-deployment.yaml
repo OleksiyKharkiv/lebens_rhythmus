@@ -12,6 +12,8 @@ spec:
       labels:
         app: lr-postgres
     spec:
+      nodeSelector:
+        project: lr
       containers:
         - name: lr-postgres
           image: postgres:16-alpine
@@ -21,7 +23,7 @@ spec:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: lr-db-credentials  # Secret
+                  name: lr-db-credentials
                   key: username
             - name: POSTGRES_PASSWORD
               valueFrom:
@@ -35,4 +37,4 @@ spec:
               mountPath: /var/lib/postgresql/data
       volumes:
         - name: pg-data
-          emptyDir: {}  # temporary. Next: PersistentVolumeClaim
+          emptyDir: {}
