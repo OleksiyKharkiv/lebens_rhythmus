@@ -13,7 +13,11 @@ spec:
         app: lr-backend
     spec:
       imagePullSecrets:
-              {{- toYaml .Values.backend.imagePullSecrets | nindent 8 }}
+        {{- toYaml .Values.backend.imagePullSecrets | nindent 8 }}
+      initContainers:
+        - name: wait-for-db
+          image: postgres:16-alpine
+          command: ['sh', '-c', 'until pg_isready -h lr-postgres -p 5432; do sleep 1; done']
       containers:
         - name: lr-backend
           image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.global.imageTag }}"
@@ -33,3 +37,12 @@ spec:
                 secretKeyRef:
                   name: lr-db-credentials
                   key: password
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 5
+            timeoutSeconds: 3
+            successThreshold: 1
+            failureThreshold: 3
