@@ -17,7 +17,7 @@ spec:
       initContainers:
         - name: wait-for-db
           image: postgres:16-alpine
-          command: ['sh', '-c', 'until pg_isready -h lr-postgres -p 5432; do sleep 1; done']
+          command: ['sh', '-c', 'until pg_isready -h lr-postgres.lr-dev.svc.cluster.local -p 5432; do sleep 1; done']
       containers:
         - name: lr-backend
           image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.global.imageTag }}"
