@@ -12,6 +12,8 @@ spec:
       labels:
         app: lr-frontend
     spec:
+      nodeSelector:
+        project: lr
       imagePullSecrets:
               {{- toYaml .Values.frontend.imagePullSecrets | nindent 8 }}
       containers:
