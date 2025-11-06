@@ -21,7 +21,7 @@ spec:
               service:
                 name: lr-backend
                 port:
-                  number: 8080
+                  number: 80
     - host: tlab29.com
       http:
         paths:
