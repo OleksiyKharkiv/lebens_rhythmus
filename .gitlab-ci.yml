@@ -4,7 +4,7 @@ variables:
   REGISTRY_PASS: "$CI_REGISTRY_PASSWORD"
   BACKEND_IMAGE: "$CI_REGISTRY_IMAGE/backend"
   FRONTEND_IMAGE: "$CI_REGISTRY_IMAGE/frontend"
-  KUBECONFIG: "/tmp/kubeconfig"        # helm использует его же
+  KUBECONFIG: "/tmp/kubeconfig"        # helm too
 
 stages:
   - build
