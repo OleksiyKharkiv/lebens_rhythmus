@@ -6,11 +6,6 @@ metadata:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
     cert-manager.io/cluster-issuer: letsencrypt-prod
 spec:
-  tls:
-    - hosts:
-        - tlab29.com
-        - api.tlab29.com
-      secretName: lr-tls
   rules:
     - host: api.tlab29.com
       http:
