@@ -19,7 +19,22 @@ spec:
       initContainers:
         - name: wait-for-db
           image: postgres:16-alpine
-          command: ['sh', '-c', 'until pg_isready -h lr-postgres.lr-dev.svc.cluster.local -p 5432; do sleep 1; done']
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for Postgres to be ready..."
+              for i in $(seq 1 60); do
+                pg_isready -h lr-postgres.lr-dev.svc.cluster.local -p 5432
+                if [ $? -eq 0 ]; then
+                  echo "Postgres is ready!"
+                  exit 0
+                fi
+                echo "Postgres not ready yet, retrying in 5s..."
+                sleep 5
+              done
+              echo "ERROR: Postgres did not become ready in time."
+              exit 1
       containers:
         - name: lr-backend
           image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.global.imageTag }}"
