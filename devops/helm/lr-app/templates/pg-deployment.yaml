@@ -16,7 +16,7 @@ spec:
         project: lr
       containers:
         - name: lr-postgres
-          image: postgres:16
+          image: postgres:16-bullseye
           env:
             - name: POSTGRES_DB
               value: "{{ .Values.postgres.db }}"
