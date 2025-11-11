@@ -3,7 +3,7 @@ kind: StatefulSet
 metadata:
   name: lr-postgres
 spec:
-  serviceName: lr-postgres
+  serviceName: lr-postgres  # Required for StatefulSet
   replicas: 1
   selector:
     matchLabels:
@@ -32,7 +32,7 @@ spec:
                   name: lr-db-credentials
                   key: password
             - name: POSTGRES_EXTRA_ARGS
-              value: "-c listen_addresses=*"
+              value: "-c listen_addresses=*"  # Listen on all interfaces
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -65,4 +65,4 @@ spec:
         accessModes: [ "ReadWriteOnce" ]
         resources:
           requests:
-            storage: 10Gi
+            storage: {{ .Values.postgres.storage | default "10Gi" }}

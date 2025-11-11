@@ -1,28 +1,29 @@
 global:
-  imageRegistry: ""   # from CI
-  imageTag: ""        # from CI
+  imageRegistry: ""   # Set from CI pipeline - registry URL
+  imageTag: ""        # Set from CI pipeline - commit SHA or tag
 
 backend:
   replicaCount: 1
   image:
-    repository: ""
-    tag: ""
+    repository: ""    # Set from CI pipeline - backend image repository
+    tag: ""           # Set from CI pipeline - backend image tag
   service:
     port: 8080
   imagePullSecrets:
     - name: gitlab-registry
+  # Environment variables for backend application
   env:
     SPRING_DATASOURCE_URL: jdbc:postgresql://lr-postgres:5432/lebens_rhythmus
 
 postgres:
-  db: lebens_rhythmus
-  storage: 10Gi
+  db: lebens_rhythmus  # PostgreSQL database name
+  storage: 10Gi        # Storage size for PostgreSQL persistence
 
 frontend:
   replicaCount: 1
   image:
-    repository: ""
-    tag: ""
+    repository: ""    # Set from CI pipeline - frontend image repository
+    tag: ""           # Set from CI pipeline - frontend image tag
   service:
     port: 80
   imagePullSecrets:

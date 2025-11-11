@@ -23,12 +23,21 @@ spec:
             - sh
             - -c
             - |
+              # Wait for PostgreSQL server to be ready
               echo "Waiting for Postgres to be ready..."
               until pg_isready -h lr-postgres.lr-dev.svc.cluster.local -p 5432 -U "$POSTGRES_USER"; do
-                echo "Postgres not ready yet, retrying in 5s..."
+                echo "Postgres server not ready yet, retrying in 5s..."
                 sleep 5
               done
-              echo "Postgres is ready!"
+              echo "Postgres server is ready!"
+
+              # Wait for specific database to be created
+              echo "Checking if database $POSTGRES_DB exists..."
+              until psql -h lr-postgres.lr-dev.svc.cluster.local -U "$POSTGRES_USER" -lqt | cut -d \| -f 1 | grep -qw "$POSTGRES_DB"; do
+                echo "Database $POSTGRES_DB not ready yet, retrying in 5s..."
+                sleep 5
+              done
+              echo "Database $POSTGRES_DB is ready!"
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -40,6 +49,8 @@ spec:
                 secretKeyRef:
                   name: lr-db-credentials
                   key: password
+            - name: POSTGRES_DB
+              value: "lebens_rhythmus"
       containers:
         - name: lr-backend
           image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.global.imageTag }}"
@@ -48,7 +59,7 @@ spec:
             - containerPort: {{ .Values.backend.service.port }}
           env:
             - name: SPRING_DATASOURCE_URL
-              value: {{ .Values.backend.env.SPRING_DATASOURCE_URL }}
+              value: "jdbc:postgresql://lr-postgres:5432/lebens_rhythmus"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
