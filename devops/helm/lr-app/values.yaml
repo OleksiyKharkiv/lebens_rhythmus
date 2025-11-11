@@ -16,6 +16,7 @@ backend:
 
 postgres:
   db: lebens_rhythmus
+  storage: 10Gi
 
 frontend:
   replicaCount: 1

@@ -24,17 +24,22 @@ spec:
             - -c
             - |
               echo "Waiting for Postgres to be ready..."
-              for i in $(seq 1 60); do
-                pg_isready -h lr-postgres.lr-dev.svc.cluster.local -p 5432
-                if [ $? -eq 0 ]; then
-                  echo "Postgres is ready!"
-                  exit 0
-                fi
+              until pg_isready -h lr-postgres.lr-dev.svc.cluster.local -p 5432 -U "$POSTGRES_USER"; do
                 echo "Postgres not ready yet, retrying in 5s..."
                 sleep 5
               done
-              echo "ERROR: Postgres did not become ready in time."
-              exit 1
+              echo "Postgres is ready!"
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: lr-db-credentials
+                  key: username
+            - name: PGPASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lr-db-credentials
+                  key: password
       containers:
         - name: lr-backend
           image: "{{ .Values.global.imageRegistry }}/{{ .Values.backend.image.repository }}:{{ .Values.global.imageTag }}"
@@ -54,12 +59,15 @@ spec:
                 secretKeyRef:
                   name: lr-db-credentials
                   key: password
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 60
+            periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /actuator/health
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 5
-            timeoutSeconds: 3
-            successThreshold: 1
-            failureThreshold: 3
