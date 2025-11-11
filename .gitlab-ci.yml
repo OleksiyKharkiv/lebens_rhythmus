@@ -54,7 +54,7 @@ docker-frontend:
     - docker tag $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA $FRONTEND_IMAGE:latest
     - docker push $FRONTEND_IMAGE:latest
 
-ddeploy-dev:
+deploy-dev:
   stage: deploy
   image:
     name: alpine/helm:3.19.0
