@@ -74,14 +74,6 @@ deploy-dev:
         --set global.imageTag=$CI_COMMIT_SHORT_SHA \
         --set postgres.db=lebens_rhythmus \
         --set postgres.storage=10Gi
-      
-      # Wait specifically for PostgreSQL pod to be ready
-      echo "Waiting for PostgreSQL to become ready..."
-      kubectl wait --for=condition=ready pod -l app=lr-postgres -n lr-dev --timeout=300s
-      
-      # Wait for backend to be ready (init-container should handle DB dependency)
-      echo "Waiting for Backend to become ready..."
-      kubectl wait --for=condition=ready pod -l app=lr-backend -n lr-dev --timeout=300s
   tags:
     - lr-runner
 # ---------- 4. Smoke-test ----------
