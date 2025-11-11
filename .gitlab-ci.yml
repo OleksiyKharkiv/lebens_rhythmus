@@ -65,34 +65,27 @@ deploy-dev:
     - echo "$KUBECONFIG_FILE" | base64 -d > $KUBECONFIG
   script:
     - |
-      # First deployment: PostgreSQL only with waiting
+      # Single deployment with all components
       helm upgrade --install lr-dev ./devops/helm/lr-app \
         --namespace lr-dev --create-namespace \
-        --set global.imageRegistry=registry.gitlab.com \
-        --set global.imageTag=$CI_COMMIT_SHORT_SHA \
-        --set postgres.db=lebens_rhythmus \
-        --set postgres.storage=10Gi \
-        --wait \  # Wait for resources to be ready
-        --timeout 5m
-      
-      # Wait specifically for PostgreSQL pod to be ready
-      echo "Waiting for PostgreSQL to become ready..."
-      kubectl wait --for=condition=ready pod -l app=lr-postgres -n lr-dev --timeout=300s
-      
-      # Second deployment: Backend and Frontend
-      helm upgrade --install lr-dev ./devops/helm/lr-app \
-        --namespace lr-dev \
         --set global.imageRegistry=registry.gitlab.com \
         --set backend.image.repository=okh3/lebens_rhythmus/backend \
         --set frontend.image.repository=okh3/lebens_rhythmus/frontend \
         --set global.imageTag=$CI_COMMIT_SHORT_SHA \
         --set postgres.db=lebens_rhythmus \
         --set postgres.storage=10Gi \
-        --wait \  # Wait for all components to be ready
+        --wait \  # Wait for all resources to be ready
         --timeout 10m
+      
+      # Wait specifically for PostgreSQL pod to be ready
+      echo "Waiting for PostgreSQL to become ready..."
+      kubectl wait --for=condition=ready pod -l app=lr-postgres -n lr-dev --timeout=300s
+      
+      # Wait for backend to be ready (init-container should handle DB dependency)
+      echo "Waiting for Backend to become ready..."
+      kubectl wait --for=condition=ready pod -l app=lr-backend -n lr-dev --timeout=300s
   tags:
     - lr-runner
-
 # ---------- 4. Smoke-test ----------
 smoke-test:
   stage: smoke
