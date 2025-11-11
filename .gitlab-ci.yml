@@ -80,7 +80,7 @@ deploy-dev:
       kubectl wait --for=condition=ready pod -l app=lr-postgres -n lr-dev --timeout=300s
       
       # Second deployment: Backend and Frontend
-      helm upgrade lr-dev ./devops/helm/lr-app \
+      helm upgrade --install lr-dev ./devops/helm/lr-app \
         --namespace lr-dev \
         --set global.imageRegistry=registry.gitlab.com \
         --set backend.image.repository=okh3/lebens_rhythmus/backend \
