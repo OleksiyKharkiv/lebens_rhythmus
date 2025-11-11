@@ -73,9 +73,7 @@ deploy-dev:
         --set frontend.image.repository=okh3/lebens_rhythmus/frontend \
         --set global.imageTag=$CI_COMMIT_SHORT_SHA \
         --set postgres.db=lebens_rhythmus \
-        --set postgres.storage=10Gi \
-        --wait \  # Wait for all resources to be ready
-        --timeout 10m
+        --set postgres.storage=10Gi
       
       # Wait specifically for PostgreSQL pod to be ready
       echo "Waiting for PostgreSQL to become ready..."
