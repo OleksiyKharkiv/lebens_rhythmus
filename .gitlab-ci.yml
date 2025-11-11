@@ -57,54 +57,25 @@ docker-frontend:
 deploy-dev:
   stage: deploy
   image:
-    name: dtzar/helm-kubectl:3.18.3  # ✅ Тот же образ что в workout-evo
+    name: alpine/helm:3.19.0
+    entrypoint: [ "/bin/sh", "-c" ]
   needs: [ docker-backend, docker-frontend ]
-  tags:
-    - lr-runner
   before_script:
-    # Copy kubeconfig from CI/CD variables
+    # copy kubeconfig from VM200
     - echo "$KUBECONFIG_FILE" | base64 -d > $KUBECONFIG
-    - export KUBECONFIG=$KUBECONFIG
-    - kubectl cluster-info
-    - kubectl get nodes
   script:
     - |
-      # 1. Create namespace if not exists
-      if ! kubectl get namespace "lr-dev" >/dev/null 2>&1; then
-        kubectl create namespace "lr-dev"
-      fi
-
-      # 2. Create Docker registry secret using YOUR variables
-      kubectl create secret docker-registry gitlab-registry \
-        --docker-server="registry.gitlab.com" \
-        --docker-username="$REGISTRY_USER" \
-        --docker-password="$REGISTRY_PASS" \
-        --docker-email="hudoshin7605@gmail.com" \
-        -n "lr-dev" \
-        --dry-run=client -o yaml | kubectl apply -f -
-
-      # 3. Deploy with Helm
       helm upgrade --install lr-dev ./devops/helm/lr-app \
-        --namespace lr-dev \
+        --namespace lr-dev --create-namespace \
         --set global.imageRegistry=registry.gitlab.com \
         --set backend.image.repository=okh3/lebens_rhythmus/backend \
         --set frontend.image.repository=okh3/lebens_rhythmus/frontend \
         --set global.imageTag=$CI_COMMIT_SHORT_SHA \
-        --set postgres.db=lebens_rhythmus \
-        --set postgres.storage=10Gi \
-        --timeout=10m
+        --set postgres.db=lebens_rhythmus
 
-      # 4. Wait for PostgreSQL to be ready
-      echo "Waiting for PostgreSQL to be ready..."
-      kubectl wait --for=condition=ready pod -l app=lr-postgres -n lr-dev --timeout=300s
+  tags:
+    - lr-runner
 
-      # 5. Wait for backend to be ready
-      echo "Waiting for Backend to be ready..."
-      kubectl wait --for=condition=ready pod -l app=lr-backend -n lr-dev --timeout=300s
-
-      # 6. Wait for frontend to be ready  
-      echo "Waiting for Frontend to be ready..."
-      kubectl wait --for=condition=ready pod -l app=lr-frontend -n lr-dev --timeout=300s
 # ---------- 4. Smoke-test ----------
 smoke-test:
   stage: smoke
