@@ -17,7 +17,7 @@ spec:
       imagePullSecrets:
               {{- toYaml .Values.frontend.imagePullSecrets | nindent 8 }}
       containers:
-        - name: lr-backend
+        - name: lr-frontend
           image: "{{ .Values.global.imageRegistry }}/{{ .Values.frontend.image.repository }}:{{ .Values.global.imageTag }}"
           imagePullPolicy: Always
           ports:
