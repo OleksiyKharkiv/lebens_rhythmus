@@ -1,0 +1,21 @@
+# charts/lr-app/templates/flannel-patch.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flannel-host-gw-patch
+  namespace: kube-flannel
+spec:
+  template:
+    spec:
+      serviceAccountName: flannel-patcher
+      restartPolicy: Never
+      containers:
+        - name: patch
+          image: bitnami/kubectl:latest
+          command:
+            - sh
+            - -c
+            - |
+              kubectl patch -n kube-flannel cm kube-flannel-cfg \
+                --type merge -p '{"data":{"net-conf.json":"{\"Network\":\"10.42.0.0/16\",\"Backend\":{\"Type\":\"host-gw\"}}"}}'
+              kubectl -n kube-flannel delete pod --all
