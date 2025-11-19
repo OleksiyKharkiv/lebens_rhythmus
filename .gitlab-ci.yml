@@ -37,7 +37,6 @@ docker-backend:
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $REGISTRY
     - docker build -t $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA .
     - docker push  $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA
-    # latest – чтобы не менять тег каждый раз в values
     - docker tag $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA $BACKEND_IMAGE:latest
     - docker push $BACKEND_IMAGE:latest
 
