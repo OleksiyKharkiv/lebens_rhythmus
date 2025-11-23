@@ -67,13 +67,15 @@ nav {
     padding: 10px 20px;
     border-radius: 4px;
     color: #333;
-    background-color: #f0f0f0;
+    background-color: #a8c2d6;
     text-decoration: none;
 }
 
 .nav-button:hover {
     background-color: #e0e0e0;
     color: #222;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .nav-button.active {
@@ -168,18 +170,22 @@ nav {
 .hero h1 {
     font-size: 3rem;
     margin-bottom: 10px;
+    color: aqua;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .hero h3 {
     font-size: 1.5rem;
     margin-bottom: 20px;
-    color: #555;
+    color: lightyellow;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .hero p {
-    max-width: 600px;
+    max-width: 60rem;
     margin-bottom: 30px;
-    color: #333;
+    color: lightyellow;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
 }
 
 .hero .buttons {
@@ -187,6 +193,7 @@ nav {
     gap: 15px;
     flex-wrap: wrap;
     justify-content: center;
+    
 }
 
 .hero .buttons button {
@@ -195,7 +202,8 @@ nav {
     cursor: pointer;
     font-weight: bold;
     border-radius: 6px;
-    transition: 0.3s;
+    transition: all 0.3s ease;
+
 }
 
 .hero .buttons .primary {
@@ -211,6 +219,8 @@ nav {
 
 .hero .buttons button:hover {
     opacity: 0.8;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 footer {
