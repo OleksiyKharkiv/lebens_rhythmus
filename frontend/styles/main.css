@@ -47,12 +47,14 @@ header {
 .logo-link {
     text-decoration: none;
     color: inherit;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     transition: color 0.3s ease;
 }
 
 .logo-link:hover {
     color: purple;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 nav {
     display: flex;
