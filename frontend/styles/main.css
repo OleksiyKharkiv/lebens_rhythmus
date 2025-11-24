@@ -235,7 +235,7 @@ footer {
     height: 3vh;
     font-size: 0.8rem;
     color: #666;
-    background-color: #f4f4f4;
+    background-color: rgba(244, 244, 244, 0.5);
 }
 
 .impressum {
