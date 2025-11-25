@@ -13,3 +13,7 @@ ports:
     port: 8000
   websecure:
     port: 8443
+
+additionalArguments:
+  - "--entrypoints.web.address=:8000"
+  - "--entrypoints.websecure.address=:8443"
