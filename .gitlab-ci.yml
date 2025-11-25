@@ -78,7 +78,9 @@ deploy-dev:
 
 deploy-traefik:
   stage: deploy
-  image: bitnami/helm:3.19.0  # Этот образ имеет shell
+  image:
+    name: alpine/helm:3.19.0
+    entrypoint: [""]  # Отключаем дефолтный entrypoint
   before_script:
     - echo "$KUBECONFIG_FILE" | base64 -d > $KUBECONFIG
   script:
