@@ -1,0 +1,15 @@
+service:
+  type: NodePort
+  ports:
+    web:
+      port: 8000
+      nodePort: 30080
+    websecure:
+      port: 8443
+      nodePort: 30443
+
+ports:
+  web:
+    port: 8000
+  websecure:
+    port: 8443

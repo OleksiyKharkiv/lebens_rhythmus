@@ -12,7 +12,7 @@ stages:
   - deploy
   - smoke
 
-# ---------- 1. Build JAR ----------
+# ---------- Build JAR ----------
 build-backend:
   stage: build
   image: gradle:8.5-jdk21
@@ -25,7 +25,7 @@ build-backend:
       - backend/build/libs/*.jar
     expire_in: 1 hour
 
-# ---------- 2. Make Docker-image ----------
+# ---------- Make Docker-image ----------
 docker-backend:
   stage: package
   image: docker:24
@@ -76,7 +76,20 @@ deploy-dev:
   tags:
     - lr-runner
 
-# ---------- 4. Smoke-test ----------
+deploy-traefik:
+  stage: deploy
+  image: alpine/helm:3.19.0
+  before_script:
+    - echo "$KUBECONFIG_FILE" | base64 -d > $KUBECONFIG
+  script:
+    - |
+      helm upgrade --install traefik traefik/traefik \
+        -n traefik --create-namespace \
+        -f devops/helm/traefik-values.yaml
+  tags:
+    - lr-runner
+
+# ----------  Smoke-test ----------
 smoke-test:
   stage: smoke
   image: curlimages/curl:latest
