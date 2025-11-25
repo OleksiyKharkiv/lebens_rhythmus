@@ -2,20 +2,12 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: lr-ingress
+  namespace: lr-dev
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
 spec:
+  ingressClassName: traefik
   rules:
-    - host: api.tlab29.com
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: lr-backend
-                port:
-                  number: 80
     - host: tlab29.com
       http:
         paths:
@@ -26,3 +18,18 @@ spec:
                 name: lr-frontend
                 port:
                   number: 80
+    - host: api.tlab29.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: lr-backend
+                port:
+                  number: 80
+  tls:
+    - hosts:
+        - tlab29.com
+        - api.tlab29.com
+      secretName: tls-secret
