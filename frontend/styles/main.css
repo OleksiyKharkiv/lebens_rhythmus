@@ -169,7 +169,7 @@ nav {
     align-items: center;
     text-align: center;
     padding: 0 20px;
-    background: url(../assets/background_temp.jpg) center/cover no-repeat;
+    background: linear-gradient(rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.3)), url(../assets/background_temp.jpg) center/cover no-repeat;
     position: relative;
 }
 
@@ -177,21 +177,22 @@ nav {
     font-size: 3rem;
     margin-bottom: 10px;
     color: aqua;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    text-shadow: 0.15em 0.15em 0.25em rgba(0, 0, 0, 0.5);
 }
 
 .hero h3 {
-    font-size: 1.5rem;
+    font-size: 1.7rem;
     margin-bottom: 20px;
-    color: lightyellow;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    color: #efe97d;
+    text-shadow: 0.15em 0.15em 0.25em rgba(0, 0, 0, 0.8);
 }
 
 .hero p {
+    font-size: 1.4rem;
     max-width: 60rem;
     margin-bottom: 30px;
-    color: lightyellow;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+    color: #efe97d;
+    text-shadow: 0.15em 0.15em 0.25em rgba(0, 0, 0, 0.95);
 }
 
 .hero .buttons {
