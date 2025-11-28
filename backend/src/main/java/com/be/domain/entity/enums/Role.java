@@ -1,5 +1,8 @@
 package com.be.domain.entity.enums;
 
 public enum Role {
-    ADMIN, USER, TEACHER
+    ADMIN,
+    USER,
+    TEACHER,
+    CONTENT_MANAGER
 }
