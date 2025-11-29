@@ -1,4 +1,4 @@
-package com.be.dto;
+package com.be.web.dto.request;
 
 import com.be.domain.entity.enums.Role;
 import jakarta.validation.constraints.*;
@@ -32,6 +32,13 @@ public class UserRegistrationDTO {
     private LocalDate birthDate;
     @Builder.Default
     private Role role = Role.USER;
-    @AssertTrue(message = "You must accept privacy policy")
+    @AssertTrue(message = "You must accept terms and conditions")
     private Boolean acceptedTerms = false;
+    @AssertTrue(message = "You must accept privacy policy")
+    private Boolean privacyPolicyAccepted = false;
+
+    private String address;
+    private String city;
+    private String zipCode;
+    private String country;
 }

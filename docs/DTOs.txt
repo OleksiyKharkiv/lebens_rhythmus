@@ -1,0 +1,33 @@
+UserLoginRequestDTO - System Login
+Frontend: login.html - login form
+Usage: Send email and password for authentication
+
+UserLoginResponseDTO - Response after successful login
+Frontend: login.js - token saving, redirect to dashboard
+Usage: After successful login - show welcome message and available features
+
+UserRegistrationDTO - New user registration
+Frontend: register.html - registration form 
+Usage: Create new user account
+
+UserProfileDTO - Full profile information
+Frontend: profile.html, dashboard.html - view and edit profile
+Usage: User personal cabinet
+
+UserUpdateDTO - Profile update
+Frontend: profile-edit.html - profile editing form
+Usage: Update user information
+
+UserBasicDTO - Basic user information
+Frontend: Admin panel, user lists
+Usage: Display in tables and dropdown lists
+
+UserPasswordUpdateDTO - Password change
+Frontend: security-settings.html - password change form
+Usage: Update user password
+
+ParticipantInfoDTO - Participant Information
+Frontend: dashboard.html - user's participant list
+
+TeacherInfoDTO - Teacher Profile Information 
+Frontend: teacher-dashboard.html - teacher panel

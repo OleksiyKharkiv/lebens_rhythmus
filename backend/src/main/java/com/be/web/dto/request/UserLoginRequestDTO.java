@@ -1,4 +1,4 @@
-package com.be.dto;
+package com.be.web.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

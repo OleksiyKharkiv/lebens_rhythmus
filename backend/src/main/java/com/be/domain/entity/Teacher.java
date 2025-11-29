@@ -7,11 +7,11 @@ import java.util.Set;
 
 @Entity
 @Table(name = "teachers")
+@Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class Teacher {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -28,6 +28,12 @@ public class Teacher {
 
     @Column(nullable = false)
     private String phone;
+
+    @Column(nullable = false)
+    private String title;
+
+    @Column(nullable = false)
+    private boolean approved = false;
 
     @Column(columnDefinition = "TEXT")
     private String bioDe;

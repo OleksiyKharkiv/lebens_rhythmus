@@ -1,6 +1,8 @@
-package com.be.dto;
+package com.be.web.dto.response;
 
 import com.be.domain.entity.enums.Role;
+import com.be.web.dto.ParticipantInfoDTO;
+import com.be.web.dto.TeacherInfoDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -15,9 +17,9 @@ import java.util.List;
 public class UserLoginResponseDTO {
     private String token;
     private String tokenType = "Bearer";
-    private Long expireIn; // in seconds
+    private Long expiresIn; // in seconds
     //    Basic user info
-    private Long userId;
+    private Long id;
     private String email;
     private String firstName;
     private String lastName;

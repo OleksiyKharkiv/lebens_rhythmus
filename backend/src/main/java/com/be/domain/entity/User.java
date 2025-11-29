@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long userId;
+    private Long id;
 
     //    Registration data
     @Column(nullable = false, unique = true)
@@ -36,18 +36,19 @@ public class User {
     @Size(min = 2, max = 50)
     private String lastName;
     private String phone;
-    private LocalDateTime birthDate;
+    private LocalDate birthDate;
 
     //    Security
     private int failedLoginAttempts;
     private LocalDateTime lockUntil;
     private Boolean enabled = true;
+    private Boolean emailVerified = false;
 
     // GDPR accept
     private Boolean acceptedTerms = false;
     private Boolean privacyPolicyAccepted = false;
-    private LocalDate termsAcceptedAt;
-    private LocalDate privacyPolicyAcceptedAt;
+    private LocalDateTime termsAcceptedAt;
+    private LocalDateTime privacyPolicyAcceptedAt;
 
     //Role
     @Enumerated(EnumType.STRING)

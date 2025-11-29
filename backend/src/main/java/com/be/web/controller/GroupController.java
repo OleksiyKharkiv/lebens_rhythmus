@@ -1,4 +1,4 @@
-package com.be.controller;
+package com.be.web.controller;
 
 import com.be.domain.entity.Group;
 import com.be.service.GroupService;
