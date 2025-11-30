@@ -1,0 +1,71 @@
+1. Authorization Algorithm Order
+Full authentication flow:
+
+Frontend (login.html)
+    → POST /api/auth/login
+    → AuthController
+    → AuthService
+    → AuthenticationManager (Spring Security)
+    → UserDetailsService
+    → UserRepository
+    → JwtUtils (token generation)
+    → Response with JWT token
+    → Frontend saves token in localStorage
+    → Subsequent requests: Frontend adds Header "Authorization: Bearer <token>"
+    → JwtAuthTokenFilter (intercepts each request)
+    → JwtUtils (token validation)
+    → SecurityContextHolder (sets authentication)
+    → Access to protected resources
+
+Configuration classes and their calls:
+
+SecurityConfig - main Spring Security config
+
+JwtAuthTokenFilter - filter for JWT (called before each request)
+
+JwtUtils - utilities for working with JWT
+
+AuthenticationManager - Spring authentication manager
+
+2. Why do we need JWT Filter?
+JWT Filter is needed for:
+
+Stateless authentication - we don't store sessions on server
+
+Intercepting each request - we check JWT token in header
+
+Setting SecurityContext - we tell Spring that user is authenticated
+
+Automation - no need to manually check token in each controller
+
+Without JWT Filter we would need in each controller method:
+
+java
+@GetMapping("/api/protected")
+public ResponseEntity<?> protectedMethod(@RequestHeader("Authorization") String authHeader) {
+    // Manually check token in each method 😱
+    if (!isValidToken(authHeader)) {
+        return ResponseEntity.status(401).build();
+    }
+    // ...
+}
+
+3. Secure Storage of Secret Key
+Correct approaches:
+
+Option 1: GitLab CI/CD Variables (recommended for MVP)
+properties
+# application.properties
+app.jwt.secret=${JWT_SECRET}
+In GitLab: Settings → CI/CD → Variables → Add variable JWT_SECRET
+
+Option 2: Kubernetes Secrets (for production)
+yaml
+# deployment.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: app-secrets
+type: Opaque
+data:
+  jwt-secret: <base64-encoded-secret>

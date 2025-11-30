@@ -14,6 +14,8 @@ backend:
   # Environment variables for backend application
   env:
     SPRING_DATASOURCE_URL: jdbc:postgresql://lr-postgres:5432/lebens_rhythmus
+    JWT_SECRET: ""  # Will be overridden in pipeline
+    JWT_EXPIRATION: "86400000"
 
 postgres:
   db: lebens_rhythmus  # PostgreSQL database name

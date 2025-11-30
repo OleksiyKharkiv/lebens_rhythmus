@@ -89,6 +89,63 @@ nav {
     color: white;
 }
 
+
+.login-form,
+.register-form {
+    max-width: 400px;
+    margin: 2rem auto;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-form h3,
+.register-form h3 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.login-form input,
+.register-form input {
+    width: 100%;
+    padding: 0.8rem;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.login-form input:focus,
+.register-form input:focus {
+    outline: none;
+    border-color: purple;
+    box-shadow: 0 0 5px rgba(128, 0, 128, 0.2);
+}
+
+.login-form button,
+.register-form button {
+    width: 100%;
+    padding: 1rem;
+    background: linear-gradient(to right, purple, pink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.login-form button:hover,
+.register-form button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
 .langs {
     display: flex;
     gap: 10px;
@@ -107,6 +164,9 @@ nav {
     color: white;
     background: linear-gradient(to right, purple, pink);
 }
+
+
+/*_________________________________________________________________________________*/
 /*Mobile menu*/
 .mobile-menu {
     display: none;

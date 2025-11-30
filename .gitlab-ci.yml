@@ -71,24 +71,26 @@ deploy-dev:
         --set frontend.image.repository=okh3/lebens_rhythmus/frontend \
         --set global.imageTag=$CI_COMMIT_SHORT_SHA \
         --set postgres.db=lebens_rhythmus\
-        --set flannel.backend=host-gw
+        --set flannel.backend=host-gw\
+        --set backend.env.JWT_SECRET="$JWT_SECRET" \
+        --set backend.env.JWT_EXPIRATION="86400000"
 
   tags:
     - lr-runner
-
-deploy-traefik:
-  stage: deploy
-  image:
-    name: alpine/helm:3.19.0
-    entrypoint: [""]  # Off default entrypoint
-  before_script:
-    - echo "$KUBECONFIG_FILE" | base64 -d > $KUBECONFIG
-  script:
-    - helm repo add traefik https://traefik.github.io/charts
-    - helm repo update
-    - helm upgrade --install traefik traefik/traefik -n traefik --create-namespace -f devops/helm/traefik-values.yaml
-  tags:
-    - lr-runner
+# ---------- Deploy Traefik ----------
+#deploy-traefik:
+#  stage: deploy
+#  image:
+#    name: alpine/helm:3.19.0
+#    entrypoint: [""]  # Off default entrypoint
+#  before_script:
+#    - echo "$KUBECONFIG_FILE" | base64 -d > $KUBECONFIG
+#  script:
+#    - helm repo add traefik https://traefik.github.io/charts
+#    - helm repo update
+#    - helm upgrade --install traefik traefik/traefik -n traefik --create-namespace -f devops/helm/traefik-values.yaml
+#  tags:
+#    - lr-runner
 
 # ----------  Smoke-test ----------
 smoke-test:
