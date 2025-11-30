@@ -4,7 +4,7 @@ import com.be.domain.entity.Activity;
 import com.be.domain.entity.Group;
 import com.be.domain.entity.Participant;
 import com.be.domain.entity.Teacher;
-import com.be.repository.GroupRepository;
+import com.be.domain.repository.GroupRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

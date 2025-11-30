@@ -1,4 +1,4 @@
-package com.be.repository;
+package com.be.domain.repository;
 
 import com.be.domain.entity.Activity;
 import com.be.domain.entity.AgeGroup;
