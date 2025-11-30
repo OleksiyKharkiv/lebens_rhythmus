@@ -96,7 +96,7 @@ public class UserService {
 
         UserProfileDTO profileDTO = userMapper.toProfileDTO(user);
 
-        // Add statistics (you can implement these later)
+        // Add statistics (implement these later)
         profileDTO.setTotalOrders(0); // TODO: Implement order count
         profileDTO.setActiveParticipants(0); // TODO: Implement participant count
         profileDTO.setHasTeacherProfile(false); // TODO: Implement teacher profile check
