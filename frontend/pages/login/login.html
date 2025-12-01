@@ -7,11 +7,12 @@
     <link rel="icon" type="image/x-icon" href="../../assets/favicon_io/favicon.ico">
     <link rel="stylesheet" href="../../styles/main.css">
 </head>
+
 <body>
 <main>
     <header>
         <div class="logo">
-            <a href="../home/index.html" class="logo-link">Lebens Rhythmus</a>
+            <a href="./index.html" class="logo-link">Lebens Rhythmus</a>
         </div>
         <nav>
             <nav>
@@ -49,35 +50,62 @@
         <a href="../feedback/feedback.html" class="nav-button">Feedback</a>
         <a href="../contact/contact.html" class="nav-button">Kontakt</a>
         <a href="../dashboard/dashboard.html" class="nav-button">Dashboard</a>
-        <a href="../login/login.html" class="nav-button">Login/Register</a>
+        <a href="../login/login.html" class="nav-button active">Login/Register</a>
     </div>
+
     <!--Hero section-->
     <section class="hero" id="login"
              style="background-image: url('../../assets/pinguins.jpg'); background-size: cover; background-position: center;">
         <h1>Login/Registrieren</h1><br>
         <div class="login-container">
-            <form class="login-form">
+            <form class="login-form" id="loginForm">
                 <h3>Login</h3>
-                <input type="email" placeholder="Email" required>
-                <input type="password" placeholder="Password" required>
+                <label for="loginEmail"></label><input type="email" id="loginEmail" placeholder="Email" required>
+                <label for="loginPassword"></label><input type="password" id="loginPassword" placeholder="Passwort" required>
                 <button type="submit">Login</button>
+                <div style="text-align: center; margin-top: 15px;">
+                    <a href="#" style="color: #0066cc; text-decoration: none; font-size: 0.9em;">
+                        Passwort vergessen?
+                    </a>
+                </div>
             </form>
 
             <div class="separator">
-                <span>or</span>
+                <span>oder</span>
             </div>
 
-            <form class="register-form">
-                <h3>Register</h3>
-                <input type="text" placeholder="Full Name" required>
-                <input type="email" placeholder="Email" required>
-                <input type="password" placeholder="Password" required>
-                <input type="password" placeholder="Confirm Password" required>
-                <button type="submit">Register</button>
+            <form class="register-form" id="registerForm">
+                <h3>Registrieren</h3>
+                <label for="registerFirstName"></label><input type="text" id="registerFirstName" placeholder="Vorname" required>
+                <label for="registerLastName"></label><input type="text" id="registerLastName" placeholder="Nachname" required>
+                <label for="registerEmail"></label><input type="email" id="registerEmail" placeholder="Email" required>
+                <label for="registerPassword"></label><input type="password" id="registerPassword" placeholder="Passwort" required>
+                <label for="registerConfirmPassword"></label><input type="password" id="registerConfirmPassword" placeholder="Passwort bestätigen" required>
+
+                <div class="gdpr-checkbox">
+                    <label>
+                        <input type="checkbox" id="acceptTerms" required>
+                        Ich akzeptiere die
+                        <a href="../impressum/impressum.html#terms" target="_blank">
+                            Allgemeinen Geschäftsbedingungen
+                        </a>
+                    </label>
+                    <label>
+                        <input type="checkbox" id="acceptPrivacy" required>
+                        Ich akzeptiere die
+                        <a href="../impressum/impressum.html#privacy" target="_blank">
+                            Datenschutzbestimmungen
+                        </a>
+                    </label>
+                </div>
+
+                <button type="submit">Registrieren</button>
             </form>
         </div>
-
     </section>
+
+
+    <script src="login.js"></script>
     <script src="../../js/main.js"></script>
 </main>
 <footer>

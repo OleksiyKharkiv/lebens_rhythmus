@@ -62,7 +62,6 @@ nav {
 }
 
 .nav-button {
-    background: none;
     border: none;
     cursor: pointer;
     font-size: 0.9rem;
@@ -70,7 +69,7 @@ nav {
     padding: 0.5rem 1.3rem;
     border-radius: 4px;
     color: #333;
-    background-color: #a8c2d6;
+    background: #a8c2d6 none;
     text-decoration: none;
     text-align: center;
     display: inline-flex;
@@ -144,6 +143,68 @@ nav {
     opacity: 0.9;
     transform: translateY(-2px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 25px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    z-index: 1000;
+    animation: slideIn 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.notification.success {
+    background-color: #4CAF50;
+}
+
+.notification.error {
+    background-color: #f44336;
+}
+
+.notification.info {
+    background-color: #2196F3;
+}
+
+.notification.warning {
+    background-color: #ff9800;
+}
+
+@keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes slideOut {
+    from { transform: translateX(0); opacity: 1; }
+    to { transform: translateX(100%); opacity: 0; }
+}
+
+/* Улучшенные стили для форм */
+.login-container input {
+    transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+.login-container input:focus {
+    border-color: #4CAF50 !important;
+    outline: none;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5) !important;
+}
+
+.login-container button {
+    transition: background-color 0.3s, transform 0.2s;
+}
+
+.login-container button:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.login-container button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
 }
 
 .langs {
