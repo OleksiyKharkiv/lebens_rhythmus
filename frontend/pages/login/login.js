@@ -1,11 +1,10 @@
 /**
  * Login/Registration Page Script for Lebens Rhythmus
- * Integrates with Spring Boot Backend using JWT authentication
- * Based on provided ERM, User entity, Auth flow, and deployment config
+ * Интеграция с Spring Boot бэкендом с использованием JWT аутентификации
  */
 
 document.addEventListener('DOMContentLoaded', function() {
-    // ========== CONFIGURATION ==========
+    // ========== КОНФИГУРАЦИЯ ==========
     const API_BASE_URL = window.location.hostname === 'localhost'
         ? 'http://localhost:8080/api'
         : 'https://api.tlab29.com/api';
@@ -13,47 +12,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const ENDPOINTS = {
         LOGIN: `${API_BASE_URL}/auth/login`,
         REGISTER: `${API_BASE_URL}/auth/register`,
-        VERIFY_TOKEN: `${API_BASE_URL}/auth/verify-token`  // Assuming this endpoint exists
+        VERIFY_TOKEN: `${API_BASE_URL}/auth/verify-token`
     };
 
-    // ========== DOM ELEMENTS ==========
-    const loginForm = document.querySelector('.login-form');
-    const registerForm = document.querySelector('.register-form');
-    const loginEmail = loginForm?.querySelector('input[type="email"]');
-    const loginPassword = loginForm?.querySelector('input[type="password"]');
+    // ========== ДОМ ЭЛЕМЕНТЫ ==========
+    const loginForm = document.getElementById('loginForm');
+    const registerForm = document.getElementById('registerForm');
 
-    const registerName = registerForm?.querySelector('input[type="text"]');
-    const registerEmail = registerForm?.querySelectorAll('input[type="email"]')[0];
-    const registerPassword = registerForm?.querySelectorAll('input[type="password"]')[0];
-    const registerConfirmPassword = registerForm?.querySelectorAll('input[type="password"]')[1];
+    // Элементы формы логина
+    const loginEmail = document.getElementById('loginEmail');
+    const loginPassword = document.getElementById('loginPassword');
 
-    // Check GDPR checkbox (add this to your register form in HTML)
-    let gdprCheckbox = null;
-    const gdprDiv = document.createElement('div');
-    gdprDiv.className = 'gdpr-checkbox';
-    gdprDiv.innerHTML = `
-        <label style="display: flex; align-items: center; margin: 10px 0; font-size: 0.9em;">
-            <input type="checkbox" id="gdpr-accept" required>
-            <span style="margin-left: 8px;">
-                Ich akzeptiere die 
-                <a href="../impressum/impressum.html" target="_blank" style="color: #0066cc;">
-                    AGB und Datenschutzbestimmungen
-                </a>
-            </span>
-        </label>
-    `;
+    // Элементы формы регистрации
+    const registerFirstName = document.getElementById('registerFirstName');
+    const registerLastName = document.getElementById('registerLastName');
+    const registerEmail = document.getElementById('registerEmail');
+    const registerPassword = document.getElementById('registerPassword');
+    const registerConfirmPassword = document.getElementById('registerConfirmPassword');
+    const acceptTerms = document.getElementById('acceptTerms');
+    const acceptPrivacy = document.getElementById('acceptPrivacy');
 
-    // Insert GDPR checkbox before register button
-    if (registerForm) {
-        const registerBtn = registerForm.querySelector('button[type="submit"]');
-        registerForm.insertBefore(gdprDiv, registerBtn);
-        gdprCheckbox = document.getElementById('gdpr-accept');
-    }
-
-    // ========== AUTH STATUS CHECK ==========
+    // ========== ПРОВЕРКА СТАТУСА АУТЕНТИФИКАЦИИ ==========
     checkAuthStatus();
 
-    // ========== LOGIN FORM HANDLER ==========
+    // ========== ОБРАБОТЧИК ФОРМЫ ЛОГИНА ==========
     if (loginForm) {
         loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
@@ -61,25 +43,27 @@ document.addEventListener('DOMContentLoaded', function() {
             const email = loginEmail.value.trim();
             const password = loginPassword.value;
 
-            // Frontend validation
+            // Валидация на фронтенде
             if (!validateEmail(email)) {
                 showNotification('Bitte geben Sie eine gültige E-Mail-Adresse ein.', 'error');
+                highlightField(loginEmail, 'error');
                 return;
             }
 
             if (password.length < 6) {
                 showNotification('Passwort muss mindestens 6 Zeichen lang sein.', 'error');
+                highlightField(loginPassword, 'error');
                 return;
             }
 
             try {
-                // Disable button during request
+                // Отключаем кнопку во время запроса
                 const submitBtn = loginForm.querySelector('button[type="submit"]');
                 const originalText = submitBtn.textContent;
                 submitBtn.textContent = 'Wird eingeloggt...';
                 submitBtn.disabled = true;
 
-                // Prepare request according to UserLoginRequestDTO structure
+                // Подготавливаем запрос согласно структуре UserLoginRequestDTO
                 const loginData = {
                     email: email,
                     password: password
@@ -96,7 +80,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Save token and user data based on UserLoginResponseDTO
+                    // Сохраняем токен и данные пользователя согласно UserLoginResponseDTO
                     localStorage.setItem('authToken', data.token);
                     localStorage.setItem('userData', JSON.stringify({
                         id: data.id,
@@ -108,19 +92,19 @@ document.addEventListener('DOMContentLoaded', function() {
                         teachers: data.teachers || []
                     }));
 
-                    // Save token expiry (convert expiresIn to timestamp)
+                    // Сохраняем время истечения токена
                     const expiryTime = Date.now() + (data.expiresIn || 86400000);
                     localStorage.setItem('tokenExpiry', expiryTime.toString());
 
                     showNotification('Erfolgreich eingeloggt! Willkommen zurück!', 'success');
 
-                    // Redirect to dashboard based on user role
+                    // Перенаправляем на dashboard в зависимости от роли
                     setTimeout(() => {
                         redirectBasedOnRole(data.role);
                     }, 1500);
 
                 } else {
-                    // Handle specific error cases
+                    // Обрабатываем конкретные случаи ошибок
                     if (response.status === 401) {
                         showNotification('Ungültige Anmeldedaten. Bitte überprüfen Sie Email und Passwort.', 'error');
                     } else if (response.status === 423) {
@@ -134,75 +118,102 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Login error:', error);
                 showNotification('Netzwerkfehler. Bitte überprüfen Sie Ihre Internetverbindung.', 'error');
             } finally {
-                // Re-enable button
+                // Включаем кнопку обратно
                 const submitBtn = loginForm.querySelector('button[type="submit"]');
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.textContent = 'Login';
+                    submitBtn.disabled = false;
+                }
             }
         });
     }
 
-    // ========== REGISTRATION FORM HANDLER ==========
+    // ========== ОБРАБОТЧИК ФОРМЫ РЕГИСТРАЦИИ ==========
     if (registerForm) {
         registerForm.addEventListener('submit', async function(e) {
             e.preventDefault();
 
-            const name = registerName.value.trim();
+            const firstName = registerFirstName.value.trim();
+            const lastName = registerLastName.value.trim();
             const email = registerEmail.value.trim();
             const password = registerPassword.value;
             const confirmPassword = registerConfirmPassword.value;
 
-            // Extract first and last name
-            const nameParts = name.split(' ');
-            const firstName = nameParts[0] || '';
-            const lastName = nameParts.slice(1).join(' ') || '';
+            // Валидация
+            let isValid = true;
 
-            // Validation
-            if (!name || nameParts.length < 2) {
-                showNotification('Bitte geben Sie Vor- und Nachname ein.', 'error');
-                return;
+            if (!firstName || firstName.length < 2) {
+                showNotification('Bitte geben Sie einen gültigen Vornamen ein (mindestens 2 Zeichen).', 'error');
+                highlightField(registerFirstName, 'error');
+                isValid = false;
+            } else {
+                highlightField(registerFirstName, 'success');
+            }
+
+            if (!lastName || lastName.length < 2) {
+                showNotification('Bitte geben Sie einen gültigen Nachnamen ein (mindestens 2 Zeichen).', 'error');
+                highlightField(registerLastName, 'error');
+                isValid = false;
+            } else {
+                highlightField(registerLastName, 'success');
             }
 
             if (!validateEmail(email)) {
                 showNotification('Bitte geben Sie eine gültige E-Mail-Adresse ein.', 'error');
-                return;
+                highlightField(registerEmail, 'error');
+                isValid = false;
+            } else {
+                highlightField(registerEmail, 'success');
             }
 
             if (password.length < 6) {
                 showNotification('Passwort muss mindestens 6 Zeichen lang sein.', 'error');
-                return;
+                highlightField(registerPassword, 'error');
+                isValid = false;
+            } else {
+                highlightField(registerPassword, 'success');
             }
 
             if (password !== confirmPassword) {
                 showNotification('Passwörter stimmen nicht überein.', 'error');
-                return;
+                highlightField(registerConfirmPassword, 'error');
+                isValid = false;
+            } else if (password.length >= 6) {
+                highlightField(registerConfirmPassword, 'success');
             }
 
-            if (!gdprCheckbox?.checked) {
-                showNotification('Bitte akzeptieren Sie die AGB und Datenschutzbestimmungen.', 'error');
-                return;
+            if (!acceptTerms.checked) {
+                showNotification('Bitte akzeptieren Sie die Allgemeinen Geschäftsbedingungen.', 'error');
+                isValid = false;
             }
+
+            if (!acceptPrivacy.checked) {
+                showNotification('Bitte akzeptieren Sie die Datenschutzbestimmungen.', 'error');
+                isValid = false;
+            }
+
+            if (!isValid) return;
 
             try {
-                // Disable button during request
+                // Отключаем кнопку во время запроса
                 const submitBtn = registerForm.querySelector('button[type="submit"]');
                 const originalText = submitBtn.textContent;
                 submitBtn.textContent = 'Wird registriert...';
                 submitBtn.disabled = true;
 
-                // Prepare request according to UserRegistrationDTO structure
+                // Подготавливаем запрос согласно структуре UserRegistrationDTO
                 const registrationData = {
                     email: email,
                     password: password,
                     firstName: firstName,
                     lastName: lastName,
-                    phone: '', // Optional field
-                    birthDate: null, // Optional field
-                    role: 'USER', // Default role
-                    address: '', // Optional
-                    city: '', // Optional
-                    zipCode: '', // Optional
-                    country: 'Deutschland', // Default
+                    phone: '', // Необязательное поле
+                    birthDate: null, // Необязательное поле
+                    role: 'USER', // Роль по умолчанию
+                    address: '', // Необязательное
+                    city: '', // Необязательное
+                    zipCode: '', // Необязательное
+                    country: 'Deutschland', // По умолчанию
                     acceptedTerms: true,
                     privacyPolicyAccepted: true
                 };
@@ -218,7 +229,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
 
                 if (response.ok) {
-                    // Auto-login after successful registration
+                    // Автоматический логин после успешной регистрации
                     localStorage.setItem('authToken', data.token);
                     localStorage.setItem('userData', JSON.stringify({
                         id: data.id,
@@ -233,10 +244,10 @@ document.addEventListener('DOMContentLoaded', function() {
 
                     showNotification('Registrierung erfolgreich! Willkommen bei Lebens Rhythmus!', 'success');
 
-                    // Clear registration form
+                    // Очищаем форму регистрации
                     registerForm.reset();
 
-                    // Redirect based on role
+                    // Перенаправляем в зависимости от роли
                     setTimeout(() => {
                         redirectBasedOnRole(data.role);
                     }, 2000);
@@ -253,28 +264,38 @@ document.addEventListener('DOMContentLoaded', function() {
                 console.error('Registration error:', error);
                 showNotification('Netzwerkfehler. Bitte überprüfen Sie Ihre Internetverbindung.', 'error');
             } finally {
-                // Re-enable button
+                // Включаем кнопку обратно
                 const submitBtn = registerForm.querySelector('button[type="submit"]');
-                submitBtn.textContent = originalText;
-                submitBtn.disabled = false;
+                if (submitBtn) {
+                    submitBtn.textContent = 'Registrieren';
+                    submitBtn.disabled = false;
+                }
             }
         });
     }
 
-    // ========== HELPER FUNCTIONS ==========
+    // ========== ИНИЦИАЛИЗАЦИЯ ДОПОЛНИТЕЛЬНЫХ ФУНКЦИЙ ==========
+
+    // Инициализация переключателей видимости пароля
+    initPasswordToggles();
+
+    // Настройка валидации форм в реальном времени
+    setupRealTimeValidation();
+
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
 
     /**
-     * Check authentication status and redirect if already logged in
+     * Проверка статуса аутентификации и перенаправление, если уже авторизован
      */
     async function checkAuthStatus() {
         const token = localStorage.getItem('authToken');
         const expiry = localStorage.getItem('tokenExpiry');
 
         if (token && expiry && Date.now() < parseInt(expiry)) {
-            // Token exists and not expired
+            // Токен существует и не истек
             try {
-                // Verify token with backend
-                const response = await fetch(ENDPOINTS.VERIFY_TOKEN || `${API_BASE_URL}/users/me`, {
+                // Проверяем токен с бэкендом
+                const response = await fetch(`${API_BASE_URL}/users/me`, {
                     method: 'GET',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -282,25 +303,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 if (response.ok) {
-                    // User is authenticated, redirect to dashboard
+                    // Пользователь авторизован, перенаправляем на dashboard
                     const userData = JSON.parse(localStorage.getItem('userData') || '{}');
                     redirectBasedOnRole(userData.role || 'USER');
                 } else {
-                    // Token invalid, clear storage
+                    // Токен недействителен, очищаем хранилище
                     clearAuthData();
                 }
             } catch (error) {
                 console.error('Token verification error:', error);
-                // Keep user on login page if there's an error
+                // Оставляем пользователя на странице логина при ошибке
             }
         } else {
-            // Token expired or doesn't exist
+            // Токен истек или не существует
             clearAuthData();
         }
     }
 
     /**
-     * Clear authentication data from localStorage
+     * Очистка данных аутентификации из localStorage
      */
     function clearAuthData() {
         localStorage.removeItem('authToken');
@@ -309,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Validate email format
+     * Валидация формата email
      */
     function validateEmail(email) {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -317,46 +338,23 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Show notification to user
+     * Показать уведомление пользователю
      */
     function showNotification(message, type = 'info') {
-        // Remove existing notifications
+        // Удаляем существующие уведомления
         const existingNotification = document.querySelector('.notification');
         if (existingNotification) {
             existingNotification.remove();
         }
 
-        // Create notification element
+        // Создаем элемент уведомления
         const notification = document.createElement('div');
         notification.className = `notification ${type}`;
         notification.textContent = message;
-        notification.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 25px;
-            border-radius: 5px;
-            color: white;
-            font-weight: bold;
-            z-index: 1000;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        `;
-
-        // Style based on type
-        if (type === 'success') {
-            notification.style.backgroundColor = '#4CAF50';
-        } else if (type === 'error') {
-            notification.style.backgroundColor = '#f44336';
-        } else if (type === 'warning') {
-            notification.style.backgroundColor = '#ff9800';
-        } else {
-            notification.style.backgroundColor = '#2196F3';
-        }
 
         document.body.appendChild(notification);
 
-        // Auto-remove after 5 seconds
+        // Автоматическое удаление через 5 секунд
         setTimeout(() => {
             if (notification.parentNode) {
                 notification.style.animation = 'slideOut 0.3s ease';
@@ -366,7 +364,17 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Redirect user based on their role
+     * Подсветить поле ввода
+     */
+    function highlightField(field, type) {
+        field.classList.remove('error', 'success');
+        if (type === 'error' || type === 'success') {
+            field.classList.add(type);
+        }
+    }
+
+    /**
+     * Перенаправить пользователя в зависимости от его роли
      */
     function redirectBasedOnRole(role) {
         const basePath = window.location.origin + window.location.pathname.split('/pages/login')[0];
@@ -384,139 +392,112 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     /**
-     * Add password visibility toggle
+     * Инициализация переключателей видимости пароля
      */
-    function addPasswordVisibilityToggle() {
-        const passwordInputs = document.querySelectorAll('input[type="password"]');
+    function initPasswordToggles() {
+        const toggleButtons = document.querySelectorAll('.toggle-password');
 
-        passwordInputs.forEach(input => {
-            const wrapper = document.createElement('div');
-            wrapper.style.position = 'relative';
-            wrapper.style.width = '100%';
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
 
-            input.parentNode.insertBefore(wrapper, input);
-            wrapper.appendChild(input);
+                const targetId = this.getAttribute('data-target');
+                const passwordInput = document.getElementById(targetId);
 
-            const toggleBtn = document.createElement('button');
-            toggleBtn.type = 'button';
-            toggleBtn.innerHTML = '👁️';
-            toggleBtn.style.cssText = `
-                position: absolute;
-                right: 10px;
-                top: 50%;
-                transform: translateY(-50%);
-                background: none;
-                border: none;
-                cursor: pointer;
-                font-size: 16px;
-                padding: 5px;
-                z-index: 2;
-            `;
+                if (passwordInput) {
+                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                    passwordInput.setAttribute('type', type);
 
-            toggleBtn.addEventListener('click', function() {
-                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
-                input.setAttribute('type', type);
-                toggleBtn.innerHTML = type === 'password' ? '👁️' : '👁️‍🗨️';
+                    // Меняем иконку
+                    this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
+
+                    // Фокусируемся на поле ввода
+                    setTimeout(() => {
+                        passwordInput.focus();
+                        // Помещаем курсор в конец текста
+                        const length = passwordInput.value.length;
+                        passwordInput.setSelectionRange(length, length);
+                    }, 10);
+                }
             });
 
-            wrapper.appendChild(toggleBtn);
+            // Предотвращаем фокус на кнопке при табуляции
+            button.setAttribute('tabindex', '-1');
         });
     }
 
     /**
-     * Setup form validation with visual feedback
+     * Настройка валидации в реальном времени
      */
-    function setupFormValidation() {
-        const inputs = document.querySelectorAll('input[required]');
+    function setupRealTimeValidation() {
+        // Валидация email в реальном времени
+        if (loginEmail) {
+            loginEmail.addEventListener('blur', function() {
+                if (this.value.trim() && !validateEmail(this.value.trim())) {
+                    highlightField(this, 'error');
+                } else if (this.value.trim()) {
+                    highlightField(this, 'success');
+                }
+            });
+        }
 
-        inputs.forEach(input => {
-            input.addEventListener('blur', function() {
-                if (this.value.trim() === '') {
-                    this.style.borderColor = '#f44336';
-                } else {
-                    this.style.borderColor = '#4CAF50';
+        if (registerEmail) {
+            registerEmail.addEventListener('blur', function() {
+                if (this.value.trim() && !validateEmail(this.value.trim())) {
+                    highlightField(this, 'error');
+                } else if (this.value.trim()) {
+                    highlightField(this, 'success');
+                }
+            });
+        }
+
+        // Валидация пароля в реальном времени
+        if (loginPassword) {
+            loginPassword.addEventListener('blur', function() {
+                if (this.value.length > 0 && this.value.length < 6) {
+                    highlightField(this, 'error');
+                } else if (this.value.length >= 6) {
+                    highlightField(this, 'success');
+                }
+            });
+        }
+
+        if (registerPassword) {
+            registerPassword.addEventListener('blur', function() {
+                if (this.value.length > 0 && this.value.length < 6) {
+                    highlightField(this, 'error');
+                } else if (this.value.length >= 6) {
+                    highlightField(this, 'success');
+                }
+            });
+        }
+
+        // Валидация подтверждения пароля в реальном времени
+        if (registerPassword && registerConfirmPassword) {
+            registerConfirmPassword.addEventListener('input', function() {
+                if (this.value !== registerPassword.value && this.value.length > 0) {
+                    highlightField(this, 'error');
+                } else if (this.value === registerPassword.value && this.value.length > 0) {
+                    highlightField(this, 'success');
                 }
             });
 
-            input.addEventListener('input', function() {
-                this.style.borderColor = '';
+            registerPassword.addEventListener('input', function() {
+                if (registerConfirmPassword.value && this.value !== registerConfirmPassword.value) {
+                    highlightField(registerConfirmPassword, 'error');
+                } else if (registerConfirmPassword.value && this.value === registerConfirmPassword.value) {
+                    highlightField(registerConfirmPassword, 'success');
+                }
             });
-        });
-    }
-
-    // ========== INITIALIZATION ==========
-
-    // Add password visibility toggle
-    addPasswordVisibilityToggle();
-
-    // Setup form validation
-    setupFormValidation();
-
-    // Add CSS for animations
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
         }
-        
-        @keyframes slideOut {
-            from { transform: translateX(0); opacity: 1; }
-            to { transform: translateX(100%); opacity: 0; }
-        }
-        
-        .login-container input:focus {
-            border-color: #4CAF50;
-            outline: none;
-            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
-        }
-        
-        .gdpr-checkbox {
-            margin: 15px 0;
-            font-size: 0.9em;
-        }
-        
-        .gdpr-checkbox a {
-            color: #0066cc;
-            text-decoration: none;
-        }
-        
-        .gdpr-checkbox a:hover {
-            text-decoration: underline;
-        }
-    `;
-    document.head.appendChild(style);
-
-    // ========== DEBUG / DEVELOPMENT HELPERS ==========
-
-    // For development: Add test buttons
-    if (window.location.hostname === 'localhost') {
-        const debugDiv = document.createElement('div');
-        debugDiv.style.cssText = `
-            position: fixed;
-            bottom: 10px;
-            left: 10px;
-            background: #f5f5f5;
-            padding: 10px;
-            border-radius: 5px;
-            font-size: 12px;
-            z-index: 9999;
-        `;
-
-        debugDiv.innerHTML = `
-            <strong>Dev Mode</strong><br>
-            API: ${API_BASE_URL}<br>
-            <button onclick="localStorage.clear(); location.reload();">Clear Storage</button>
-        `;
-
-        document.body.appendChild(debugDiv);
     }
 });
 
-// ========== GLOBAL AUTH HELPER FUNCTIONS ==========
+// ========== ГЛОБАЛЬНЫЕ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ АУТЕНТИФИКАЦИИ ==========
 
 /**
- * Get authentication headers for API requests
+ * Получить заголовки аутентификации для API запросов
  */
 function getAuthHeaders() {
     const token = localStorage.getItem('authToken');
@@ -527,7 +508,7 @@ function getAuthHeaders() {
 }
 
 /**
- * Check if user is authenticated
+ * Проверить, авторизован ли пользователь
  */
 function isAuthenticated() {
     const token = localStorage.getItem('authToken');
@@ -539,7 +520,7 @@ function isAuthenticated() {
 }
 
 /**
- * Logout function - clears auth data
+ * Функция выхода - очищает данные аутентификации
  */
 function logout() {
     localStorage.removeItem('authToken');
@@ -548,7 +529,7 @@ function logout() {
     window.location.href = '/pages/login/login.html';
 }
 
-// Make functions available globally
+// Делаем функции доступными глобально
 window.getAuthHeaders = getAuthHeaders;
 window.isAuthenticated = isAuthenticated;
 window.logout = logout;

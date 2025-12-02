@@ -368,6 +368,256 @@ footer {
     padding: 4rem 2rem;
     min-height: 90vh;
 }
+/* ===== Login/Register Specific Styles ===== */
+
+.login-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+    display: flex;
+    gap: 3rem;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 10px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+}
+
+.login-form,
+.register-form {
+    flex: 1;
+    margin: 0;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+}
+
+.login-form h3,
+.register-form h3 {
+    margin-bottom: 1.5rem;
+    color: #333;
+    font-size: 1.5rem;
+}
+
+.separator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin: 0;
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.separator::before,
+.separator::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: #ddd;
+    margin: 0 10px;
+}
+
+/* Form fields styling */
+.form-field {
+    margin-bottom: 1.2rem;
+}
+
+.form-field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #333;
+    font-size: 0.95rem;
+}
+
+.form-field label.required::after {
+    content: " *";
+    color: #f44336;
+}
+
+.form-field input {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.form-field input:focus {
+    outline: none;
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+.form-field input.error {
+    border-color: #f44336;
+    box-shadow: 0 0 5px rgba(244, 67, 54, 0.5);
+}
+
+.form-field input.success {
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
+/* Password field styling */
+.password-field {
+    position: relative;
+}
+
+.password-input-container {
+    position: relative;
+    width: 100%;
+}
+
+.password-input-container input {
+    padding-right: 45px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 4px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #666;
+    border-radius: 3px;
+    transition: background-color 0.2s;
+    z-index: 2;
+}
+
+.toggle-password:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+/* GDPR checkbox styling */
+.gdpr-checkbox {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: rgba(248, 248, 248, 0.8);
+    border-radius: 5px;
+    border: 1px solid #eee;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 0.8rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    color: #333;
+}
+
+.checkbox-label:last-child {
+    margin-bottom: 0;
+}
+
+.checkbox-label input[type="checkbox"] {
+    margin-right: 10px;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.checkbox-label a {
+    color: #0066cc;
+    text-decoration: none;
+    margin: 0 3px;
+}
+
+.checkbox-label a:hover {
+    text-decoration: underline;
+}
+
+.required-star {
+    color: #f44336;
+    margin-left: 2px;
+}
+
+/* Required note */
+.required-note {
+    font-size: 0.85em;
+    color: #666;
+    margin-top: 1.5rem;
+    text-align: center;
+    padding-top: 1rem;
+    border-top: 1px solid #eee;
+}
+
+/* Form row for first and last name */
+.form-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 1.2rem;
+}
+
+.form-row .form-field {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+/* Button styling */
+.login-form button,
+.register-form button {
+    width: 100%;
+    padding: 0.9rem;
+    background: linear-gradient(to right, purple, pink);
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 0.5rem;
+}
+
+.login-form button:hover,
+.register-form button:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.login-form button:disabled,
+.register-form button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Responsive adjustments for login */
+@media (max-width: 768px) {
+    .login-container {
+        flex-direction: column;
+        gap: 2rem;
+        padding: 1.5rem;
+    }
+
+    .login-form,
+    .register-form {
+        padding: 1.2rem;
+    }
+
+    .form-row {
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+
+    .separator {
+        margin: 1rem 0;
+    }
+}
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
