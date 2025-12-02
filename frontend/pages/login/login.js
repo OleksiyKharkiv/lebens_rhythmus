@@ -201,19 +201,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitBtn.textContent = 'Wird registriert...';
                 submitBtn.disabled = true;
 
-                // Подготавливаем запрос согласно структуре UserRegistrationDTO
                 const registrationData = {
                     email: email,
                     password: password,
                     firstName: firstName,
                     lastName: lastName,
-                    phone: '', // Необязательное поле
-                    birthDate: null, // Необязательное поле
-                    role: 'USER', // Роль по умолчанию
-                    address: '', // Необязательное
-                    city: '', // Необязательное
-                    zipCode: '', // Необязательное
-                    country: 'Deutschland', // По умолчанию
+                    phone: '',
+                    birthDate: null,
+                    role: 'USER', // Role by default
+                    address: '',
+                    city: '',
+                    zipCode: '',
+                    country: 'Deutschland',
                     acceptedTerms: true,
                     privacyPolicyAccepted: true
                 };

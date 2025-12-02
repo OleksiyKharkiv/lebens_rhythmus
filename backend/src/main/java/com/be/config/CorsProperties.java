@@ -14,6 +14,9 @@ public class CorsProperties {
 
     private List<String> allowedOrigins = Arrays.asList(
             "https://tlab29.com",
+            "http://tlab29.com",
+            "https://api.tlab29.com",
+            "http://api.tlab29.com",
             "http://localhost:3000",
             "http://localhost:8080"
     );
