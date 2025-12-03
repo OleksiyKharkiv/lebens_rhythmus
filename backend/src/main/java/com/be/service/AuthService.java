@@ -122,6 +122,10 @@ public class AuthService {
         }
 
         User user = userMapper.toEntity(registrationDTO);
+        user.setEnabled(true);
+        user.setFailedLoginAttempts(0);
+        user.setAcceptedTerms(Boolean.TRUE);
+        user.setPrivacyPolicyAccepted(Boolean.TRUE);
 
         // ensure server-side defaults (extra safety)
         if (user.getEnabled() == null) user.setEnabled(true);

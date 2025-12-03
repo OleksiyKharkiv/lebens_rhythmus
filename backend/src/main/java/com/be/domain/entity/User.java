@@ -47,7 +47,7 @@ public class User {
 
     // NOTE: some legacy DBs use column name "enable" — маппим явно и ставим NOT NULL
     @Builder.Default
-    @Column(name = "enable", nullable = false)
+    @Column(name = "enabled", nullable = false)
     private Boolean enabled = true;
 
     @Builder.Default
