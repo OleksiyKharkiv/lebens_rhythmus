@@ -31,7 +31,7 @@ public class AuthService {
     private final UserMapper userMapper;
 
     public AuthService(UserService userService,
-                       PasswordEncoder passwordEncoder,
+//                       PasswordEncoder passwordEncoder,
                        JwtUtils jwtUtils,
                        AuthenticationManager authenticationManager,
                        UserMapper userMapper) {
