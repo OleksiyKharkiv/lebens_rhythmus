@@ -18,7 +18,9 @@ public class CorsProperties {
             "https://api.tlab29.com",
             "http://api.tlab29.com",
             "http://localhost:3000",
-            "http://localhost:8080"
+            "http://localhost:8080",
+            "https://localhost:3000",
+            "https://localhost:8080"
     );
 
     private boolean allowCredentials = true;
