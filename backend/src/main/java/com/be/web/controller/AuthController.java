@@ -5,13 +5,19 @@ import com.be.web.dto.request.UserLoginRequestDTO;
 import com.be.web.dto.request.UserRegistrationDTO;
 import com.be.web.dto.response.UserLoginResponseDTO;
 import jakarta.validation.Valid;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "https://tlab29.com")
 public class AuthController {
+
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     private final AuthService authService;
 
@@ -19,14 +25,18 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<UserLoginResponseDTO> login(@Valid @RequestBody UserLoginRequestDTO loginRequest) {
+    @PostMapping(value = "/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserLoginResponseDTO> login(@Valid @RequestBody UserLoginRequestDTO loginRequest,
+                                                      HttpServletRequest request) {
+        log.debug("POST /api/auth/login Origin={}", request.getHeader("Origin"));
         UserLoginResponseDTO response = authService.authenticate(loginRequest);
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/register")
-    public ResponseEntity<UserLoginResponseDTO> register(@Valid @RequestBody UserRegistrationDTO registrationDTO) {
+    @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserLoginResponseDTO> register(@Valid @RequestBody UserRegistrationDTO registrationDTO,
+                                                         HttpServletRequest request) {
+        log.debug("POST /api/auth/register Origin={}", request.getHeader("Origin"));
         UserLoginResponseDTO response = authService.register(registrationDTO);
         return ResponseEntity.ok(response);
     }

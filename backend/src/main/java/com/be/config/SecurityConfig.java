@@ -1,5 +1,7 @@
 package com.be.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -19,11 +21,15 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(securedEnabled = true, jsr250Enabled = true)
 public class SecurityConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
     private final JwtAuthTokenFilter jwtAuthTokenFilter;
     private final CorsProperties corsProperties;
@@ -54,8 +60,29 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Allowed origins (moved to configuration)
-        configuration.setAllowedOrigins(corsProperties.getAllowedOrigins());
+        // Берём и нормализуем origins из свойств (trim + фильтр пустых)
+        List<String> allowedOrigins = corsProperties.getAllowedOrigins() == null
+                ? List.of()
+                : corsProperties.getAllowedOrigins().stream()
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+
+        List<String> allowedOriginPatterns = corsProperties.getAllowedOriginPatterns() == null
+                ? List.of()
+                : corsProperties.getAllowedOriginPatterns().stream()
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
+                .collect(Collectors.toList());
+
+        if (!allowedOrigins.isEmpty()) {
+            configuration.setAllowedOrigins(allowedOrigins);
+        }
+
+        // patterns дают гибкость для поддоменов (поддерживается начиная со Spring 5.3+)
+        if (!allowedOriginPatterns.isEmpty()) {
+            configuration.setAllowedOriginPatterns(allowedOriginPatterns);
+        }
 
         // Allowed HTTP methods
         configuration.setAllowedMethods(Arrays.asList(
@@ -100,6 +127,10 @@ public class SecurityConfig {
 
         // Apply CORS to all endpoints
         source.registerCorsConfiguration("/**", configuration);
+
+        // Логируем для отладки
+        log.info("CORS configuration loaded. allowedOrigins={}, allowedOriginPatterns={}, allowCredentials={}",
+                allowedOrigins, allowedOriginPatterns, corsProperties.isAllowCredentials());
 
         return source;
     }
