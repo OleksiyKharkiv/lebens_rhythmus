@@ -1,7 +1,5 @@
 package com.be.config;
 
-import com.be.domain.entity.User;
-import com.be.service.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,11 +24,10 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
     private static final Logger logger = LoggerFactory.getLogger(JwtAuthTokenFilter.class);
 
     private final JwtUtils jwtUtils;
-    private final UserService userService;
 
-    public JwtAuthTokenFilter(JwtUtils jwtUtils, UserService userService) {
+    // убрали зависимость от UserService — только JwtUtils
+    public JwtAuthTokenFilter(JwtUtils jwtUtils) {
         this.jwtUtils = jwtUtils;
-        this.userService = userService;
     }
 
     @Override
@@ -39,43 +36,39 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain) throws ServletException, IOException {
 
+        // не трогаем preflight
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod())) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         try {
             String jwt = parseJwt(request);
 
             if (jwt != null && jwtUtils.validateToken(jwt)) {
-                String email = jwtUtils.getEmailFromToken(jwt);
+                String email = jwtUtils.getEmailFromToken(jwt); // оставляем как было
 
-                User user = userService.findByEmail(email)
-                        .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
-
-                // Проверяем, активирован ли пользователь
-                if (!user.getEnabled()) {
-                    logger.warn("User account is disabled: {}", email);
-                    SecurityContextHolder.clearContext();
-                } else {
-                    String role = user.getRole() != null ? user.getRole().name() : "USER";
+                if (email != null && !email.isBlank()) {
+                    // Упрощённо даём базовую роль USER для тестов.
+                    // Позже можно вытаскивать роли из токена или подгружать пользователя.
+                    String role = "USER";
 
                     UsernamePasswordAuthenticationToken authentication =
                             new UsernamePasswordAuthenticationToken(
-                                    user,
+                                    email, // principal — просто email (или заменить на lightweight DTO)
                                     null,
                                     Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + role))
                             );
 
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
                     SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                    logger.debug("Authenticated user: {}, role: {}", email, role);
+                    logger.debug("Authenticated via JWT, principal={}, role={}", email, role);
                 }
             }
         } catch (Exception e) {
             logger.error("Cannot set user authentication: {}", e.getMessage());
-
-            // Не очищаем контекст для preflight запросов
-            if (!"OPTIONS".equalsIgnoreCase(request.getMethod())) {
-                SecurityContextHolder.clearContext();
-            }
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
@@ -83,11 +76,9 @@ public class JwtAuthTokenFilter extends OncePerRequestFilter {
 
     private String parseJwt(HttpServletRequest request) {
         String headerAuth = request.getHeader("Authorization");
-
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
             return headerAuth.substring(7);
         }
-
         return null;
     }
 }

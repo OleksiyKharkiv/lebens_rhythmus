@@ -31,16 +31,14 @@ public class SecurityConfig {
 
     private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
 
-    private final JwtAuthTokenFilter jwtAuthTokenFilter;
+    // убрал поле jwtAuthTokenFilter — будем получать его как параметр filterChain(...)
     private final CorsProperties corsProperties;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final JwtAccessDeniedHandler accessDeniedHandler;
 
-    public SecurityConfig(JwtAuthTokenFilter jwtAuthTokenFilter,
-                          CorsProperties corsProperties,
+    public SecurityConfig(CorsProperties corsProperties,
                           JwtAuthenticationEntryPoint authenticationEntryPoint,
                           JwtAccessDeniedHandler accessDeniedHandler) {
-        this.jwtAuthTokenFilter = jwtAuthTokenFilter;
         this.corsProperties = corsProperties;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.accessDeniedHandler = accessDeniedHandler;
@@ -60,7 +58,7 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Берём и нормализуем origins из свойств (trim + фильтр пустых)
+        // Нормализуем и подтягиваем origins/patterns
         List<String> allowedOrigins = corsProperties.getAllowedOrigins() == null
                 ? List.of()
                 : corsProperties.getAllowedOrigins().stream()
@@ -78,13 +76,10 @@ public class SecurityConfig {
         if (!allowedOrigins.isEmpty()) {
             configuration.setAllowedOrigins(allowedOrigins);
         }
-
-        // patterns дают гибкость для поддоменов (поддерживается начиная со Spring 5.3+)
         if (!allowedOriginPatterns.isEmpty()) {
             configuration.setAllowedOriginPatterns(allowedOriginPatterns);
         }
 
-        // Allowed HTTP methods
         configuration.setAllowedMethods(Arrays.asList(
                 HttpMethod.GET.name(),
                 HttpMethod.POST.name(),
@@ -95,7 +90,6 @@ public class SecurityConfig {
                 HttpMethod.HEAD.name()
         ));
 
-        // Allowed headers
         configuration.setAllowedHeaders(Arrays.asList(
                 "Authorization",
                 "Content-Type",
@@ -109,7 +103,6 @@ public class SecurityConfig {
                 "X-XSRF-TOKEN"
         ));
 
-        // Exposed headers to a client
         configuration.setExposedHeaders(Arrays.asList(
                 "Access-Control-Allow-Origin",
                 "Access-Control-Allow-Credentials",
@@ -117,71 +110,48 @@ public class SecurityConfig {
                 "Content-Disposition"
         ));
 
-        // Allow cookies/authorization
         configuration.setAllowCredentials(corsProperties.isAllowCredentials());
-
-        // Maximum preflight request cache time
         configuration.setMaxAge(corsProperties.getMaxAge());
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-
-        // Apply CORS to all endpoints
         source.registerCorsConfiguration("/**", configuration);
 
-        // Логируем для отладки
         log.info("CORS configuration loaded. allowedOrigins={}, allowedOriginPatterns={}, allowCredentials={}",
                 allowedOrigins, allowedOriginPatterns, corsProperties.isAllowCredentials());
 
         return source;
     }
 
+    /**
+     * SecurityFilterChain получает JwtAuthTokenFilter как параметр — это убирает цикл зависимостей.
+     */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthTokenFilter jwtAuthTokenFilter) throws Exception {
         return http
-                // Disable CSRF for REST API with JWT (using JWT instead of CSRF token)
                 .csrf(AbstractHttpConfigurer::disable)
-
-                // Enable CORS with the configuration above
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-
-                // Make session STATELESS for REST API
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-
-                // Request authorization setup
                 .authorizeHttpRequests(auth -> auth
-                        // Preflight requests (OPTIONS) allowed for all
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-
-                        // Public endpoints (no authentication)
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/public/**").permitAll()
                         .requestMatchers("/actuator/health").permitAll()
                         .requestMatchers("/actuator/info").permitAll()
                         .requestMatchers("/error").permitAll()
-
-                        // Authenticated user endpoints
                         .requestMatchers("/api/users/me/**").authenticated()
                         .requestMatchers("/api/dashboard/**").authenticated()
-
-                        // Admin-only endpoints
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/users", "/api/users/**").hasRole("ADMIN")
-
-                        // All other requests require authentication
                         .anyRequest().authenticated()
                 )
-
-                // Add JWT filter before standard authentication filter
+                // добавляем фильтр, который перед стандартной аутентификацией
                 .addFilterBefore(jwtAuthTokenFilter, UsernamePasswordAuthenticationFilter.class)
-
-                // Exception handling setup
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(authenticationEntryPoint)
                         .accessDeniedHandler(accessDeniedHandler)
                 )
-
                 .build();
     }
 }
