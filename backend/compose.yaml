@@ -1,17 +1,21 @@
 services:
   backend:
-    build: ./backend
-    image: ${REGISTRY}/lr-backend:latest
+    build: .
+    image: lr-backend:latest
     depends_on:
       - postgres
     ports:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
+    container_name: lr-postgres
     environment:
       POSTGRES_DB: ${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
