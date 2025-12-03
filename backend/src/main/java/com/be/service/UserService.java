@@ -43,12 +43,35 @@ public class UserService {
     }
 
     public User save(User user) {
+        // additionally ensure defaults before saving
+        normalizeDefaults(user);
         return userRepository.save(user);
     }
 
     public User createUser(User user) {
+        // Normalize, encode password and save
+        normalizeDefaults(user);
+
+        if (user.getPassword() == null) {
+            throw new IllegalArgumentException("Password must be provided");
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        // Set default role if not specified
+        if (user.getRole() == null) {
+            user.setRole(Role.USER);
+        }
+
         return userRepository.save(user);
+    }
+
+    private void normalizeDefaults(User user) {
+        if (user.getEnabled() == null) user.setEnabled(true);
+        if (user.getEmailVerified() == null) user.setEmailVerified(false);
+        if (user.getAcceptedTerms() == null) user.setAcceptedTerms(false);
+        if (user.getPrivacyPolicyAccepted() == null) user.setPrivacyPolicyAccepted(false);
+        if (user.getCreatedAt() == null) user.setCreatedAt(LocalDateTime.now());
+        if (user.getCountry() == null) user.setCountry("Deutschland");
     }
 
     public User updateUser(Long userId, UserUpdateDTO updateDTO) {
@@ -96,10 +119,9 @@ public class UserService {
 
         UserProfileDTO profileDTO = userMapper.toProfileDTO(user);
 
-        // Add statistics (implement these later)
-        profileDTO.setTotalOrders(0); // TODO: Implement order count
-        profileDTO.setActiveParticipants(0); // TODO: Implement participant count
-        profileDTO.setHasTeacherProfile(false); // TODO: Implement teacher profile check
+        profileDTO.setTotalOrders(0);
+        profileDTO.setActiveParticipants(0);
+        profileDTO.setHasTeacherProfile(false);
 
         return profileDTO;
     }
@@ -108,12 +130,10 @@ public class UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
 
-        // Verify current password
         if (!passwordEncoder.matches(currentPassword, user.getPassword())) {
             return false;
         }
 
-        // Update password
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         return true;
