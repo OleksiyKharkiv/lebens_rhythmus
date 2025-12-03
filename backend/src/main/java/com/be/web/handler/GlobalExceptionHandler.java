@@ -1,73 +1,87 @@
 package com.be.web.handler;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@RestControllerAdvice
+@ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
-    }
+    private final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<String> handleAccessDeniedException() {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access denied");
-    }
+    /**
+     * Единственный обработчик для ошибок валидации @Valid на теле запроса (DTO).
+     */
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+        Map<String, String> fieldErrors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .collect(Collectors.toMap(
+                        FieldError::getField,
+                        FieldError::getDefaultMessage,
+                        (existing, replacement) -> existing // keep first if duplicate
+                ));
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, String>> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
-        ex.getBindingResult().getAllErrors().forEach((error) -> {
-            String fieldName = ((FieldError) error).getField();
-            String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
-        });
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errors);
-    }
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<?> handleValidation(MethodArgumentNotValidException ex) {
         Map<String, Object> body = new HashMap<>();
-        body.put("timestamp", Instant.now());
         body.put("status", HttpStatus.BAD_REQUEST.value());
-        body.put("errors", ex.getBindingResult().getFieldErrors().stream()
-                .map(fe -> {
-                    assert fe.getDefaultMessage() != null;
-                    return Map.of("field", fe.getField(), "message", fe.getDefaultMessage());
-                })
-                .collect(Collectors.toList()));
-        return ResponseEntity.badRequest().body(body);
+        body.put("error", "Validation failed");
+        body.put("fieldErrors", fieldErrors);
+
+        log.debug("Validation failed: {}", fieldErrors);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<?> handleIllegalArgument(IllegalArgumentException ex) {
-        Map<String, Object> body = Map.of(
-                "timestamp", Instant.now(),
-                "status", HttpStatus.BAD_REQUEST.value(),
-                "error", ex.getMessage()
-        );
-        return ResponseEntity.badRequest().body(body);
+    /**
+     * Отдельный обработчик для ConstraintViolation (например, @Validated на параметрах запроса/path).
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
+        Map<String, String> violations = ex.getConstraintViolations()
+                .stream()
+                .collect(Collectors.toMap(
+                        v -> {
+                            String path = v.getPropertyPath().toString();
+                            return path.isEmpty() ? "constraint" : path;
+                        },
+                        ConstraintViolation::getMessage,
+                        (existing, replacement) -> existing
+                ));
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Constraint violation");
+        body.put("violations", violations);
+
+        log.debug("Constraint violations: {}", violations);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 
+    /**
+     * Fallback — ловит всё прочее и возвращает 500.
+     */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleAll(Exception ex) {
-        Map<String, Object> body = Map.of(
-                "timestamp", Instant.now(),
-                "status", HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "error", ex.getMessage()
-        );
+    public ResponseEntity<Map<String, Object>> handleAll(Exception ex) {
+        log.error("Unhandled exception: ", ex);
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
+        body.put("error", "Internal server error");
+        body.put("message", ex.getMessage());
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }
