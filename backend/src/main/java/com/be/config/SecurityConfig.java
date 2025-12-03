@@ -1,5 +1,7 @@
 package com.be.config;
 
+import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.Customizer;
@@ -10,6 +12,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -20,6 +24,13 @@ public class SecurityConfig {
     PasswordEncoder passwordEncoder() {          // ← вот этот бин
         return new BCryptPasswordEncoder();
     }
+    @Bean   // ← обязательно
+    JwtDecoder jwtDecoder(@Value("${JWT_SECRET}") String secret) {
+        return NimbusJwtDecoder.withSecretKey(
+                        Keys.hmacShaKeyFor(secret.getBytes()))
+                .build();
+    }
+
 
     @Bean
     SecurityFilterChain chain(HttpSecurity http) throws Exception {
@@ -33,7 +44,4 @@ public class SecurityConfig {
                 .oauth2ResourceServer(o -> o.jwt(Customizer.withDefaults()))
                 .build();
     }
-
-    /*  больше не создаём своего CorsConfigurationSource —
-        CORS задаётся в WebMvcConfig через CorsProperties        */
 }
