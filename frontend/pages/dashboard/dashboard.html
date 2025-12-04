@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-    <title>Lebens Rhythmus</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard – Lebens Rhythmus</title>
     <link rel="icon" type="image/x-icon" href="../../assets/favicon_io/favicon.ico">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="./dashboard.css">
 </head>
+
 <body>
 <main>
     <header>
@@ -14,50 +16,66 @@
             <a href="../home/index.html" class="logo-link">Lebens Rhythmus</a>
         </div>
         <nav>
-            <nav>
-                <a href="../home/index.html" class="nav-button">Startseite</a>
-                <a href="../about/about.html" class="nav-button">Über uns</a>
-                <a href="../activities/activities.html" class="nav-button">Aktivitäten</a>
-                <a href="../workshops/workshops.html" class="nav-button">Kurse/Workshops</a>
-                <a href="../performances/performances.html" class="nav-button">Aufführungen</a>
-                <a href="../corporate/corporate.html" class="nav-button">Für Unternehmen</a>
-                <a href="../feedback/feedback.html" class="nav-button">Feedback</a>
-                <a href="../contact/contact.html" class="nav-button">Kontakt</a>
-            </nav>
+            <a href="../home/index.html" class="nav-button">Startseite</a>
+            <a href="../activities/activities.html" class="nav-button">Aktivitäten</a>
+            <a href="../workshops/workshops.html" class="nav-button">Kurse/Workshops</a>
+            <a href="../performances/performances.html" class="nav-button">Aufführungen</a>
+            <a href="../feedback/feedback.html" class="nav-button">Feedback</a>
+            <a href="../contact/contact.html" class="nav-button">Kontakt</a>
         </nav>
         <nav>
-            <a href="../dashboard/dashboard.html" class="nav-button">Dashboard</a>
-            <a href="../login/login.html" class="nav-button">Login/Register</a>
+            <a href="../dashboard/dashboard.html" class="nav-button active">Dashboard</a>
+            <button class="nav-button" onclick="logout()">Logout</button>
         </nav>
         <div class="langs">
             <button class="active">DE</button>
             <button>EN</button>
             <button>UA</button>
         </div>
-
-        <!--Toggle mobile menu-->
         <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-
-        <!--Mobile menu-->
-        <div class="mobile-menu" id="mobileMenu" style="display: none;">
-            <a href="../home/index.html" class="nav-button">Startseite</a>
-            <a href="../about/about.html" class="nav-button">Über uns</a>
-            <a href="../activities/activities.html" class="nav-button">Aktivitäten</a>
-            <a href="../workshops/workshops.html" class="nav-button">Kurse/Workshops</a>
-            <a href="../performances/performances.html" class="nav-button">Aufführungen</a>
-            <a href="../corporate/corporate.html" class="nav-button">Für Unternehmen</a>
-            <a href="../feedback/feedback.html" class="nav-button">Feedback</a>
-            <a href="../contact/contact.html" class="nav-button">Kontakt</a>
-            <a href="../dashboard/dashboard.html" class="nav-button">Dashboard</a>
-            <a href="../login/login.html" class="nav-button">Login/Register</a>
-        </div>
     </header>
+
+    <!--Mobile menu-->
+    <div class="mobile-menu" id="mobileMenu" style="display: none;">
+        <a href="../home/index.html" class="nav-button">Startseite</a>
+        <a href="../activities/activities.html" class="nav-button">Aktivitäten</a>
+        <a href="../workshops/workshops.html" class="nav-button">Kurse/Workshops</a>
+        <a href="../performances/performances.html" class="nav-button">Aufführungen</a>
+        <a href="../feedback/feedback.html" class="nav-button">Feedback</a>
+        <a href="../contact/contact.html" class="nav-button">Kontakt</a>
+        <a href="../dashboard/dashboard.html" class="nav-button active">Dashboard</a>
+        <button class="nav-button" onclick="logout()">Logout</button>
+    </div>
+
+    <!--Hero section-->
+    <section class="hero dashboard-hero">
+        <h1>Dashboard</h1>
+        <p id="userGreeting">Hallo, <span class="userName">...</span>! Schön, dass du da bist.</p>
+
+        <!--MVP-навигация по будущим фичам-->
+        <nav class="dashboard-nav">
+            <a href="../workshops/workshops.html" class="btn-primary">Workshops</a>
+            <a href="../performances/performances.html" class="btn-secondary">Aufführungen</a>
+            <a href="../feedback/feedback.html" class="btn-secondary">Feedback</a>
+        </nav>
+        <!-- после героя -->
+        <section class="dashboard-section">
+            <h2>Meine Kurse</h2>
+            <ul id="myCoursesList" class="course-list">
+                <!-- заполняется dashboard.js -->
+            </ul>
+            <a href="../workshops/workshops.html" class="btn-text">Alle Kurse ansehen →</a>
+        </section>
+    </section>
+
+
+    <!--Скрипт только для логаута и вывода имени-->
     <script src="../../js/main.js"></script>
+    <script src="./dashboard.js"></script>
 </main>
+
 <footer>
-    <p>
-        © 2025 Lebens Rhythmus - <a href="../impressum/impressum.html">Impressum</a>
-    </p>
+    <p>© 2025 Lebens Rhythmus - <a href="../impressum/impressum.html">Impressum</a></p>
 </footer>
 </body>
 </html>
