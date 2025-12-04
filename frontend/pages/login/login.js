@@ -376,20 +376,12 @@ document.addEventListener('DOMContentLoaded', function() {
      * Перенаправить пользователя в зависимости от его роли
      */
     function redirectBasedOnRole(role) {
-        const basePath = window.location.origin + window.location.pathname.split('/pages/login')[0];
-
-        switch(role) {
-            case 'ADMIN':
-                window.location.href = `${basePath}/pages/admin/dashboard.html`;
-                break;
-            case 'TEACHER':
-                window.location.href = `${basePath}/pages/teacher/dashboard.html`;
-                break;
-            default: // USER
-                window.location.href = `${basePath}/pages/dashboard/dashboard.html`;
-        }
+        // относительный путь от login.html → dashboard.html
+        const target = role === 'ADMIN' ? '../admin/dashboard.html'
+            : role === 'TEACHER' ? '../teacher/dashboard.html'
+                : '../dashboard/dashboard.html';
+        location.href = target;
     }
-
     /**
      * Инициализация переключателей видимости пароля
      */
