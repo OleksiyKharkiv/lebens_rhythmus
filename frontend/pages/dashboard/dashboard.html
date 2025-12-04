@@ -11,42 +11,6 @@
 
 <body>
 <main>
-    <header>
-        <div class="logo">
-            <a href="../home/index.html" class="logo-link">Lebens Rhythmus</a>
-        </div>
-        <nav>
-            <a href="../home/index.html" class="nav-button">Startseite</a>
-            <a href="../activities/activities.html" class="nav-button">Aktivitäten</a>
-            <a href="../workshops/workshops.html" class="nav-button">Kurse/Workshops</a>
-            <a href="../performances/performances.html" class="nav-button">Aufführungen</a>
-            <a href="../feedback/feedback.html" class="nav-button">Feedback</a>
-            <a href="../contact/contact.html" class="nav-button">Kontakt</a>
-        </nav>
-        <nav>
-            <a href="../dashboard/dashboard.html" class="nav-button active">Dashboard</a>
-            <button class="nav-button" onclick="logout()">Logout</button>
-        </nav>
-        <div class="langs">
-            <button class="active">DE</button>
-            <button>EN</button>
-            <button>UA</button>
-        </div>
-        <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-    </header>
-
-    <!--Mobile menu-->
-    <div class="mobile-menu" id="mobileMenu" style="display: none;">
-        <a href="../home/index.html" class="nav-button">Startseite</a>
-        <a href="../activities/activities.html" class="nav-button">Aktivitäten</a>
-        <a href="../workshops/workshops.html" class="nav-button">Kurse/Workshops</a>
-        <a href="../performances/performances.html" class="nav-button">Aufführungen</a>
-        <a href="../feedback/feedback.html" class="nav-button">Feedback</a>
-        <a href="../contact/contact.html" class="nav-button">Kontakt</a>
-        <a href="../dashboard/dashboard.html" class="nav-button active">Dashboard</a>
-        <button class="nav-button" onclick="logout()">Logout</button>
-    </div>
-
     <!--Hero section-->
     <section class="hero dashboard-hero">
         <h1>Dashboard</h1>
@@ -71,11 +35,8 @@
 
     <!--Скрипт только для логаута и вывода имени-->
     <script src="../../js/main.js"></script>
-    <script src="./dashboard.js"></script>
+    <script src="../../js/partials-loader.js"></script>
+    <script src="../../js/dashboard.js"></script>
 </main>
-
-<footer>
-    <p>© 2025 Lebens Rhythmus - <a href="../impressum/impressum.html">Impressum</a></p>
-</footer>
 </body>
 </html>

@@ -1,14 +1,14 @@
 
 body {
     background: linear-gradient(rgba(255, 255, 255, .5), rgba(255, 255, 255, .5)),
-    url('../../assets/background_temp.jpg') center/cover fixed no-repeat;
+    url('../assets/background_temp.jpg') center/cover fixed no-repeat;
     min-height: 100vh;
 }
 
 /*========== DASHBOARD ==========*/
 .dashboard-hero {
     background: linear-gradient(rgba(255, 255, 255, .2), rgba(255, 255, 255, .2)),
-    url('../../assets/nord_sea.jpg') center/cover no-repeat;
+    url('../assets/nord_sea.jpg') center/cover no-repeat;
     color: #fff;
     text-align: center;
     /*top: 8vh;*/
