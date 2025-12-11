@@ -5,7 +5,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 10px 10px 10px;
+    padding: 30px 10px 10px;
     background:transparent;
     position: relative;
 }
@@ -47,7 +47,7 @@
 
 .impressum-header {
     background: linear-gradient(135deg, #6366f1, #8b5cf6);
-    padding: 20px;
+    padding: 30px;
     text-align: center;
     color: white;
 }
