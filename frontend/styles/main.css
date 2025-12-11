@@ -17,6 +17,7 @@ main {
     display: flex;
     flex-direction: column;
     flex: 1;
+    background: url("../assets/background_temp.jpg") center/cover no-repeat;");
 }
 
 header {
