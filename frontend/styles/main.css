@@ -362,6 +362,24 @@ footer {
     background-color: rgba(244, 244, 244, 0.5);
 }
 
+.footer-link {
+    color: #666;
+    text-decoration: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+
+.footer-link:hover {
+    color: #333;
+    background-color: rgba(0, 0, 0, 0.05);
+}
+
+.footer-link:first-child {
+    font-weight: 500;
+}
+
 .impressum {
     background: linear-gradient(135deg, #ffffff 0%, #f2f4f9 100%);
     color: #222;
