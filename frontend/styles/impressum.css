@@ -1,12 +1,12 @@
 /* Impressum Page Specific Styles */
 
 .impressum {
-    min-height: calc(100vh - 3.75rem - 3vh); /* Вычитаем высоту header (60px) и footer (3vh) */
+    min-height: calc(80vh - 3.75rem - 3vh); /* Вычитаем высоту header (60px) и footer (3vh) */
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 80px 20px 40px;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95)),
+    /*background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95)),*/
     url('../../assets/koln_rhein.jpg');
     background-size: cover;
     background-position: center;
@@ -21,7 +21,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: rgba(0, 0, 0, 0.3);
+    /*background: rgba(0, 0, 0, 0.3);*/
     z-index: 1;
 }
 
