@@ -1,0 +1,209 @@
+/* Impressum Page Specific Styles */
+
+.impressum {
+    min-height: calc(100vh - 3.75rem - 3vh); /* Вычитаем высоту header (60px) и footer (3vh) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 80px 20px 40px;
+    background: linear-gradient(135deg, rgba(99, 102, 241, 0.95), rgba(139, 92, 246, 0.95)),
+    url('../../assets/koln_rhein.jpg');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    position: relative;
+}
+
+.impressum::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 1;
+}
+
+.impressum-container {
+    position: relative;
+    z-index: 2;
+    max-width: 800px;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.98);
+    backdrop-filter: blur(10px);
+    border-radius: 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: fadeInUp 0.8s ease-out;
+    margin: 20px auto;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.impressum-header {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    padding: 40px;
+    text-align: center;
+    color: white;
+}
+
+.impressum-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+    letter-spacing: -0.5px;
+}
+
+.impressum-header .subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+.impressum .content {
+    padding: 40px;
+}
+
+.impressum .info-block {
+    margin-bottom: 30px;
+    padding: 25px;
+    background: #f8fafc;
+    border-radius: 12px;
+    border-left: 4px solid #6366f1;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.impressum .info-block:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+.impressum .info-block h2 {
+    color: #6366f1;
+    font-size: 1.3rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.impressum .info-block h2::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: #6366f1;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.impressum .info-block p {
+    color: #475569;
+    font-size: 1rem;
+    line-height: 1.8;
+    margin-bottom: 8px;
+}
+
+.impressum .info-block strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.impressum .contact-link {
+    color: #6366f1;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+    border-bottom: 2px solid transparent;
+}
+
+.impressum .contact-link:hover {
+    color: #4f46e5;
+    border-bottom-color: #4f46e5;
+}
+
+.impressum .divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+    margin: 30px 0;
+}
+
+.impressum .footer-note {
+    text-align: center;
+    padding: 25px 40px;
+    background: #f1f5f9;
+    color: #64748b;
+    font-size: 0.9rem;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Responsive Design для Impressum */
+
+@media (max-width: 768px) {
+    .impressum {
+        padding: 100px 15px 40px;
+        min-height: auto;
+    }
+
+    .impressum-container {
+        margin: 10px auto;
+    }
+
+    .impressum-header h1 {
+        font-size: 2rem;
+    }
+
+    .impressum-header {
+        padding: 30px 25px;
+    }
+
+    .impressum .content {
+        padding: 30px 25px;
+    }
+
+    .impressum .info-block {
+        padding: 20px;
+        margin-bottom: 25px;
+    }
+
+    .impressum .info-block h2 {
+        font-size: 1.15rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .impressum {
+        padding: 90px 10px 30px;
+    }
+
+    .impressum-header h1 {
+        font-size: 1.75rem;
+    }
+
+    .impressum-header .subtitle {
+        font-size: 1rem;
+    }
+
+    .impressum .content {
+        padding: 25px 20px;
+    }
+
+    .impressum .info-block {
+        padding: 18px;
+        margin-bottom: 20px;
+    }
+
+    .impressum .footer-note {
+        padding: 20px 25px;
+    }
+}
