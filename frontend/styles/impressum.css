@@ -6,7 +6,7 @@
     align-items: center;
     justify-content: center;
     padding: 30px 10px 10px;
-    background:transparent;
+    background: transparent;
     position: relative;
 }
 
@@ -142,6 +142,21 @@
     border-top: 1px solid #e2e8f0;
 }
 
+.print-button-container {
+    text-align: right;
+    margin-bottom: 20px;
+}
+
+.print-button {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
 /* Responsive Design для Impressum */
 
 @media (max-width: 768px) {
@@ -201,21 +216,28 @@
     .impressum .footer-note {
         padding: 20px 25px;
     }
-    .legal-actions { margin: 1.2rem 0 2rem; }
+
+    .legal-actions {
+        margin: 1.2rem 0 2rem;
+    }
+
     .legal-actions button,
     .legal-actions .btn-download {
-        display:inline-block;
-        padding:.6rem 1.2rem;
-        margin-right:.8rem;
-        background:#004643;
-        color:#fff;
-        border:none;
-        border-radius:4px;
-        text-decoration:none;
-        font-size:1rem;
-        cursor:pointer;
-        transition:background .2s;
+        display: inline-block;
+        padding: .6rem 1.2rem;
+        margin-right: .8rem;
+        background: #004643;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: background .2s;
     }
+
     .legal-actions button:hover,
-    .legal-actions .btn-download:hover { background:#023436; }
+    .legal-actions .btn-download:hover {
+        background: #023436;
+    }
 }
