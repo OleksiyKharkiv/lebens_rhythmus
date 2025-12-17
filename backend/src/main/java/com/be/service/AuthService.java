@@ -25,10 +25,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
-    /**
-     * Аутентификация БЕЗ AuthenticationManager – сами сверяем пароль.
-     * Счётчики неудач / блокировка остаются.
-     */
     public UserLoginResponseDTO authenticate(UserLoginRequestDTO dto) {
         Optional<User> maybeUser = userService.findByEmail(dto.getEmail());
         if (maybeUser.isEmpty()) {
@@ -40,7 +36,7 @@ public class AuthService {
             throw new RuntimeException("Account locked. Try again later.");
         }
 
-        // ➜ САМИ проверяем пароль
+        // ➜ We verify the password ourselves
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             userService.incrementFailedLoginAttempts(user.getEmail());
             throw new BadCredentialsException("Invalid credentials");
