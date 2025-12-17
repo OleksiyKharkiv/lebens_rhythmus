@@ -3,13 +3,14 @@ package com.be.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
 @Table(name = "age_groups")
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class AgeGroup {
@@ -27,11 +28,12 @@ public class AgeGroup {
     private String titleUa;
 
     @Column(nullable = false)
-    private Integer minAge;
+    private int minAge;
 
     @Column(nullable = false)
-    private Integer maxAge;
+    private int maxAge;
 
+    @Builder.Default
     @OneToMany(mappedBy = "ageGroup")
-    private Set<Group> groups;
+    private Set<Group> groups = new HashSet<>();
 }

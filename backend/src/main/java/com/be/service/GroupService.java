@@ -98,15 +98,13 @@ public class GroupService {
 
     @Transactional(readOnly = true)
     public List<Group> findByActivityId(Long activityId) {
-        Activity activity = new Activity();
-        activity.setId(activityId);
+        Activity activity = Activity.builder().id(activityId).build();
         return groupRepository.findByActivity(activity);
     }
 
     @Transactional(readOnly = true)
     public List<Group> findByTeacherId(Long teacherId) {
-        Teacher teacher = new Teacher();
-        teacher.setId(teacherId);
+        Teacher teacher = Teacher.builder().id(teacherId).build();
         return groupRepository.findByTeacher(teacher);
     }
 }

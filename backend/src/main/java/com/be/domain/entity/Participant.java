@@ -3,15 +3,14 @@ package com.be.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
-import java.time.LocalDateTime;
-
+import java.time.LocalDate;
 import static jakarta.persistence.FetchType.LAZY;
 
 @Entity
 @Table(name = "participants")
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class Participant {
@@ -32,11 +31,13 @@ public class Participant {
     private String phone;
 
     @Column(nullable = false)
-    private LocalDateTime birthDate;
+    private LocalDate birthDate;
 
-    @ManyToOne(fetch = LAZY)
+    @ManyToOne(fetch = LAZY, optional = false)
+    @JoinColumn(name = "group_id", nullable = false)
     private Group group;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 }

@@ -3,6 +3,7 @@ package com.be.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -10,7 +11,7 @@ import java.util.Set;
 @Builder
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class Teacher {
     @Id
@@ -32,6 +33,7 @@ public class Teacher {
     @Column(nullable = false)
     private String title;
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean approved = false;
 
@@ -44,9 +46,11 @@ public class Teacher {
     @Column(columnDefinition = "TEXT")
     private String bioUa;
 
+    @Builder.Default
     @OneToMany(mappedBy = "teacher")
-    private Set<Group> groups;
+    private Set<Group> groups = new HashSet<>();
 
+    @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
 }

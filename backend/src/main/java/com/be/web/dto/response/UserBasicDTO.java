@@ -16,5 +16,5 @@ public class UserBasicDTO {
     private String firstName;
     private String lastName;
     private Role role;
-    private Boolean enabled;
+    private boolean enabled;
 }

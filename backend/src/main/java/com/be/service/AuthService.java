@@ -1,5 +1,6 @@
 package com.be.service;
 
+import com.be.config.JwtUtils;
 import com.be.domain.entity.User;
 import com.be.web.dto.request.UserLoginRequestDTO;
 import com.be.web.dto.request.UserRegistrationDTO;
@@ -24,6 +25,7 @@ public class AuthService {
     private final UserService userService;
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
+    private final JwtUtils jwtUtils;
 
     public UserLoginResponseDTO authenticate(UserLoginRequestDTO dto) {
         Optional<User> maybeUser = userService.findByEmail(dto.getEmail());
@@ -36,7 +38,6 @@ public class AuthService {
             throw new RuntimeException("Account locked. Try again later.");
         }
 
-        // ➜ We verify the password ourselves
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             userService.incrementFailedLoginAttempts(user.getEmail());
             throw new BadCredentialsException("Invalid credentials");
@@ -44,8 +45,10 @@ public class AuthService {
 
         userService.resetFailedLoginAttempts(user.getEmail());
 
-        // ➜ Токен теперь выдаёт Spring Security (контроллер обернёт в JWT)
-        return userMapper.toLoginResponseDTO(user, null, 86400L,
+        String token = jwtUtils.generateToken(user);
+        long expiresInSec = jwtUtils.getExpirationTime();
+
+        return userMapper.toLoginResponseDTO(user, token, expiresInSec,
                 Collections.emptyList(), Collections.emptyList());
     }
 
@@ -63,8 +66,11 @@ public class AuthService {
         user.setPrivacyPolicyAccepted(true);
 
         User saved = userService.createUser(user);
-        // ➜ Токен выдаст Spring Security после успешной аутентификации
-        return userMapper.toLoginResponseDTO(saved, null, 86400L,
+
+        String token = jwtUtils.generateToken(saved);
+        long expiresInSec = jwtUtils.getExpirationTime();
+
+        return userMapper.toLoginResponseDTO(saved, token, expiresInSec,
                 Collections.emptyList(), Collections.emptyList());
     }
 }

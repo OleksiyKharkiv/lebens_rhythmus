@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 public class UserMapper {
 
     public User toEntity(UserRegistrationDTO dto) {
-        return User.builder().email(dto.getEmail()).password(dto.getPassword()).firstName(dto.getFirstName()).lastName(dto.getLastName()).phone(dto.getPhone()).birthDate(dto.getBirthDate()).role(dto.getRole()).address(dto.getAddress()).city(dto.getCity()).zipCode(dto.getZipCode()).country(dto.getCountry()).acceptedTerms(dto.getAcceptedTerms()).privacyPolicyAccepted(dto.getPrivacyPolicyAccepted()).build();
+        return User.builder().email(dto.getEmail()).password(dto.getPassword()).firstName(dto.getFirstName()).lastName(dto.getLastName()).phone(dto.getPhone()).birthDate(dto.getBirthDate()).role(dto.getRole()).address(dto.getAddress()).city(dto.getCity()).zipCode(dto.getZipCode()).country(dto.getCountry()).acceptedTerms(dto.isAcceptedTerms()).privacyPolicyAccepted(dto.isPrivacyPolicyAccepted()).build();
     }
 
     public void updateEntityFromDTO(UserUpdateDTO dto, User user) {
@@ -39,11 +39,11 @@ public class UserMapper {
     }
 
     public UserProfileDTO toProfileDTO(User user) {
-        return UserProfileDTO.builder().id(user.getId()).email(user.getEmail()).firstName(user.getFirstName()).lastName(user.getLastName()).phone(user.getPhone()).birthDate(user.getBirthDate()).role(user.getRole()).address(user.getAddress()).city(user.getCity()).zipCode(user.getZipCode()).country(user.getCountry()).title(user.getTitle()).bio(user.getBio()).enabled(user.getEnabled()).emailVerified(user.getEmailVerified()).termsAcceptedAt(user.getTermsAcceptedAt()).privacyPolicyAcceptedAt(user.getPrivacyPolicyAcceptedAt()).createdAt(user.getCreatedAt()).updatedAt(user.getUpdatedAt()).build();
+        return UserProfileDTO.builder().id(user.getId()).email(user.getEmail()).firstName(user.getFirstName()).lastName(user.getLastName()).phone(user.getPhone()).birthDate(user.getBirthDate()).role(user.getRole()).address(user.getAddress()).city(user.getCity()).zipCode(user.getZipCode()).country(user.getCountry()).title(user.getTitle()).bio(user.getBio()).enabled(user.isEnabled()).emailVerified(user.isEmailVerified()).termsAcceptedAt(user.getTermsAcceptedAt()).privacyPolicyAcceptedAt(user.getPrivacyPolicyAcceptedAt()).createdAt(user.getCreatedAt()).updatedAt(user.getUpdatedAt()).build();
     }
 
     public UserBasicDTO toBasicDTO(User user) {
-        return UserBasicDTO.builder().id(user.getId()).email(user.getEmail()).firstName(user.getFirstName()).lastName(user.getLastName()).role(user.getRole()).enabled(user.getEnabled()).build();
+        return UserBasicDTO.builder().id(user.getId()).email(user.getEmail()).firstName(user.getFirstName()).lastName(user.getLastName()).role(user.getRole()).enabled(user.isEnabled()).build();
     }
 
     public List<UserBasicDTO> toBasicDTOList(List<User> users) {

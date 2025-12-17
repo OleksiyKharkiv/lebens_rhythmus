@@ -16,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 public class UserLoginResponseDTO {
     private String token;
+    @Builder.Default
     private String tokenType = "Bearer";
     private Long expiresIn; // in seconds
     //    Basic user info

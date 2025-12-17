@@ -43,13 +43,12 @@ public class UserService {
     }
 
     public User save(User user) {
-        // additionally ensure defaults before saving
+        // ensure defaults for timestamps and country only
         normalizeDefaults(user);
         return userRepository.save(user);
     }
 
     public User createUser(User user) {
-        // Normalize, encode password and save
         normalizeDefaults(user);
 
         if (user.getPassword() == null) {
@@ -57,7 +56,6 @@ public class UserService {
         }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
-        // Set default role if not specified
         if (user.getRole() == null) {
             user.setRole(Role.USER);
         }
@@ -66,12 +64,9 @@ public class UserService {
     }
 
     private void normalizeDefaults(User user) {
-        if (user.getEnabled() == null) user.setEnabled(true);
-        if (user.getEmailVerified() == null) user.setEmailVerified(false);
-        if (user.getAcceptedTerms() == null) user.setAcceptedTerms(false);
-        if (user.getPrivacyPolicyAccepted() == null) user.setPrivacyPolicyAccepted(false);
         if (user.getCreatedAt() == null) user.setCreatedAt(LocalDateTime.now());
         if (user.getCountry() == null) user.setCountry("Deutschland");
+        // boolean поля теперь примитивные, null-проверки не нужны
     }
 
     public User updateUser(Long userId, UserUpdateDTO updateDTO) {
@@ -83,7 +78,6 @@ public class UserService {
     }
 
     public void deleteUser(Long userId) {
-        // Soft delete - deactivate instead of hard delete for GDPR compliance
         userRepository.deactivateUser(userId);
     }
 
@@ -92,7 +86,6 @@ public class UserService {
     public void incrementFailedLoginAttempts(String email) {
         userRepository.incrementFailedLoginAttempts(email);
 
-        // Check if we need to lock the account
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found"));
 

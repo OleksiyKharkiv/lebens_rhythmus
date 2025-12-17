@@ -10,7 +10,7 @@ import java.util.Set;
 @Table(name = "activities")
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class Activity {

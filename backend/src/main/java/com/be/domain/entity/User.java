@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 })
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class User {
@@ -46,18 +46,18 @@ public class User {
     private LocalDateTime lockUntil;
 
     @Builder.Default
-    @Column(name = "enabled", nullable = false)
-    private Boolean enabled = true;
+    @Column(nullable = false)
+    private boolean enabled = true;
 
     @Builder.Default
-    private Boolean emailVerified = false;
+    private boolean emailVerified = false;
 
-    // GDPR accept
+    // GDPR
     @Builder.Default
-    private Boolean acceptedTerms = false;
+    private boolean acceptedTerms = false;
 
     @Builder.Default
-    private Boolean privacyPolicyAccepted = false;
+    private boolean privacyPolicyAccepted = false;
 
     private LocalDateTime termsAcceptedAt;
     private LocalDateTime privacyPolicyAcceptedAt;
@@ -86,15 +86,8 @@ public class User {
 
     @PrePersist
     protected void onCreate() {
-        if (createdAt == null) createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
-
-        // ensure not-null booleans in case builder or mapper omitted them
-        if (enabled == null) enabled = true;
-        if (emailVerified == null) emailVerified = false;
-        if (acceptedTerms == null) acceptedTerms = false;
-        if (privacyPolicyAccepted == null) privacyPolicyAccepted = false;
-        if (country == null) country = "Deutschland";
+        createdAt = LocalDateTime.now();
+        updatedAt = createdAt;
     }
 
     @PreUpdate

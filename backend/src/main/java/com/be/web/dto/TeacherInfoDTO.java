@@ -13,6 +13,6 @@ public class TeacherInfoDTO {
     private Long id;
     private String title;
     private String bio;
-    private Boolean approved;
+    private boolean approved;
     private Long userId;
 }
