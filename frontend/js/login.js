@@ -1,29 +1,27 @@
 /**
  * Login/Registration Page Script for Lebens Rhythmus
- * Интеграция с Spring Boot бэкендом с использованием JWT аутентификации
+ * JWT-based authentication with full UX feedback
  */
 
-document.addEventListener('DOMContentLoaded', function() {
-    // ========== КОНФИГУРАЦИЯ ==========
+document.addEventListener('DOMContentLoaded', function () {
+
+    // ========== CONFIG ==========
     const API_BASE_URL = window.location.hostname === 'localhost'
         ? 'http://localhost:8080/api'
         : 'https://api.tlab29.com/api';
 
     const ENDPOINTS = {
         LOGIN: `${API_BASE_URL}/auth/login`,
-        REGISTER: `${API_BASE_URL}/auth/register`,
-        VERIFY_TOKEN: `${API_BASE_URL}/auth/verify-token`
+        REGISTER: `${API_BASE_URL}/auth/register`
     };
 
-    // ========== ДОМ ЭЛЕМЕНТЫ ==========
+    // ========== DOM ==========
     const loginForm = document.getElementById('loginForm');
     const registerForm = document.getElementById('registerForm');
 
-    // Элементы формы логина
     const loginEmail = document.getElementById('loginEmail');
     const loginPassword = document.getElementById('loginPassword');
 
-    // Элементы формы регистрации
     const registerFirstName = document.getElementById('registerFirstName');
     const registerLastName = document.getElementById('registerLastName');
     const registerEmail = document.getElementById('registerEmail');
@@ -32,495 +30,230 @@ document.addEventListener('DOMContentLoaded', function() {
     const acceptTerms = document.getElementById('acceptTerms');
     const acceptPrivacy = document.getElementById('acceptPrivacy');
 
-    // ========== ПРОВЕРКА СТАТУСА АУТЕНТИФИКАЦИИ ==========
+    const notificationsContainer = createNotificationContainer();
+
+    // ========== AUTH CHECK ==========
     checkAuthStatus();
 
-    // ========== ОБРАБОТЧИК ФОРМЫ ЛОГИНА ==========
+    // ========== PASSWORD TOGGLE ==========
+    document.querySelectorAll('.toggle-password').forEach(btn => {
+        btn.addEventListener('click', function () {
+            const targetId = btn.dataset.target;
+            const input = document.getElementById(targetId);
+            if (input.type === 'password') input.type = 'text';
+            else input.type = 'password';
+        });
+    });
+
+    // ========== LOGIN ==========
     if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
+        loginForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
             const email = loginEmail.value.trim();
             const password = loginPassword.value;
 
-            // Валидация на фронтенде
             if (!validateEmail(email)) {
                 showNotification('Bitte geben Sie eine gültige E-Mail-Adresse ein.', 'error');
-                highlightField(loginEmail, 'error');
                 return;
             }
-
             if (password.length < 6) {
                 showNotification('Passwort muss mindestens 6 Zeichen lang sein.', 'error');
-                highlightField(loginPassword, 'error');
                 return;
             }
 
+            const btn = loginForm.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Wird eingeloggt...';
+
             try {
-                // Отключаем кнопку во время запроса
-                const submitBtn = loginForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = 'Wird eingeloggt...';
-                submitBtn.disabled = true;
-
-                // Подготавливаем запрос согласно структуре UserLoginRequestDTO
-                const loginData = {
-                    email: email,
-                    password: password
-                };
-
                 const response = await fetch(ENDPOINTS.LOGIN, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(loginData)
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email, password})
                 });
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    // Сохраняем токен и данные пользователя согласно UserLoginResponseDTO
-                    localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('userData', JSON.stringify({
-                        id: data.id,
-                        email: data.email,
-                        firstName: data.firstName,
-                        lastName: data.lastName,
-                        role: data.role,
-                        participants: data.participants || [],
-                        teachers: data.teachers || []
-                    }));
-
-                    // Сохраняем время истечения токена
-                    const expiryTime = Date.now() + (data.expiresIn || 86400000);
-                    localStorage.setItem('tokenExpiry', expiryTime.toString());
-
-                    showNotification('Erfolgreich eingeloggt! Willkommen zurück!', 'success');
-
-                    // Перенаправляем на dashboard в зависимости от роли
-                    setTimeout(() => {
-                        redirectBasedOnRole(data.role);
-                    }, 1500);
-
-                } else {
-                    // Обрабатываем конкретные случаи ошибок
-                    if (response.status === 401) {
-                        showNotification('Ungültige Anmeldedaten. Bitte überprüfen Sie Email und Passwort.', 'error');
-                    } else if (response.status === 423) {
-                        showNotification('Konto gesperrt. Zu viele fehlgeschlagene Versuche. Bitte versuchen Sie es später.', 'error');
-                    } else {
-                        showNotification(data.message || 'Login fehlgeschlagen. Bitte versuchen Sie es erneut.', 'error');
-                    }
+                if (!response.ok) {
+                    showNotification(data.message || 'Login fehlgeschlagen.', 'error');
+                    return;
                 }
 
-            } catch (error) {
-                console.error('Login error:', error);
-                showNotification('Netzwerkfehler. Bitte überprüfen Sie Ihre Internetverbindung.', 'error');
+                persistAuth(data);
+                showNotification('Erfolgreich eingeloggt!', 'success');
+                redirectBasedOnRole(data.role);
+
+            } catch (err) {
+                console.error(err);
+                showNotification('Netzwerkfehler.', 'error');
             } finally {
-                // Включаем кнопку обратно
-                const submitBtn = loginForm.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.textContent = 'Login';
-                    submitBtn.disabled = false;
-                }
+                btn.disabled = false;
+                btn.textContent = 'Login';
             }
         });
     }
 
-    // ========== ОБРАБОТЧИК ФОРМЫ РЕГИСТРАЦИИ ==========
+    // ========== REGISTER ==========
     if (registerForm) {
-        registerForm.addEventListener('submit', async function(e) {
+        registerForm.addEventListener('submit', async function (e) {
             e.preventDefault();
 
-            const firstName = registerFirstName.value.trim();
-            const lastName = registerLastName.value.trim();
-            const email = registerEmail.value.trim();
-            const password = registerPassword.value;
-            const confirmPassword = registerConfirmPassword.value;
-
-            // Валидация
-            let isValid = true;
-
-            if (!firstName || firstName.length < 2) {
-                showNotification('Bitte geben Sie einen gültigen Vornamen ein (mindestens 2 Zeichen).', 'error');
-                highlightField(registerFirstName, 'error');
-                isValid = false;
-            } else {
-                highlightField(registerFirstName, 'success');
+            if (!acceptTerms.checked || !acceptPrivacy.checked) {
+                showNotification('Bitte akzeptieren Sie alle Bedingungen.', 'error');
+                return;
             }
 
-            if (!lastName || lastName.length < 2) {
-                showNotification('Bitte geben Sie einen gültigen Nachnamen ein (mindestens 2 Zeichen).', 'error');
-                highlightField(registerLastName, 'error');
-                isValid = false;
-            } else {
-                highlightField(registerLastName, 'success');
-            }
-
-            if (!validateEmail(email)) {
-                showNotification('Bitte geben Sie eine gültige E-Mail-Adresse ein.', 'error');
-                highlightField(registerEmail, 'error');
-                isValid = false;
-            } else {
-                highlightField(registerEmail, 'success');
-            }
-
-            if (password.length < 6) {
-                showNotification('Passwort muss mindestens 6 Zeichen lang sein.', 'error');
-                highlightField(registerPassword, 'error');
-                isValid = false;
-            } else {
-                highlightField(registerPassword, 'success');
-            }
-
-            if (password !== confirmPassword) {
+            if (registerPassword.value !== registerConfirmPassword.value) {
                 showNotification('Passwörter stimmen nicht überein.', 'error');
-                highlightField(registerConfirmPassword, 'error');
-                isValid = false;
-            } else if (password.length >= 6) {
-                highlightField(registerConfirmPassword, 'success');
+                return;
             }
 
-            if (!acceptTerms.checked) {
-                showNotification('Bitte akzeptieren Sie die Allgemeinen Geschäftsbedingungen.', 'error');
-                isValid = false;
-            }
-
-            if (!acceptPrivacy.checked) {
-                showNotification('Bitte akzeptieren Sie die Datenschutzbestimmungen.', 'error');
-                isValid = false;
-            }
-
-            if (!isValid) return;
+            const btn = registerForm.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.textContent = 'Wird registriert...';
 
             try {
-                // Отключаем кнопку во время запроса
-                const submitBtn = registerForm.querySelector('button[type="submit"]');
-                const originalText = submitBtn.textContent;
-                submitBtn.textContent = 'Wird registriert...';
-                submitBtn.disabled = true;
-
-                const registrationData = {
-                    email: email,
-                    password: password,
-                    firstName: firstName,
-                    lastName: lastName,
-                    phone: '',
-                    birthDate: null,
-                    role: 'USER', // Role by default
-                    address: '',
-                    city: '',
-                    zipCode: '',
-                    country: 'Deutschland',
-                    acceptedTerms: true,
-                    privacyPolicyAccepted: true
+                const payload = {
+                    firstName: registerFirstName.value.trim(),
+                    lastName: registerLastName.value.trim(),
+                    email: registerEmail.value.trim(),
+                    password: registerPassword.value
                 };
 
                 const response = await fetch(ENDPOINTS.REGISTER, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(registrationData)
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
                 });
 
                 const data = await response.json();
 
-                if (response.ok) {
-                    // Автоматический логин после успешной регистрации
-                    localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('userData', JSON.stringify({
-                        id: data.id,
-                        email: data.email,
-                        firstName: data.firstName,
-                        lastName: data.lastName,
-                        role: data.role
-                    }));
-
-                    const expiryTime = Date.now() + (data.expiresIn || 86400000);
-                    localStorage.setItem('tokenExpiry', expiryTime.toString());
-
-                    showNotification('Registrierung erfolgreich! Willkommen bei Lebens Rhythmus!', 'success');
-
-                    // Очищаем форму регистрации
-                    registerForm.reset();
-
-                    // Перенаправляем в зависимости от роли
-                    setTimeout(() => {
-                        redirectBasedOnRole(data.role);
-                    }, 2000);
-
-                } else {
-                    if (response.status === 409) {
-                        showNotification('Diese E-Mail-Adresse ist bereits registriert.', 'error');
-                    } else {
-                        showNotification(data.message || 'Registrierung fehlgeschlagen. Bitte versuchen Sie es erneut.', 'error');
-                    }
+                if (!response.ok) {
+                    showNotification(data.message || 'Registrierung fehlgeschlagen.', 'error');
+                    return;
                 }
 
-            } catch (error) {
-                console.error('Registration error:', error);
-                showNotification('Netzwerkfehler. Bitte überprüfen Sie Ihre Internetverbindung.', 'error');
+                persistAuth(data);
+                showNotification('Registrierung erfolgreich!', 'success');
+                redirectBasedOnRole(data.role);
+
+            } catch (err) {
+                console.error(err);
+                showNotification('Netzwerkfehler.', 'error');
             } finally {
-                // Включаем кнопку обратно
-                const submitBtn = registerForm.querySelector('button[type="submit"]');
-                if (submitBtn) {
-                    submitBtn.textContent = 'Registrieren';
-                    submitBtn.disabled = false;
-                }
+                btn.disabled = false;
+                btn.textContent = 'Registrieren';
             }
         });
     }
 
-    // ========== ИНИЦИАЛИЗАЦИЯ ДОПОЛНИТЕЛЬНЫХ ФУНКЦИЙ ==========
+    // ========== HELPERS ==========
+    function checkAuthStatus() {
+        if (!isAuthenticated()) {
+            clearAuthData();
+            return;
+        }
 
-    // Инициализация переключателей видимости пароля
-    initPasswordToggles();
+        const raw = localStorage.getItem('userData');
+        if (!raw) {
+            clearAuthData();
+            return;
+        }
 
-    // Настройка валидации форм в реальном времени
-    setupRealTimeValidation();
-
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
-
-    /**
-     * Проверка статуса аутентификации и перенаправление, если уже авторизован
-     */
-    async function checkAuthStatus() {
-        const token = localStorage.getItem('authToken');
-        const expiry = localStorage.getItem('tokenExpiry');
-
-        if (token && expiry && Date.now() < parseInt(expiry)) {
-            // Токен существует и не истек
-            try {
-                // Проверяем токен с бэкендом
-                const response = await fetch(`${API_BASE_URL}/users/me`, {
-                    method: 'GET',
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
-
-                if (response.ok) {
-                    // Пользователь авторизован, перенаправляем на dashboard
-                    const userData = JSON.parse(localStorage.getItem('userData') || '{}');
-                    redirectBasedOnRole(userData.role || 'USER');
-                } else {
-                    // Токен недействителен, очищаем хранилище
-                    clearAuthData();
-                }
-            } catch (error) {
-                console.error('Token verification error:', error);
-                // Оставляем пользователя на странице логина при ошибке
-            }
-        } else {
-            // Токен истек или не существует
+        try {
+            const user = JSON.parse(raw);
+            redirectBasedOnRole(user.role || 'USER');
+        } catch {
             clearAuthData();
         }
     }
 
-    /**
-     * Очистка данных аутентификации из localStorage
-     */
+    function persistAuth(data) {
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('userData', JSON.stringify({
+            id: data.id,
+            email: data.email,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            role: data.role
+        }));
+        localStorage.setItem('tokenExpiry', (Date.now() + data.expiresIn * 1000).toString());
+    }
+
     function clearAuthData() {
         localStorage.removeItem('authToken');
         localStorage.removeItem('userData');
         localStorage.removeItem('tokenExpiry');
     }
 
-    /**
-     * Валидация формата email
-     */
     function validateEmail(email) {
-        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return re.test(email);
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
     }
 
-    /**
-     * Показать уведомление пользователю
-     */
-    function showNotification(message, type = 'info') {
-        // Удаляем существующие уведомления
-        const existingNotification = document.querySelector('.notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
-
-        // Создаем элемент уведомления
-        const notification = document.createElement('div');
-        notification.className = `notification ${type}`;
-        notification.textContent = message;
-
-        document.body.appendChild(notification);
-
-        // Автоматическое удаление через 5 секунд
-        setTimeout(() => {
-            if (notification.parentNode) {
-                notification.style.animation = 'slideOut 0.3s ease';
-                setTimeout(() => notification.remove(), 300);
-            }
-        }, 5000);
-    }
-
-    /**
-     * Подсветить поле ввода
-     */
-    function highlightField(field, type) {
-        field.classList.remove('error', 'success');
-        if (type === 'error' || type === 'success') {
-            field.classList.add(type);
-        }
-    }
-
-    /**
-     * Перенаправить пользователя в зависимости от его роли
-     */
     function redirectBasedOnRole(role) {
-        // относительный путь от login.html → dashboard.html
-        const target = role === 'ADMIN' ? '../admin/dashboard.html'
-            : role === 'TEACHER' ? '../teacher/dashboard.html'
-                : '../dashboard/dashboard.html';
-        location.href = target;
-    }
-    /**
-     * Инициализация переключателей видимости пароля
-     */
-    function initPasswordToggles() {
-        const toggleButtons = document.querySelectorAll('.toggle-password');
+        const target =
+            role === 'ADMIN' ? '../admin/dashboard.html'
+                : role === 'TEACHER' ? '../teacher/dashboard.html'
+                    : '../dashboard/dashboard.html';
 
-        toggleButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-
-                const targetId = this.getAttribute('data-target');
-                const passwordInput = document.getElementById(targetId);
-
-                if (passwordInput) {
-                    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                    passwordInput.setAttribute('type', type);
-
-                    // Меняем иконку
-                    this.textContent = type === 'password' ? '👁️' : '👁️‍🗨️';
-
-                    // Фокусируемся на поле ввода
-                    setTimeout(() => {
-                        passwordInput.focus();
-                        // Помещаем курсор в конец текста
-                        const length = passwordInput.value.length;
-                        passwordInput.setSelectionRange(length, length);
-                    }, 10);
-                }
-            });
-
-            // Предотвращаем фокус на кнопке при табуляции
-            button.setAttribute('tabindex', '-1');
-        });
+        setTimeout(() => location.replace(target), 500);
     }
 
-    /**
-     * Настройка валидации в реальном времени
-     */
-    function setupRealTimeValidation() {
-        // Валидация email в реальном времени
-        if (loginEmail) {
-            loginEmail.addEventListener('blur', function() {
-                if (this.value.trim() && !validateEmail(this.value.trim())) {
-                    highlightField(this, 'error');
-                } else if (this.value.trim()) {
-                    highlightField(this, 'success');
-                }
-            });
-        }
+    // ========== NOTIFICATIONS ==========
+    function createNotificationContainer() {
+        const container = document.createElement('div');
+        container.id = 'notificationContainer';
+        container.style.position = 'fixed';
+        container.style.top = '20px';
+        container.style.right = '20px';
+        container.style.zIndex = '9999';
+        container.style.width = '300px';
+        document.body.appendChild(container);
+        return container;
+    }
 
-        if (registerEmail) {
-            registerEmail.addEventListener('blur', function() {
-                if (this.value.trim() && !validateEmail(this.value.trim())) {
-                    highlightField(this, 'error');
-                } else if (this.value.trim()) {
-                    highlightField(this, 'success');
-                }
-            });
-        }
+    function showNotification(msg, type) {
+        const notif = document.createElement('div');
+        notif.textContent = msg;
+        notif.style.padding = '10px 15px';
+        notif.style.marginBottom = '10px';
+        notif.style.borderRadius = '5px';
+        notif.style.color = '#fff';
+        notif.style.boxShadow = '0 2px 6px rgba(0,0,0,0.2)';
+        notif.style.opacity = '0.95';
+        notif.style.transition = 'opacity 0.5s ease';
+        if (type === 'success') notif.style.backgroundColor = '#4CAF50';
+        else if (type === 'error') notif.style.backgroundColor = '#f44336';
+        else notif.style.backgroundColor = '#2196F3';
 
-        // Валидация пароля в реальном времени
-        if (loginPassword) {
-            loginPassword.addEventListener('blur', function() {
-                if (this.value.length > 0 && this.value.length < 6) {
-                    highlightField(this, 'error');
-                } else if (this.value.length >= 6) {
-                    highlightField(this, 'success');
-                }
-            });
-        }
-
-        if (registerPassword) {
-            registerPassword.addEventListener('blur', function() {
-                if (this.value.length > 0 && this.value.length < 6) {
-                    highlightField(this, 'error');
-                } else if (this.value.length >= 6) {
-                    highlightField(this, 'success');
-                }
-            });
-        }
-
-        // Валидация подтверждения пароля в реальном времени
-        if (registerPassword && registerConfirmPassword) {
-            registerConfirmPassword.addEventListener('input', function() {
-                if (this.value !== registerPassword.value && this.value.length > 0) {
-                    highlightField(this, 'error');
-                } else if (this.value === registerPassword.value && this.value.length > 0) {
-                    highlightField(this, 'success');
-                }
-            });
-
-            registerPassword.addEventListener('input', function() {
-                if (registerConfirmPassword.value && this.value !== registerConfirmPassword.value) {
-                    highlightField(registerConfirmPassword, 'error');
-                } else if (registerConfirmPassword.value && this.value === registerConfirmPassword.value) {
-                    highlightField(registerConfirmPassword, 'success');
-                }
-            });
-        }
+        notificationsContainer.appendChild(notif);
+        setTimeout(() => {
+            notif.style.opacity = '0';
+            setTimeout(() => notificationsContainer.removeChild(notif), 500);
+        }, 3000);
     }
 });
 
-// ========== ГЛОБАЛЬНЫЕ ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ АУТЕНТИФИКАЦИИ ==========
-
-/**
- * Получить заголовки аутентификации для API запросов
- */
-function getAuthHeaders() {
+// ========== GLOBAL AUTH ==========
+function isAuthenticated() {
     const token = localStorage.getItem('authToken');
+    const expiry = localStorage.getItem('tokenExpiry');
+    return token && expiry && Date.now() < Number(expiry);
+}
+
+function getAuthHeaders() {
     return {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
         'Content-Type': 'application/json'
     };
 }
 
-/**
- * Проверить, авторизован ли пользователь
- */
-function isAuthenticated() {
-    const token = localStorage.getItem('authToken');
-    const expiry = localStorage.getItem('tokenExpiry');
-
-    if (!token || !expiry) return false;
-
-    return Date.now() < parseInt(expiry);
-}
-
-/**
- * Функция выхода - очищает данные аутентификации
- */
 function logout() {
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('userData');
-    localStorage.removeItem('tokenExpiry');
-    window.location.href = '/pages/login/login.html';
+    localStorage.clear();
+    location.href = '/pages/login/login.html';
 }
 
-// Делаем функции доступными глобально
-window.getAuthHeaders = getAuthHeaders;
 window.isAuthenticated = isAuthenticated;
+window.getAuthHeaders = getAuthHeaders;
 window.logout = logout;

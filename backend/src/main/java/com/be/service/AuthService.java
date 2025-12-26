@@ -59,7 +59,7 @@ public class AuthService {
         }
 
         User user = userMapper.toEntity(dto);
-        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+//        user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setEnabled(true);
         user.setFailedLoginAttempts(0);
         user.setAcceptedTerms(true);

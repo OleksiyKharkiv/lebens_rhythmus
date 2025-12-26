@@ -25,7 +25,7 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
     @Bean   // ← обязательно
-    JwtDecoder jwtDecoder(@Value("${JWT_SECRET}") String secret) {
+    JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String secret) {
         return NimbusJwtDecoder.withSecretKey(
                         Keys.hmacShaKeyFor(secret.getBytes()))
                 .build();

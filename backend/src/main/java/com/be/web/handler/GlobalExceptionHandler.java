@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     private final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
-     * Единственный обработчик для ошибок валидации @Valid на теле запроса (DTO).
+     * Обработчик для ошибок валидации @Valid на теле запроса (DTO).
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
