@@ -1,17 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Lebens Rhythmus</title>
+    <title>Lebens Rhythmus - Aktivitäten</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="../../assets/favicon_io/favicon.ico">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/activities.css">
 </head>
 <body>
 <main>
+    <!--Hero section-->
+    <section class="hero" id="activities">
+        <h1>Unsere Aktivitäten</h1>
+        <p>Entdecke vielfältige kreative Kurse für jedes Alter und Interesse</p>
+    </section>
+
+    <!--Filters section-->
+    <section class="filters">
+        <div class="filter-container">
+            <div class="filter-group">
+                <label for="activity-type">Aktivitätstyp:</label>
+                <select id="activity-type" name="activity-type">
+                    <option value="">Alle</option>
+                    <option value="theater">Theater</option>
+                    <option value="dance">Tanz</option>
+                    <option value="gymnastics">Gymnastik</option>
+                    <option value="music">Musik</option>
+                    <option value="art">Kunst</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="age-group">Altersgruppe:</label>
+                <select id="age-group" name="age-group">
+                    <option value="">Alle</option>
+                    <option value="children">Kinder (4-10)</option>
+                    <option value="teens">Jugendliche (11-17)</option>
+                    <option value="adults">Erwachsene (18+)</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label for="day-of-week">Wochentag:</label>
+                <select id="day-of-week" name="day-of-week">
+                    <option value="">Alle</option>
+                    <option value="monday">Montag</option>
+                    <option value="tuesday">Dienstag</option>
+                    <option value="wednesday">Mittwoch</option>
+                    <option value="thursday">Donnerstag</option>
+                    <option value="friday">Freitag</option>
+                    <option value="saturday">Samstag</option>
+                </select>
+            </div>
+            <button class="primary" id="apply-filters">Filter anwenden</button>
+        </div>
+    </section>
+
+    <!--Activities grid-->
+    <section class="activities-grid">
+        <div id="activities-container" class="grid-container">
+            <!-- Activities will be loaded dynamically -->
+        </div>
+        <div id="loading" class="loading" style="display: none;">
+            <p>Lade Aktivitäten...</p>
+        </div>
+        <div id="no-results" class="no-results" style="display: none;">
+            <p>Keine Aktivitäten gefunden. Bitte versuchen Sie andere Filter.</p>
+        </div>
+    </section>
+
+    <!--Call to action-->
+    <section class="cta">
+        <h2>Bereit, mitzumachen?</h2>
+        <p>Melde dich jetzt an und starte deine kreative Reise!</p>
+        <div class="buttons">
+            <a href="../login/login.html">
+                <button class="primary">Jetzt registrieren</button>
+            </a>
+            <a href="../about/about.html">
+                <button class="secondary">Kontakt aufnehmen</button>
+            </a>
+        </div>
+    </section>
 
     <script src="../../js/main.js"></script>
     <script src="../../js/partials-loader.js"></script>
+    <script src="../../js/activities.js"></script>
 </main>
 
 </body>
