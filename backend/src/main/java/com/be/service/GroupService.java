@@ -46,7 +46,7 @@ public class GroupService {
         existingGroup.setTitleDe(group.getTitleDe());
         existingGroup.setTitleEn(group.getTitleEn());
         existingGroup.setTitleUa(group.getTitleUa());
-        existingGroup.setMaxParticipants(group.getMaxParticipants());
+        existingGroup.setCapacity(group.getCapacity());
         existingGroup.setActivity(group.getActivity());
         existingGroup.setAgeGroup(group.getAgeGroup());
         existingGroup.setLanguage(group.getLanguage());
@@ -74,7 +74,7 @@ public class GroupService {
         Group group = findById(groupId);
         Set<Participant> participants = group.getParticipants();
 
-        if (participants.size() >= group.getMaxParticipants()) {
+        if (participants.size() >= group.getCapacity()) {
             return false;
         }
 
@@ -93,7 +93,7 @@ public class GroupService {
     @Transactional(readOnly = true)
     public boolean hasAvailableSpots(Long groupId) {
         Group group = findById(groupId);
-        return group.getParticipants().size() < group.getMaxParticipants();
+        return group.getParticipants().size() < group.getCapacity();
     }
 
     @Transactional(readOnly = true)

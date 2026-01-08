@@ -41,7 +41,7 @@ public class Group {
     @Column(nullable = false)
     private int capacity; // max participants
     @Column(nullable = false)
-    private int maxParticipants;
+    private int capacityLeft;
 
     // period / slot of this group (LocalDateTime per decision)
     @Column(name = "start_date_time", nullable = false)
@@ -68,6 +68,11 @@ public class Group {
     @JoinColumn(name = "workshop_id")
     private Workshop workshop;
 
+    @OneToMany(fetch = LAZY)
+    @JoinColumn(name = "participant_id")
+    private Set<Participant> participants = new HashSet<>();
+
+
     // teacher — рекомендую связать с User, если Teacher — это профиль в users.
     // Если у тебя есть отдельная Teacher entity, оставляем как есть.
     @ManyToOne(fetch = LAZY)
@@ -84,7 +89,13 @@ public class Group {
 
     @Builder.Default
     @Column(nullable = false)
-    private boolean active = true;
+    private boolean active = tr#DataSourceSettings#
+            #LocalDataSource: lebens_rhythmus@localhost
+#BEGIN#
+<data-source source="LOCAL" name="lebens_rhythmus@localhost" uuid="936fd34e-db15-4928-a35c-1d2510e42211"><database-info product="" version="" jdbc-version="" driver-name="" driver-version="" dbms="POSTGRES"/><driver-ref>postgresql</driver-ref><synchronize>true</synchronize><jdbc-driver>org.postgresql.Driver</jdbc-driver><jdbc-url>jdbc:postgresql://localhost:5432/lebens_rhythmus</jdbc-url><jdbc-additional-properties><property name="com.intellij.clouds.kubernetes.db.host.port"/><property name="com.intellij.clouds.kubernetes.db.enabled" value="false"/><property name="com.intellij.clouds.kubernetes.db.container.port"/></jdbc-additional-properties><secret-storage>master_key</secret-storage><user-name>postgres</user-name><schema-mapping/><working-dir>$ProjectFileDir$</working-dir></data-source>
+            #END#
+
+    ue;
 
     // ---- helper methods ----
 
@@ -95,6 +106,6 @@ public class Group {
 
     @Transient
     public boolean isFull() {
-        return getEnrolledCount() >= maxParticipants;
+        return getEnrolledCount() >= capacity;
     }
 }
