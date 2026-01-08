@@ -98,7 +98,7 @@ public class WorkshopMapper {
         w.setMaxParticipants(dto.getMaxParticipants());
         w.setPrice(dto.getPrice());
         w.setStatus(WorkshopStatus.valueOf(dto.getStatus()));
-        // teacher/venue must be set by service (entities need fetching)
+        // service must set teacher/venue (entities need fetching)
         return w;
     }
 }
