@@ -1,0 +1,76 @@
+/* profile.css - small additions on top of main.css / dashboard.css */
+
+.profile-section {
+    max-width: 56rem;
+    margin: 2.5rem auto;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 0.75rem;
+    box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.06);
+}
+
+.profile-section .form-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1rem;
+}
+
+.profile-section label {
+    font-weight: 600;
+    margin-bottom: 0.375rem;
+    color: #333;
+}
+
+.profile-section input[type="text"],
+.profile-section input[type="email"],
+.profile-section input[type="date"],
+.profile-section input[type="password"],
+.profile-section textarea,
+.profile-section select {
+    padding: 0.75rem 0.9rem;
+    border: 1px solid #d9d9d9;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    outline: none;
+    transition: box-shadow .15s, border-color .15s;
+    background: #fff;
+}
+
+.profile-section input:focus,
+.profile-section textarea:focus {
+    border-color: #9c27b0;
+    box-shadow: 0 0 0 4px rgba(156, 39, 176, 0.06);
+}
+
+.profile-section .btn-primary,
+.profile-section .btn-secondary {
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+}
+
+.profile-section .btn-primary {
+    background: linear-gradient(45deg, #9c27b0, #e91e63);
+    color: #fff;
+}
+
+.profile-section .btn-secondary {
+    background: #fff;
+    color: #9c27b0;
+    border: 2px solid #9c27b0;
+}
+
+.change-password-section {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px dashed #eee;
+}
+
+@media (max-width: 48rem) {
+    .profile-section {
+        margin: 1rem;
+        padding: 1rem;
+    }
+}

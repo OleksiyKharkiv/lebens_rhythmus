@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="../../styles/main.css">
     <link rel="stylesheet" href="../../styles/dashboard.css">
 </head>
-
 <body>
 <main>
     <!--Hero section-->
@@ -21,19 +20,29 @@
             <a href="../workshops/workshops.html" class="btn-primary">Workshops</a>
             <a href="../performances/performances.html" class="btn-secondary">Aufführungen</a>
             <a href="../feedback/feedback.html" class="btn-secondary">Feedback</a>
+            <a href="./profile.html" class="btn-secondary">Profil bearbeiten</a>
         </nav>
-        <!-- after hero -->
-        <section class="dashboard-section">
-            <h2>Meine Kurse</h2>
-            <ul id="myCoursesList" class="course-list">
-                <!-- populated by dashboard.js -->
-            </ul>
-            <a href="../workshops/workshops.html" class="btn-text">Alle Kurse ansehen →</a>
-        </section>
     </section>
 
+    <!-- Meine Kurse -->
+    <section class="dashboard-section">
+        <h2>Meine Kurse</h2>
+        <ul id="myCoursesList" class="course-list">
+            <!-- populated by dashboard.js -->
+        </ul>
+        <a href="../workshops/workshops.html" class="btn-text">Alle Kurse ansehen →</a>
+    </section>
 
-    <!--Script only for logout and name display-->
+    <!-- Teacher/Admin Quick Actions -->
+    <section class="dashboard-section teacher-only" hidden>
+        <h2>Schnellaktionen</h2>
+        <div class="quick-actions">
+            <button onclick="location.href='../admin/workshops-edit.html'" class="btn-primary">Workshops verwalten
+            </button>
+            <button onclick="location.href='../admin/users.html'" class="btn-secondary">Benutzer verwalten</button>
+        </div>
+    </section>
+
     <script src="../../js/main.js"></script>
     <script src="../../js/partials-loader.js"></script>
     <script src="../../js/dashboard.js"></script>

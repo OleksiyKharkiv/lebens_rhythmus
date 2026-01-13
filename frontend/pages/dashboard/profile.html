@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Profil – Lebens Rhythmus</title>
+    <link rel="icon" type="image/x-icon" href="../../assets/favicon_io/favicon.ico">
+    <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/dashboard.css">
+    <link rel="stylesheet" href="../../styles/profile.css">
+</head>
+<body>
+<main>
+    <section class="dashboard-hero">
+        <h1>Profil</h1>
+        <p id="userGreeting">Hallo, <span class="userName">...</span>!</p>
+    </section>
+
+    <section class="dashboard-section profile-section">
+        <form id="profileForm">
+            <div class="form-field">
+                <label>Vorname</label>
+                <input type="text" id="firstName" required>
+            </div>
+            <div class="form-field">
+                <label>Nachname</label>
+                <input type="text" id="lastName" required>
+            </div>
+            <div class="form-field">
+                <label>Email</label>
+                <input type="email" id="email" readonly>
+            </div>
+            <div class="form-field">
+                <label>Rolle</label>
+                <input type="text" id="role" readonly>
+            </div>
+            <div class="form-field">
+                <label>Telefon</label>
+                <input type="text" id="phone">
+            </div>
+            <div class="form-field">
+                <label>Geburtsdatum</label>
+                <input type="date" id="birthDate">
+            </div>
+
+            <button type="submit" class="btn-primary">Speichern</button>
+        </form>
+
+        <section class="change-password-section">
+            <h3>Passwort ändern</h3>
+            <form id="passwordForm">
+                <div class="form-field">
+                    <label>Aktuelles Passwort</label>
+                    <input type="password" id="currentPassword" required>
+                </div>
+                <div class="form-field">
+                    <label>Neues Passwort</label>
+                    <input type="password" id="newPassword" required>
+                </div>
+                <div class="form-field">
+                    <label>Neues Passwort bestätigen</label>
+                    <input type="password" id="confirmPassword" required>
+                </div>
+                <button type="submit" class="btn-primary">Passwort ändern</button>
+            </form>
+        </section>
+    </section>
+
+    <script src="../../js/main.js"></script>
+    <script src="../../js/dashboard.js"></script>
+    <script src="../../js/profile.js"></script>
+</main>
+</body>
+</html>
