@@ -23,7 +23,7 @@ public class EnrollmentMapper {
 
         return EnrollmentResponseDTO.builder()
                 .id(e.getId())
-                .workshopId(w != null ? w.getWorkshopId() : null)
+                .workshopId(w != null ? w.getId() : null)
                 .workshopTitle(w != null ? w.getWorkshopName() : null)
                 .groupId(g != null ? g.getId() : null)
                 .groupTitle(g != null ? selectGroupTitle(g) : null)

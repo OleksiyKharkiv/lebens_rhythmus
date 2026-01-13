@@ -1,0 +1,41 @@
+<!DOCTYPE html><html lang="de"><head><meta charset="utf-8"/><title>Create Workshop</title></head><body>
+<main>
+  <h1>Neuen Workshop erstellen</h1>
+  <form id="createWorkshopForm">
+    <label>Titel<input id="title" required /></label><br/>
+    <label>Beschreibung<textarea id="description"></textarea></label><br/>
+    <label>Start <input type="date" id="startDate" required/></label>
+    <label>Ende <input type="date" id="endDate" /></label><br/>
+    <label>Preis <input type="number" id="price" step="0.01" /></label><br/>
+    <label>TeacherId <input id="teacherId" /></label><br/>
+    <button type="submit">Erstellen</button>
+  </form>
+  <div id="result"></div>
+  <script src="../../js/main.js"></script>
+  <script>
+    document.getElementById('createWorkshopForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const payload = {
+        title: document.getElementById('title').value,
+        description: document.getElementById('description').value,
+        startDate: document.getElementById('startDate').value,
+        endDate: document.getElementById('endDate').value || null,
+        price: document.getElementById('price').value ? Number(document.getElementById('price').value) : 0,
+        teacherId: document.getElementById('teacherId').value ? Number(document.getElementById('teacherId').value) : null
+      };
+      try {
+        const res = await fetch(`${window.API_BASE_URL}/workshops`, {
+          method: 'POST',
+          headers: window.getAuthHeaders(),
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if(!res.ok) throw new Error(data.message || 'Fehler');
+        document.getElementById('result').innerHTML = 'Workshop erstellt: ' + data.title;
+      } catch (err) {
+        document.getElementById('result').innerHTML = 'Error: ' + err.message;
+      }
+    });
+  </script>
+</main>
+</body></html>

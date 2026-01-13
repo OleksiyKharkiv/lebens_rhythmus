@@ -54,7 +54,7 @@ public class EnrollmentService {
                     .orElseThrow(() -> new RuntimeException("Group not found: " + request.getGroupId()));
 
             // group must belong to the workshop
-            if (group.getWorkshop() == null || !group.getWorkshop().getWorkshopId().equals(workshopId)) {
+            if (group.getWorkshop() == null || !group.getWorkshop().getId().equals(workshopId)) {
                 throw new RuntimeException("Group does not belong to the requested workshop");
             }
 
@@ -83,7 +83,7 @@ public class EnrollmentService {
         // Notify teacher and business owner (MVP: logs)
         try {
             String msg = String.format("New enrollment: user=%s (%d) for workshop=%s (%d) group=%s",
-                    user.getEmail(), user.getId(), workshop.getWorkshopName(), workshop.getWorkshopId(),
+                    user.getEmail(), user.getId(), workshop.getWorkshopName(), workshop.getId(),
                     group != null ? group.getId() : "n/a");
             notificationService.notifyWorkshopEnrollment(workshop, group, user, saved.getStatus(), msg);
         } catch (Exception ex) {

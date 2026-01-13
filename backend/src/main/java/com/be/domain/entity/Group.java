@@ -77,7 +77,7 @@ public class Group {
     // Если у тебя есть отдельная Teacher entity, оставляем как есть.
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "teacher_id")
-    private User teacher;
+    private Teacher teacher;
 
     /**
      * Записи участников. Рекомендую использовать Enrollment entity (см. ранее),

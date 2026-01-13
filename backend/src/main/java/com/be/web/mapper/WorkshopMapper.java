@@ -27,7 +27,7 @@ public class WorkshopMapper {
     public WorkshopListDTO toListDTO(Workshop w) {
         UserBasicDTO teacher = w.getTeacher() != null ? userMapper.toBasicDTO(w.getTeacher()) : null;
         return WorkshopListDTO.builder()
-                .id(w.getWorkshopId())
+                .id(w.getId())
                 .title(w.getWorkshopName())
                 .shortDescription(w.getDescription() != null && w.getDescription().length() > 200
                         ? w.getDescription().substring(0, 200) + "..."
@@ -53,7 +53,7 @@ public class WorkshopMapper {
         int enrollments = w.getEnrollments() == null ? 0 : w.getEnrollments().size();
 
         return WorkshopDetailDTO.builder()
-                .id(w.getWorkshopId())
+                .id(w.getId())
                 .title(w.getWorkshopName())
                 .description(w.getDescription())
                 .teacher(teacher)
