@@ -1,6 +1,6 @@
 package com.be.service;
 
-import com.be.domain.entity.Enrollment.EnrollmentStatus;
+import com.be.domain.entity.enums.EnrollmentStatus;
 import com.be.domain.entity.Group;
 import com.be.domain.entity.User;
 import com.be.domain.entity.Workshop;

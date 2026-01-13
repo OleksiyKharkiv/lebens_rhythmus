@@ -1,9 +1,9 @@
 package com.be.service;
 
-import com.be.domain.entity.Enrollment.EnrollmentStatus;
 import com.be.domain.entity.Group;
 import com.be.domain.entity.User;
 import com.be.domain.entity.Workshop;
+import com.be.domain.entity.enums.EnrollmentStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

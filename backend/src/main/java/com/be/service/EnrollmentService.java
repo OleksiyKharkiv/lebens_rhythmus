@@ -1,6 +1,7 @@
 package com.be.service;
 
 import com.be.domain.entity.*;
+import com.be.domain.entity.enums.EnrollmentStatus;
 import com.be.domain.repository.EnrollmentRepository;
 import com.be.domain.repository.GroupRepository;
 import com.be.domain.repository.UserRepository;
@@ -73,9 +74,9 @@ public class EnrollmentService {
         // determine status: free workshop -> CONFIRMED, else PENDING
         BigDecimal price = workshop.getPrice();
         if (price == null || price.compareTo(BigDecimal.ZERO) == 0) {
-            enrollment.setStatus(Enrollment.EnrollmentStatus.CONFIRMED);
+            enrollment.setStatus(EnrollmentStatus.CONFIRMED);
         } else {
-            enrollment.setStatus(Enrollment.EnrollmentStatus.PENDING);
+            enrollment.setStatus(EnrollmentStatus.PENDING);
         }
 
         Enrollment saved = enrollmentRepository.save(enrollment);
@@ -114,7 +115,7 @@ public class EnrollmentService {
             throw new RuntimeException("Forbidden: cannot cancel other user's enrollment");
         }
 
-        e.setStatus(Enrollment.EnrollmentStatus.CANCELLED);
+        e.setStatus(EnrollmentStatus.CANCELLED);
         enrollmentRepository.save(e);
 
         // notify
