@@ -22,7 +22,7 @@ public class GlobalExceptionHandler {
     private final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
-     * Обработчик для ошибок валидации @Valid на теле запроса (DTO).
+     * Handler for @Valid validation errors on request body (DTO).
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Отдельный обработчик для ConstraintViolation (например, @Validated на параметрах запроса/path).
+     * Separate handler for ConstraintViolation (e.g., @Validated on request/path parameters).
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
@@ -72,7 +72,7 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Fallback — ловит всё прочее и возвращает 500.
+     * Fallback — catches everything else and returns 500.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleAll(Exception ex) {

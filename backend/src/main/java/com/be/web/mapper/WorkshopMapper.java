@@ -86,6 +86,7 @@ public class WorkshopMapper {
     }
 
     private WorkshopFileDTO toFileDTO(WorkshopFile f) {
+        // Builds file DTO from a workshop file entity
         return WorkshopFileDTO.builder()
                 .id(f.getId())
                 .filename(f.getFilename())

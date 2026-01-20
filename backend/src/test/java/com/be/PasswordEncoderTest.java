@@ -13,13 +13,12 @@ public class PasswordEncoderTest {
 
     @Test
     void testPasswordMatches() {
-        String rawPassword = "Test1234"; // пароль, который вводит пользователь
+        String rawPassword = "Test1234";
         String hashedPassword = passwordEncoder.encode(rawPassword); // имитация пароля из БД
 
-        // проверка совпадения
-        assertTrue(passwordEncoder.matches(rawPassword, hashedPassword), "Пароль должен совпадать");
-
-        // проверка несовпадения
-        assertFalse(passwordEncoder.matches("WrongPassword", hashedPassword), "Пароль не должен совпадать");
+        // check for match
+        assertTrue(passwordEncoder.matches(rawPassword, hashedPassword), "Password should match");
+        // check for mismatch
+        assertFalse(passwordEncoder.matches("WrongPassword", hashedPassword), "Password should not match");
     }
 }
