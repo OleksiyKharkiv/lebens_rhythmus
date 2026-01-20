@@ -27,7 +27,7 @@ public class Group {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // multilingual titles (ok)
+    // multilingual titles
     @Column(nullable = false)
     private String titleDe;
 
@@ -50,7 +50,7 @@ public class Group {
     @Column(name = "end_date_time")
     private LocalDateTime endDateTime;
 
-    // принадлежит Activity (ок)
+    // belongs to Activity 
     @ManyToOne(fetch = LAZY, optional = false)
     @JoinColumn(name = "activity_id", nullable = false)
     private Activity activity;
@@ -63,7 +63,7 @@ public class Group {
     @JoinColumn(name = "language_id", nullable = false)
     private Language language;
 
-    // связь к workshop (обязательно)
+    // relationship to workshop 
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "workshop_id")
     private Workshop workshop;
@@ -73,15 +73,13 @@ public class Group {
     private Set<Participant> participants = new HashSet<>();
 
 
-    // teacher — рекомендую связать с User, если Teacher — это профиль в users.
-    // Если у тебя есть отдельная Teacher entity, оставляем как есть.
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
 
     /**
-     * Записи участников. Рекомендую использовать Enrollment entity (см. ранее),
-     * а не Participant, т.к. Enrollment хранит статус, дату и т.п.
+     * Participant enrollments. Use Enrollment entity,
+     * not Participant, because Enrollment stores status, date, etc.
      */
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
