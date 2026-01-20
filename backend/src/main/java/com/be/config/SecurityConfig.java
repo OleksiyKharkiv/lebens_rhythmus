@@ -27,7 +27,6 @@ public class SecurityConfig {
     }
 
     @Bean
-        // ← обязательно
     JwtDecoder jwtDecoder(@Value("${app.jwt.secret}") String secret) {
         return NimbusJwtDecoder.withSecretKey(
                         Keys.hmacShaKeyFor(secret.getBytes()))
