@@ -27,6 +27,9 @@ public class AuthService {
     private final UserMapper userMapper;
     private final JwtUtils jwtUtils;
 
+    /**
+     * Authenticates user; returns token on valid credentials
+     */
     public UserLoginResponseDTO authenticate(UserLoginRequestDTO dto) {
         Optional<User> maybeUser = userService.findByEmail(dto.getEmail());
         if (maybeUser.isEmpty()) {
@@ -34,6 +37,7 @@ public class AuthService {
         }
         User user = maybeUser.get();
 
+        // Throws if account is temporarily locked
         if (user.getLockUntil() != null && user.getLockUntil().isAfter(LocalDateTime.now())) {
             throw new RuntimeException("Account locked. Try again later.");
         }
@@ -52,6 +56,9 @@ public class AuthService {
                 Collections.emptyList(), Collections.emptyList());
     }
 
+    /**
+     * Registers user; returns token for a new account
+     */
     @Transactional
     public UserLoginResponseDTO register(UserRegistrationDTO dto) {
         if (userService.existsByEmail(dto.getEmail())) {

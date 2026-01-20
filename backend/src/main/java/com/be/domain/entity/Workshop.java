@@ -38,7 +38,6 @@ public class Workshop {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
-    // Если время занятий не критичен — LocalDate; если важен — вернуть LocalDateTime
     @Column(name = "start_date")
     private LocalDate startDate;
 
@@ -46,8 +45,8 @@ public class Workshop {
     private LocalDate endDate;
 
     /**
-     * Общее ограничение участников (если применимо).
-     * Но при наличии групп capacity лучше хранить на Group уровне.
+     * Overall participant limit (if applicable).
+     * However, when groups exist, capacity is better stored at the Group level.
      */
     @Column(name = "max_participants")
     private Integer maxParticipants;
@@ -59,39 +58,41 @@ public class Workshop {
     @Column(name = "status", length = 50)
     private WorkshopStatus status;
 
-    // Привязка к месту проведения
+    // Reference to venue (location)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "venue_id")
     private Venue venue;
 
-    // Основной преподаватель (если требуется несколько — ManyToMany или отдельная сущность TeacherWorkshop)
+    // Main teacher (for multiple teachers use ManyToMany or separate TeacherWorkshop entity)
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
-    // Если в ERM есть отдельная сущность GroupWorkshop — лучше её реализовать.
-    // Здесь упрощенно: список групп (каждая группа содержит дату/время/capacity)
+    // In the ERM there is a separate GroupWorkshop entity — it needs to be implemented.
+    // Here simplified: list of groups (each group contains date/time/capacity)
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Group> groups = new ArrayList<>();
-
-    // Перфомансы / представления (оставляем)
+    // Performances / presentations
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Performance> performances = new ArrayList<>();
 
-    // Файлы — рекомендуем переименовать сущность в WorkshopFile/Attachment,
-    // если есть риск конфликта с java.io.File
+    // Files — may need to rename entity to WorkshopFile/Attachment,
+    // there's a risk of conflict with java.io.File
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<WorkshopFile> files = new ArrayList<>();
 
-    // Переименовать Order -> Enrollment в домене (рекомендация).
+    // Don't forget to rename Order -> Enrollment in the domain.
+    @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Enrollment> enrollments = new ArrayList<>();
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Enrollment> enrollments = new ArrayList<>();
 
-    // Связи для фильтров
+    // Relationships for filters
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "language_id")
     private Language language;

@@ -18,7 +18,7 @@ public class WorkshopFile {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // курс-владелец
+    // owner workshop
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "workshop_id")
     private Workshop workshop;
