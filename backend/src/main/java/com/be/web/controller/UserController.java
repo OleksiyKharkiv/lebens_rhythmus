@@ -46,6 +46,9 @@ public class UserController {
         return ResponseEntity.ok(profileDTO);
     }
 
+    /**
+     * Updates password; returns success or failure message
+     */
     @PutMapping("/me/password")
     public ResponseEntity<?> changePassword(
             @AuthenticationPrincipal User currentUser,
@@ -129,6 +132,9 @@ public class UserController {
 
     // ========== STATISTICS ENDPOINTS ==========
 
+    /**
+     * Returns user statistics: total, active, and by role
+     */
     @GetMapping("/stats/count")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> getUserStatistics() {
@@ -148,5 +154,6 @@ public class UserController {
             long userCount,
             long teacherCount,
             long adminCount
-    ) {}
+    ) {
+    }
 }

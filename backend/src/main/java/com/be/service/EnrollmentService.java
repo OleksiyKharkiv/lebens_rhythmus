@@ -122,7 +122,7 @@ public class EnrollmentService {
         try {
             notificationService.notifyEnrollmentCancelled(e.getWorkshop(), e.getGroup(), e.getUser(), e.getStatus(),
                     "Enrollment cancelled: " + e.getId());
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 }

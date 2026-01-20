@@ -29,5 +29,4 @@ public class UserLoginResponseDTO {
 //    Profile connections
     private List<ParticipantInfoDTO> participants; //All participants of this user
     private List<TeacherInfoDTO>teachers;
-
 }

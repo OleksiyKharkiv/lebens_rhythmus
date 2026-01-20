@@ -39,6 +39,9 @@ public class GroupService {
         return groupRepository.save(group);
     }
 
+    /**
+     * Updates group properties then persists changes
+     */
     @Transactional
     public Group update(Group group) {
         Group existingGroup = findById(group.getId());
@@ -69,6 +72,9 @@ public class GroupService {
         groupRepository.save(group);
     }
 
+    /**
+     * Adds participant to group if capacity allows
+     */
     @Transactional
     public boolean addParticipant(Long groupId, Participant participant) {
         Group group = findById(groupId);

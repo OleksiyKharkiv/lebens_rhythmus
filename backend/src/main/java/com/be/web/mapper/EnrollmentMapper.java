@@ -21,6 +21,7 @@ public class EnrollmentMapper {
         Workshop w = e.getWorkshop();
         Group g = e.getGroup();
 
+        // Maps group ID, title, and enrollment status
         return EnrollmentResponseDTO.builder()
                 .id(e.getId())
                 .workshopId(w != null ? w.getId() : null)
@@ -36,6 +37,7 @@ public class EnrollmentMapper {
         EnrollmentResponseDTO basic = toResponseDTO(e);
         UserBasicDTO userDto = e.getUser() != null ? userMapper.toBasicDTO(e.getUser()) : null;
 
+        // Maps basic enrollment and workshop details
         return EnrollmentAdminDTO.builder()
                 .id(basic.getId())
                 .workshopId(basic.getWorkshopId())

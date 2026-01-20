@@ -78,16 +78,13 @@ public class Workshop {
     @Builder.Default
     private List<Performance> performances = new ArrayList<>();
 
-    // Files — may need to rename entity to WorkshopFile/Attachment,
+    // Files — may need to rename an entity to WorkshopFile/Attachment,
     // there's a risk of conflict with java.io.File
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<WorkshopFile> files = new ArrayList<>();
 
-    // Don't forget to rename Order -> Enrollment in the domain.
-    @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
-    @Builder.Default
-    private List<Enrollment> enrollments = new ArrayList<>();
+    // Remember to rename Order -> Enrollment in the domain.
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<Enrollment> enrollments = new ArrayList<>();

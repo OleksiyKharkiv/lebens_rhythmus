@@ -30,7 +30,7 @@ public class EnrollmentController {
     }
 
     /**
-     * Enroll current user into a workshop (optionally into a group).
+     * Enroll the current user into a workshop (optionally into a group).
      */
     @PostMapping("/workshops/{workshopId}/enroll")
     @PreAuthorize("hasRole('USER') or hasRole('TEACHER') or hasRole('BUSINESS_OWNER') or hasRole('ADMIN')")
@@ -76,7 +76,7 @@ public class EnrollmentController {
     }
 
     /**
-     * Teacher or admin: list participants for group
+     * Teacher or admin: list participants for a group
      */
     @GetMapping("/teacher/groups/{groupId}/participants")
     @PreAuthorize("hasRole('TEACHER') or hasRole('BUSINESS_OWNER') or hasRole('ADMIN')")

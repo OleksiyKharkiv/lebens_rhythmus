@@ -48,6 +48,9 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    /**
+     * Creates user; enforces password; persists with defaults
+     */
     public User createUser(User user) {
         normalizeDefaults(user);
 
@@ -106,6 +109,9 @@ public class UserService {
 
     // ========== BUSINESS OPERATIONS ==========
 
+    /**
+     * Gets user profile; sets derived attributes
+     */
     public UserProfileDTO getUserProfile(Long userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
@@ -119,6 +125,9 @@ public class UserService {
         return profileDTO;
     }
 
+    /**
+     * Changes password if the current password matches
+     */
     public boolean changePassword(Long userId, String currentPassword, String newPassword) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));

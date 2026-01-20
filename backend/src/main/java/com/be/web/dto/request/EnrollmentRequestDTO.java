@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EnrollmentRequestDTO {
-    // optional: user chooses specific group to join
+    // optional: user chooses a specific group to join
     private Long groupId;
 }

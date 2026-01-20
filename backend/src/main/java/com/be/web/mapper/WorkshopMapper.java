@@ -26,6 +26,7 @@ public class WorkshopMapper {
 
     public WorkshopListDTO toListDTO(Workshop w) {
         UserBasicDTO teacher = w.getTeacher() != null ? userMapper.toBasicDTO(w.getTeacher()) : null;
+        // Maps workshop to list DTO; resolves venue name
         return WorkshopListDTO.builder()
                 .id(w.getId())
                 .title(w.getWorkshopName())
@@ -41,6 +42,9 @@ public class WorkshopMapper {
                 .build();
     }
 
+    /**
+     * Maps workshop to detail DTO; builds an immutable result
+     */
     public WorkshopDetailDTO toDetailDTO(Workshop w) {
         UserBasicDTO teacher = w.getTeacher() != null ? userMapper.toBasicDTO(w.getTeacher()) : null;
         List<GroupDTO> groups = w.getGroups() == null ? List.of() : w.getGroups().stream()
@@ -52,6 +56,7 @@ public class WorkshopMapper {
 
         int enrollments = w.getEnrollments() == null ? 0 : w.getEnrollments().size();
 
+        // Builds DTO with workshop's ID, title, description, teacher
         return WorkshopDetailDTO.builder()
                 .id(w.getId())
                 .title(w.getWorkshopName())
@@ -69,6 +74,7 @@ public class WorkshopMapper {
     }
 
     private GroupDTO toGroupDTO(Group g) {
+        // Builds group DTO with start and end times
         return GroupDTO.builder()
                 .id(g.getId())
                 .name(g.getTitleEn())
@@ -89,6 +95,9 @@ public class WorkshopMapper {
                 .build();
     }
 
+    /**
+     * Creates workshop entity from creation DTO
+     */
     public Workshop fromCreateDTO(WorkshopCreateDTO dto) {
         Workshop w = new Workshop();
         w.setWorkshopName(dto.getTitle());

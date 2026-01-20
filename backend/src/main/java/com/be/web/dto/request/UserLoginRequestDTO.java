@@ -19,5 +19,4 @@ public class UserLoginRequestDTO {
 
     @NotBlank(message = "Password is mandatory")
     private String password;
-
 }

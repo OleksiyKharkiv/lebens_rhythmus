@@ -17,6 +17,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
         User u = repo.findByEmail(email)
                 .orElseThrow(() -> new UsernameNotFoundException(email));
+        // Adapts domain user to Spring Security user
         return org.springframework.security.core.userdetails.User
                 .withUsername(u.getEmail())
                 .password(u.getPassword())

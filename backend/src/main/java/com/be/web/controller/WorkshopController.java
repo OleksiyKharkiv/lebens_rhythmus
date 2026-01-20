@@ -34,6 +34,7 @@ public class WorkshopController {
                                                       @RequestParam(required = false) String q) {
         List<Workshop> list = workshopService.listWorkshops(upcoming);
         if (q != null && !q.isBlank()) {
+            // Filters workshops by name if query provided
             list = list.stream()
                     .filter(w -> w.getWorkshopName() != null && w.getWorkshopName().toLowerCase().contains(q.toLowerCase()))
                     .toList();

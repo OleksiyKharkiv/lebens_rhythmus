@@ -11,6 +11,9 @@ import java.util.stream.Collectors;
 @Component
 public class TeacherMapper {
 
+    /**
+     * Maps teacher list to the info DTO list
+     */
     public List<TeacherInfoDTO> toInfoDTOList(List<Teacher> teachers) {
         if (teachers == null) {
             return Collections.emptyList();
