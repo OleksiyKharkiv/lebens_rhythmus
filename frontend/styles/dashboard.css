@@ -11,8 +11,7 @@ body {
     url('../assets/nord_sea.jpg') center/cover no-repeat;
     color: #fff;
     text-align: center;
-    /*top: 8vh;*/
-    top: 3.75rem;
+    margin-top: 3.75rem, auto;
     height: 50%;
     width: 80%;
     position: absolute;
