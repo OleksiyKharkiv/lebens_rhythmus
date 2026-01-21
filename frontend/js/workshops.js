@@ -60,9 +60,18 @@ function renderWorkshopCard(w) {
 function formatLocalDate(d) {
     try {
         const date = new Date(d);
-        return date.toLocaleDateString('de-DE', { year:'numeric', month:'short', day:'numeric' });
-    } catch { return d; }
+        return date.toLocaleDateString('de-DE', {year: 'numeric', month: 'short', day: 'numeric'});
+    } catch {
+        return d;
+    }
 }
 
-function escapeHtml(text){ const div=document.createElement('div'); div.textContent = text || ''; return div.innerHTML; }
-function formatPrice(p){ return p === 0 ? 'kostenlos' : new Intl.NumberFormat('de-DE',{style:'currency',currency:'EUR'}).format(p); }
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text || '';
+    return div.innerHTML;
+}
+
+function formatPrice(p) {
+    return p === 0 ? 'kostenlos' : new Intl.NumberFormat('de-DE', {style: 'currency', currency: 'EUR'}).format(p);
+}
