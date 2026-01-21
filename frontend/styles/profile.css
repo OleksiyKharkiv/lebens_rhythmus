@@ -1,9 +1,9 @@
 /* profile.css - small additions on top of main.css / dashboard.css */
 
 .profile-section {
-    max-width: 56rem;
-    margin: 2.5rem auto;
-    padding: 1.5rem;
+    width: 35rem;
+    margin: 3.8rem auto;
+    padding: 1.2rem;
     background: rgba(255, 255, 255, 0.98);
     border-radius: 0.75rem;
     box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.06);
