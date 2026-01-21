@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,32 +31,59 @@ public class UserController {
 
     // ========== USER PROFILE ENDPOINTS ==========
 
+    // ========== USER PROFILE ENDPOINTS (updated to use Jwt principal) ==========
+
+    /**
+     * GET /api/v1/users/me
+     * Use Jwt principal (resource-server) and read user id from claim "id".
+     * If jwt is null or missing claim -> return 401 (unauthorized).
+     */
     @GetMapping("/me")
-    public ResponseEntity<UserProfileDTO> getCurrentUserProfile(@AuthenticationPrincipal User currentUser) {
-        UserProfileDTO profile = userService.getUserProfile(currentUser.getId());
+    public ResponseEntity<UserProfileDTO> getCurrentUserProfile(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = extractUserIdFromJwt(jwt);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        UserProfileDTO profile = userService.getUserProfile(userId);
         return ResponseEntity.ok(profile);
     }
 
+    /**
+     * PUT /api/v1/users/me
+     * Update current user's profile — same JWT -> extract id.
+     */
     @PutMapping("/me")
     public ResponseEntity<UserProfileDTO> updateCurrentUserProfile(
-            @AuthenticationPrincipal User currentUser,
+            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UserUpdateDTO updateDTO) {
 
-        User updatedUser = userService.updateUser(currentUser.getId(), updateDTO);
+        Long userId = extractUserIdFromJwt(jwt);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        User updatedUser = userService.updateUser(userId, updateDTO);
         UserProfileDTO profileDTO = userMapper.toProfileDTO(updatedUser);
         return ResponseEntity.ok(profileDTO);
     }
 
     /**
-     * Updates password; returns success or failure message
+     * PUT /api/v1/users/me/password
+     * Change password for current user.
      */
     @PutMapping("/me/password")
     public ResponseEntity<?> changePassword(
-            @AuthenticationPrincipal User currentUser,
+            @AuthenticationPrincipal Jwt jwt,
             @Valid @RequestBody UserPasswordUpdateDTO passwordDTO) {
 
+        Long userId = extractUserIdFromJwt(jwt);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
         boolean success = userService.changePassword(
-                currentUser.getId(),
+                userId,
                 passwordDTO.getCurrentPassword(),
                 passwordDTO.getNewPassword()
         );
@@ -67,17 +95,34 @@ public class UserController {
         return ResponseEntity.ok("Password updated successfully");
     }
 
+    /**
+     * POST /api/v1/users/me/verify-email
+     */
     @PostMapping("/me/verify-email")
-    public ResponseEntity<?> verifyEmail(@AuthenticationPrincipal User currentUser) {
-        userService.verifyEmail(currentUser.getId());
+    public ResponseEntity<?> verifyEmail(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = extractUserIdFromJwt(jwt);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        userService.verifyEmail(userId);
         return ResponseEntity.ok("Email verification initiated");
     }
 
+    /**
+     * DELETE /api/v1/users/me
+     */
     @DeleteMapping("/me")
-    public ResponseEntity<?> deactivateAccount(@AuthenticationPrincipal User currentUser) {
-        userService.deleteUser(currentUser.getId());
+    public ResponseEntity<?> deactivateAccount(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = extractUserIdFromJwt(jwt);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        userService.deleteUser(userId);
         return ResponseEntity.ok("Account deactivated successfully");
     }
+
 
     // ========== ADMIN ENDPOINTS ==========
 
@@ -155,5 +200,20 @@ public class UserController {
             long teacherCount,
             long adminCount
     ) {
+    }
+
+    /**
+     * Helper method to extract user ID from JWT token.
+     * Returns null if JWT is missing or ID claim is not present.
+     */
+    private Long extractUserIdFromJwt(Jwt jwt) {
+        if (jwt == null) {
+            return null;
+        }
+        Object idClaim = jwt.getClaim("id");
+        if (idClaim == null) {
+            return null;
+        }
+        return (idClaim instanceof Number) ? ((Number) idClaim).longValue() : Long.parseLong(idClaim.toString());
     }
 }
