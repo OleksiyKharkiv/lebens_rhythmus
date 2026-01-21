@@ -11,12 +11,7 @@ body {
     url('../assets/nord_sea.jpg') center/cover no-repeat;
     color: #fff;
     text-align: center;
-    margin-top: 3.75rem, auto;
-    height: 50%;
-    width: 80%;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
+    margin: auto 3rem auto 3rem;
 }
 
 .dashboard-hero h1 {
@@ -143,7 +138,7 @@ body {
 }
 
 .dashboard-section {
-    max-width: 50rem;
+    width: 50rem;
     margin: 3rem auto;
     padding: 0 2rem;
     background: rgba(255, 255, 255, .98);

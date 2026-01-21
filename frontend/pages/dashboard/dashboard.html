@@ -22,26 +22,27 @@
             <a href="../feedback/feedback.html" class="btn-secondary">Feedback</a>
             <a href="./profile.html" class="btn-secondary">Profil bearbeiten</a>
         </nav>
+        <!-- Meine Kurse -->
+        <section class="dashboard-section">
+            <h2>Meine Kurse</h2>
+            <ul id="myCoursesList" class="course-list">
+                <!-- populated by dashboard.js -->
+            </ul>
+            <a href="../workshops/workshops.html" class="btn-text">Alle Kurse ansehen →</a>
+        </section>
+
+        <!-- Teacher/Admin Quick Actions -->
+        <section class="dashboard-section teacher-only" hidden>
+            <h2>Schnellaktionen</h2>
+            <div class="quick-actions">
+                <button onclick="location.href='../admin/workshops-edit.html'" class="btn-primary">Workshops verwalten
+                </button>
+                <button onclick="location.href='../admin/users.html'" class="btn-secondary">Benutzer verwalten</button>
+            </div>
+        </section>
     </section>
 
-    <!-- Meine Kurse -->
-    <section class="dashboard-section">
-        <h2>Meine Kurse</h2>
-        <ul id="myCoursesList" class="course-list">
-            <!-- populated by dashboard.js -->
-        </ul>
-        <a href="../workshops/workshops.html" class="btn-text">Alle Kurse ansehen →</a>
-    </section>
 
-    <!-- Teacher/Admin Quick Actions -->
-    <section class="dashboard-section teacher-only" hidden>
-        <h2>Schnellaktionen</h2>
-        <div class="quick-actions">
-            <button onclick="location.href='../admin/workshops-edit.html'" class="btn-primary">Workshops verwalten
-            </button>
-            <button onclick="location.href='../admin/users.html'" class="btn-secondary">Benutzer verwalten</button>
-        </div>
-    </section>
 
     <script src="../../js/main.js"></script>
     <script src="../../js/partials-loader.js"></script>
