@@ -1,13 +1,18 @@
 // profile.js
+// Profile page logic: load profile, update profile, change password.
+// Uses window.fetchJson and window.getAuthHeaders from main.js.
+// All handlers include English comments explaining behavior.
+
 document.addEventListener('DOMContentLoaded', initProfile);
 
 function initProfile() {
+    // If not authenticated — redirect to log in
     if (!window.isAuthenticated || !window.isAuthenticated()) {
         location.href = '../login/login.html';
         return;
     }
 
-    // DOM
+    // DOM references
     const profileForm = document.getElementById('profileForm');
     const passwordForm = document.getElementById('passwordForm');
 
@@ -24,10 +29,11 @@ function initProfile() {
 
     const notifications = ensureNotificationContainer();
 
+    // load and populate profile on page load
     loadProfile();
 
     // ===== profile save =====
-    profileForm.addEventListener('submit', async (e) => {
+    profileForm && profileForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const firstName = firstNameEl.value.trim();
@@ -54,38 +60,31 @@ function initProfile() {
         btn.textContent = 'Speichern...';
 
         try {
-            const res = await fetch(`${window.API_BASE_URL}/users/me`, {
+            // Use fetchJson wrapper: throws on non-ok and handles 401
+            const updated = await window.fetchJson(`${window.API_BASE_URL}/users/me`, {
                 method: 'PUT',
-                headers: {...window.getAuthHeaders(), 'Content-Type': 'application/json'},
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            if (!res.ok) {
-                await handleErrorResponse(res);
-                return;
-            }
-
-            const updated = await res.json();
             showNotification('Profil gespeichert.', 'success');
-            // update localStorage userData (firstName/lastName)
+
+            // update localStorage userData so other pages reflect changes quickly
             try {
                 const raw = localStorage.getItem('userData');
-                if (raw) {
-                    const ud = JSON.parse(raw);
-                    ud.firstName = updated.firstName || ud.firstName;
-                    ud.lastName = updated.lastName || ud.lastName;
-                    localStorage.setItem('userData', JSON.stringify(ud));
-                    // also update displayed username in dashboard header if present
-                    const userNameEls = document.querySelectorAll('.userName');
-                    userNameEls.forEach(el => el.textContent = ud.firstName || ud.email || 'Gast');
-                }
+                const ud = raw ? JSON.parse(raw) : {};
+                ud.firstName = updated.firstName || ud.firstName;
+                ud.lastName = updated.lastName || ud.lastName;
+                localStorage.setItem('userData', JSON.stringify(ud));
+                // update header username if present
+                document.querySelectorAll('.userName').forEach(el => el.textContent = ud.firstName || ud.email || 'Gast');
             } catch (err) {
-                // non-fatal
-                console.warn('Failed to update local userData', err);
+                console.warn('profile: failed to update local userData', err);
             }
         } catch (err) {
-            console.error(err);
-            showNotification('Netzwerkfehler beim Speichern.', 'error');
+            // fetchJson throws an Error with a message — show it
+            console.error('profile save error', err);
+            showNotification(err.message || 'Fehler beim Speichern', 'error');
         } finally {
             btn.disabled = false;
             btn.textContent = 'Speichern';
@@ -93,7 +92,7 @@ function initProfile() {
     });
 
     // ===== change password =====
-    passwordForm.addEventListener('submit', async (e) => {
+    passwordForm && passwordForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
         const current = currentPasswordEl.value;
@@ -118,23 +117,19 @@ function initProfile() {
         btn.textContent = 'Ändern...';
 
         try {
-            const res = await fetch(`${window.API_BASE_URL}/users/me/password`, {
+            // PUT /users/me/password — uses fetchJson: will throw on non-ok
+            await window.fetchJson(`${window.API_BASE_URL}/users/me/password`, {
                 method: 'PUT',
-                headers: {...window.getAuthHeaders(), 'Content-Type': 'application/json'},
-                body: JSON.stringify({currentPassword: current, newPassword: next})
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ currentPassword: current, newPassword: next })
             });
-
-            if (!res.ok) {
-                await handleErrorResponse(res);
-                return;
-            }
 
             showNotification('Passwort erfolgreich geändert.', 'success');
             passwordForm.reset();
-            // optionally force logout after password change — keep user logged in for MVP
+            // Optionally force logout — we keep the user logged in for MVP.
         } catch (err) {
-            console.error(err);
-            showNotification('Netzwerkfehler.', 'error');
+            console.error('password change error', err);
+            showNotification(err.message || 'Fehler beim Ändern des Passworts', 'error');
         } finally {
             btn.disabled = false;
             btn.textContent = 'Passwort ändern';
@@ -144,21 +139,16 @@ function initProfile() {
     // ===== helper: load profile =====
     async function loadProfile() {
         try {
-            const res = await fetch(`${window.API_BASE_URL}/users/me`, {
-                headers: window.getAuthHeaders()
-            });
-            if (!res.ok) {
-                if (res.status === 401) location.href = '../login/login.html';
-                throw new Error('Failed to load profile');
-            }
-            const p = await res.json();
+            // GET /users/me via fetchJson (handles 401)
+            const p = await window.fetchJson(`${window.API_BASE_URL}/users/me`, { method: 'GET' });
             populateProfile(p);
         } catch (err) {
-            console.error(err);
-            showNotification('Fehler beim Laden des Profils.', 'error');
+            console.error('loadProfile error', err);
+            showNotification(err.message || 'Fehler beim Laden des Profils.', 'error');
         }
     }
 
+    // Populate form fields with profile DTO
     function populateProfile(p) {
         firstNameEl.value = p.firstName || '';
         lastNameEl.value = p.lastName || '';
@@ -166,42 +156,24 @@ function initProfile() {
         roleEl.value = p.role || '';
         phoneEl.value = p.phone || '';
         birthDateEl.value = formatForInputDate(p.birthDate);
-        // update header username
-        const userNameEls = document.querySelectorAll('.userName');
-        userNameEls.forEach(el => el.textContent = p.firstName || p.email || 'Gast');
+        // update header username if present
+        document.querySelectorAll('.userName').forEach(el => el.textContent = p.firstName || p.email || 'Gast');
     }
 
     // ===== utils =====
     function formatForInputDate(d) {
         if (!d) return '';
-        // accept 'YYYY-MM-DD' or ISO date-time
-        if (d.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+        // accept 'YYYY-MM-DD' or ISO datetime
+        if (typeof d === 'string' && d.length === 10 && /^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
         try {
             const dt = new Date(d);
             if (isNaN(dt)) return '';
-            // to yyyy-mm-dd
             const y = dt.getFullYear();
             const m = String(dt.getMonth() + 1).padStart(2, '0');
             const day = String(dt.getDate()).padStart(2, '0');
             return `${y}-${m}-${day}`;
         } catch {
             return '';
-        }
-    }
-
-    async function handleErrorResponse(res) {
-        // try parse json -> message, otherwise text
-        try {
-            const ct = res.headers.get('content-type') || '';
-            if (ct.includes('application/json')) {
-                const j = await res.json();
-                showNotification(j.message || j.error || `Fehler ${res.status}`, 'error');
-            } else {
-                const t = await res.text();
-                showNotification(t || `Fehler ${res.status}`, 'error');
-            }
-        } catch (err) {
-            showNotification(`Fehler ${res.status}`, 'error');
         }
     }
 
