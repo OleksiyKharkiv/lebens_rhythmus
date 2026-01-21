@@ -12,6 +12,7 @@ body {
     color: #fff;
     text-align: center;
     /*top: 8vh;*/
+    top: 3.75rem;
     height: 50%;
     width: 80%;
     position: absolute;
@@ -41,7 +42,6 @@ body {
     text-decoration: none;
     font-weight: 600;
     transition: .3s;
-    text-shadow: 0 0 1px #fff, 0 0 2px #fff, 0 0 3px #fff;
 }
 
 .dashboard-nav .btn-primary {
