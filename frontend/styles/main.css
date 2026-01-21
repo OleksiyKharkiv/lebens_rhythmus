@@ -370,13 +370,13 @@ footer {
 }
 
 .footer-link {
-    color: #666;
+    color: black;
     text-decoration: none;
     padding: 5px 10px;
     border-radius: 4px;
     transition: all 0.3s ease;
     font-size: 0.9rem;
-    text-shadow: 0 0 1px rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
 }
 .footer-link:hover {
     color: #333;
