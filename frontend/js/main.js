@@ -11,7 +11,7 @@ function isAuthenticated() {
 }
 
 function getAuthHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {'Content-Type': 'application/json'};
     const token = localStorage.getItem('authToken');
     if (token) headers['Authorization'] = `Bearer ${token}`;
     return headers;
@@ -35,7 +35,7 @@ function toggleMobileMenu() {
 
 function scrollToSection(id) {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    if (el) el.scrollIntoView({behavior: 'smooth'});
 }
 
 // close mobile menu by default

@@ -8,4 +8,5 @@ async function loadPartials() {
     document.body.insertAdjacentHTML('afterbegin', head);
     document.body.insertAdjacentHTML('beforeend', foot);
 }
+
 loadPartials().catch(console.error);

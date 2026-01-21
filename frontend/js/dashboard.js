@@ -7,12 +7,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     try {
-        const profileRes = await fetch(`${window.API_BASE_URL}/users/me`, { headers: window.getAuthHeaders() });
+        const profileRes = await fetch(`${window.API_BASE_URL}/users/me`, {headers: window.getAuthHeaders()});
         if (!profileRes.ok) throw new Error('Failed to fetch profile');
         const profile = await profileRes.json();
         document.querySelector('.userName').textContent = profile.firstName || profile.email || 'Gast';
 
-        const enrollRes = await fetch(`${window.API_BASE_URL}/users/me/enrollments`, { headers: window.getAuthHeaders() });
+        const enrollRes = await fetch(`${window.API_BASE_URL}/users/me/enrollments`, {headers: window.getAuthHeaders()});
         if (!enrollRes.ok) throw new Error('Failed to fetch enrollments');
         const enrollments = await enrollRes.json();
         renderMyCourses(enrollments);
@@ -25,7 +25,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 function renderMyCourses(enrollments) {
     const list = document.getElementById('myCoursesList');
     if (!enrollments || enrollments.length === 0) {
-        list.innerHTML = '<li>Keine Kurse</li>'; return;
+        list.innerHTML = '<li>Keine Kurse</li>';
+        return;
     }
     list.innerHTML = enrollments.map(e => `
     <li>
@@ -38,4 +39,8 @@ function renderMyCourses(enrollments) {
   `).join('');
 }
 
-function escapeHtml(t){ const d=document.createElement('div'); d.textContent = t||''; return d.innerHTML; }
+function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t || '';
+    return d.innerHTML;
+}

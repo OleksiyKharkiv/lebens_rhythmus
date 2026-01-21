@@ -2,7 +2,6 @@
  * Login / Registration – Lebens Rhythmus
  * Safe JWT auth handling
  */
-
 document.addEventListener('DOMContentLoaded', function () {
 
     // ========== ENDPOINTS ==========
@@ -51,8 +50,8 @@ document.addEventListener('DOMContentLoaded', function () {
             try {
                 const response = await fetch(ENDPOINTS.LOGIN, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({email, password})
                 });
 
                 if (!response.ok) {
@@ -98,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function () {
             try {
                 const response = await fetch(ENDPOINTS.REGISTER, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         firstName: registerFirstName.value.trim(),
                         lastName: registerLastName.value.trim(),

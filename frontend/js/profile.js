@@ -56,7 +56,7 @@ function initProfile() {
         try {
             const res = await fetch(`${window.API_BASE_URL}/users/me`, {
                 method: 'PUT',
-                headers: { ...window.getAuthHeaders(), 'Content-Type': 'application/json' },
+                headers: {...window.getAuthHeaders(), 'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
 
@@ -100,9 +100,18 @@ function initProfile() {
         const next = newPasswordEl.value;
         const confirm = confirmPasswordEl.value;
 
-        if (!current) { showNotification('Bitte aktuelles Passwort eingeben.', 'error'); return; }
-        if (!next || next.length < 6) { showNotification('Neues Passwort min. 6 Zeichen.', 'error'); return; }
-        if (next !== confirm) { showNotification('Neue Passwörter stimmen nicht überein.', 'error'); return; }
+        if (!current) {
+            showNotification('Bitte aktuelles Passwort eingeben.', 'error');
+            return;
+        }
+        if (!next || next.length < 6) {
+            showNotification('Neues Passwort min. 6 Zeichen.', 'error');
+            return;
+        }
+        if (next !== confirm) {
+            showNotification('Neue Passwörter stimmen nicht überein.', 'error');
+            return;
+        }
 
         const btn = passwordForm.querySelector('button[type="submit"]');
         btn.disabled = true;
@@ -111,8 +120,8 @@ function initProfile() {
         try {
             const res = await fetch(`${window.API_BASE_URL}/users/me/password`, {
                 method: 'PUT',
-                headers: { ...window.getAuthHeaders(), 'Content-Type': 'application/json' },
-                body: JSON.stringify({ currentPassword: current, newPassword: next })
+                headers: {...window.getAuthHeaders(), 'Content-Type': 'application/json'},
+                body: JSON.stringify({currentPassword: current, newPassword: next})
             });
 
             if (!res.ok) {
