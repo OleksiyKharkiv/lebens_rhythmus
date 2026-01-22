@@ -120,23 +120,32 @@ public class SecurityConfig {
 
         return http
                 .csrf(AbstractHttpConfigurer::disable)
-                .cors(Customizer.withDefaults()) // CORS settings live in WebMvcConfig/CorsProperties
+                .cors(Customizer.withDefaults())
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
                 .authorizeHttpRequests(a -> a
-                        // allow login/register endpoints without auth
+                        // ===== PUBLIC AUTH =====
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/register"
                         ).permitAll()
-                        // allow actuator health
+
+                        // ===== PUBLIC READ =====
+                        .requestMatchers(HttpMethod.GET, "/api/v1/workshops/**").permitAll()
+
+                        // ===== ACTUATOR =====
                         .requestMatchers("/actuator/health").permitAll()
-                        // static resources (optional) - if used from backend
+
+                        // ===== STATIC (optional) =====
                         .requestMatchers("/static/**", "/favicon.ico", "/index.html").permitAll()
-                        // all other endpoints require an authenticated user
+
+                        // ===== EVERYTHING ELSE =====
                         .anyRequest().authenticated()
                 )
-                // configure a resource server to use JWT with our converter
-                .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwtAuthConverter)))
+
+                .oauth2ResourceServer(o ->
+                        o.jwt(j -> j.jwtAuthenticationConverter(jwtAuthConverter))
+                )
                 .build();
     }
 }
