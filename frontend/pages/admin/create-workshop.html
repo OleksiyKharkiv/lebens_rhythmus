@@ -2,46 +2,91 @@
 <html lang="de">
 <head>
     <meta charset="utf-8"/>
-    <title>Create Workshop</title></head>
+    <title>Create Workshop — Admin</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="stylesheet" href="../../styles/main.css"/>
+    <link rel="stylesheet" href="../../styles/workshops.css"/>
+</head>
 <body>
-<main>
+<!-- partials loader will insert header/footer -->
+<main class="container" style="padding:2rem;">
     <h1>Neuen Workshop erstellen</h1>
-    <form id="createWorkshopForm">
-        <label>Titel<input id="title" required/></label><br/>
-        <label>Beschreibung<textarea id="description"></textarea></label><br/>
-        <label>Start <input type="date" id="startDate" required/></label>
-        <label>Ende <input type="date" id="endDate"/></label><br/>
-        <label>Preis <input type="number" id="price" step="0.01"/></label><br/>
-        <label>TeacherId <input id="teacherId"/></label><br/>
-        <button type="submit">Erstellen</button>
+
+    <form id="createWorkshopForm" class="dash-card" style="max-width:800px;">
+        <label>Title (DE/EN/UA) — visible field for admin:
+            <input id="title" name="title" required placeholder="Workshop title" />
+        </label>
+
+        <label>Description:
+            <textarea id="description" name="description" rows="4" placeholder="Short description"></textarea>
+        </label>
+
+        <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+            <label>Start
+                <input type="date" id="startDate" required/>
+            </label>
+            <label>End
+                <input type="date" id="endDate"/>
+            </label>
+            <label>Price (€)
+                <input type="number" id="price" step="0.01" min="0" />
+            </label>
+            <label>Max participants
+                <input type="number" id="maxParticipants" min="1" />
+            </label>
+        </div>
+
+        <div style="display:flex;gap:1rem;margin-top:0.5rem;">
+            <label>Teacher (user id)
+                <input id="teacherId" type="number" />
+            </label>
+            <label>Venue id
+                <input id="venueId" type="number" />
+            </label>
+        </div>
+
+        <div style="margin-top:1rem;">
+            <button type="submit" class="btn btn-primary">Erstellen</button>
+            <button type="button" id="resetBtn" class="btn">Reset</button>
+        </div>
     </form>
-    <div id="result"></div>
-    <script src="../../js/main.js"></script>
-    <script>
-        document.getElementById('createWorkshopForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const payload = {
-                title: document.getElementById('title').value,
-                description: document.getElementById('description').value,
-                startDate: document.getElementById('startDate').value,
-                endDate: document.getElementById('endDate').value || null,
-                price: document.getElementById('price').value ? Number(document.getElementById('price').value) : 0,
-                teacherId: document.getElementById('teacherId').value ? Number(document.getElementById('teacherId').value) : null
-            };
-            try {
-                const res = await fetch(`${window.API_BASE_URL}/workshops`, {
-                    method: 'POST',
-                    headers: window.getAuthHeaders(),
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.message || 'Fehler');
-                document.getElementById('result').innerHTML = 'Workshop erstellt: ' + data.title;
-            } catch (err) {
-                document.getElementById('result').innerHTML = 'Error: ' + err.message;
-            }
-        });
-    </script>
+
+    <div id="createResult" style="margin-top:1rem;"></div>
+
+    <!-- Section to add groups to the created workshop -->
+    <section id="groupsSection" style="margin-top:2rem;display:none;" class="dash-card">
+        <h2>Gruppen für Workshop: <span id="createdWorkshopTitle"></span></h2>
+        <form id="createGroupForm">
+            <input type="hidden" id="createdWorkshopId" />
+            <div style="display:flex;gap:1rem;flex-wrap:wrap;">
+                <label>Group title (EN)
+                    <input id="groupTitleEn" required />
+                </label>
+                <label>Capacity
+                    <input id="groupCapacity" type="number" min="1" value="10"/>
+                </label>
+                <label>Start (datetime-local)
+                    <input id="groupStart" type="datetime-local" />
+                </label>
+                <label>End (datetime-local)
+                    <input id="groupEnd" type="datetime-local" />
+                </label>
+                <label>Teacher Id (optional)
+                    <input id="groupTeacherId" type="number" />
+                </label>
+            </div>
+
+            <div style="margin-top:0.5rem;">
+                <button type="submit" class="btn btn-primary">Gruppe hinzufügen</button>
+            </div>
+        </form>
+
+        <div id="groupsList" style="margin-top:1rem;"></div>
+    </section>
 </main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/partials-loader.js"></script>
+<script src="../../js/admin-workshop.js"></script>
 </body>
 </html>

@@ -1,10 +1,53 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="utf-8"/>
+    <title>Admin Dashboard — Lebens Rhythmus</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="stylesheet" href="../../styles/main.css"/>
+    <link rel="stylesheet" href="../../styles/dashboard.css"/>
 </head>
 <body>
+<!-- partials will inject header/footer -->
+<main style="max-width:1100px;margin:2rem auto;padding:1rem;">
+    <h1>Admin / Content Manager</h1>
+    <p>Quick access panel for creating and managing content: workshops, performances, groups, venues, activities, users.</p>
 
+    <section style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
+        <a class="btn btn-primary" href="../admin/create-workshop.html">Create Workshop</a>
+        <a class="btn" href="../admin/create-performance.html">Create Performance</a>
+        <a class="btn" href="../admin/groups.html">Manage Groups</a>
+        <a class="btn" href="../admin/venues.html">Manage Venues</a>
+        <a class="btn" href="../admin/activities.html">Manage Activities</a>
+        <a class="btn" href="../admin/users.html">Manage Users</a>
+        <a class="btn" href="../admin/reports.html">Reports / Photo Uploads</a>
+    </section>
+
+    <section id="adminMain" style="margin-top:1.5rem;display:grid;grid-template-columns:1fr 320px;gap:1rem;">
+        <div id="adminActions" class="dash-card">
+            <h2>Recent actions</h2>
+            <div id="recentActions">No actions yet.</div>
+        </div>
+
+        <aside id="adminSidebar">
+            <div id="adminStatsBox" class="dash-card">
+                <h3>Loading stats…</h3>
+            </div>
+
+            <div class="dash-card" style="margin-top:1rem;">
+                <h3>Quick links</h3>
+                <ul>
+                    <li><a href="../workshops/workshops.html">Public Workshops</a></li>
+                    <li><a href="../performances/performances.html">Public Performances</a></li>
+                    <li><a href="../dashboard/dashboard.html">User Dashboard</a></li>
+                </ul>
+            </div>
+        </aside>
+    </section>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/partials-loader.js"></script>
+<script src="../../js/admin-dashboard.js"></script>
 </body>
 </html>
