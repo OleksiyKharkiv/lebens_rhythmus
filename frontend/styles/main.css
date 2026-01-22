@@ -290,7 +290,7 @@ nav {
 
 /* ===== Hero ===== */
 .hero {
-    min-height: 97vh;
+    min-height: 85vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
