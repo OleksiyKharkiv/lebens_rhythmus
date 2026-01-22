@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         form.reset();
     });
 
-    // create group flow
+    // create a group flow
     groupForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const workshopId = document.getElementById('createdWorkshopId').value;
@@ -102,7 +102,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         const groupPayload = {
-            // adjust body to match backend Group DTO - minimal fields:
+            // adjust a body to match backend Group DTO - minimal fields:
             titleEn: document.getElementById('groupTitleEn').value.trim(),
             capacity: parseInt(document.getElementById('groupCapacity').value) || 10,
             startDateTime: document.getElementById('groupStart').value || null,
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 throw new Error(data.message || `HTTP ${res.status}`);
             }
 
-            // append created group to UI
+            // append a created group to UI
             prependGroupToList(data);
             groupForm.reset();
         } catch (err) {
