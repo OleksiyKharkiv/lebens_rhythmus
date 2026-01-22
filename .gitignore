@@ -6,6 +6,7 @@ HELP.md
 Thumbs.db
 build/
 backend/build
+backend/.gradle
 /.gradle/
 !**/src/main/**/build/
 !**/src/test/**/build/
