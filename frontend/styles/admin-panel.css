@@ -1,0 +1,293 @@
+/* admin-panel.css
+   Unified admin / content-manager styles — soft purple dusk palette
+   Created for Lebens Rhythmus admin UI
+*/
+
+/* -------------------- Palette & base -------------------- */
+:root{
+    --bg-1: #f1eef8;            /* page base */
+    --bg-2: #ece7f6;            /* subtle gradient stop */
+    --card: rgba(255,255,255,0.88);
+    --glass: rgba(255,255,255,0.75);
+    --text: #1f1f2a;
+    --muted: #6b6f7a;
+
+    --accent-1: #7c3aed;  /* deep purple */
+    --accent-2: #a78bfa;  /* lighter purple */
+    --accent-3: #d6bbff;  /* pale */
+    --accent-glow: rgba(124,58,237,0.14);
+
+    --success: #1e7e34;
+    --danger: #b02a37;
+
+    --radius-lg: 14px;
+    --radius-md: 8px;
+
+    --shadow-soft: 0 12px 34px rgba(20,16,60,0.10);
+    --shadow-sm: 0 6px 16px rgba(20,16,60,0.08);
+
+    --max-width: 1200px;
+    --ff: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+}
+
+/* -------------------- Admin body scope -------------------- */
+/* Apply admin theme only when body.admin is present to avoid global conflicts */
+body.admin {
+    background:
+            radial-gradient(1000px 500px at 12% 12%, rgba(167,139,250,0.10), transparent 22%),
+            radial-gradient(800px 400px at 88% 88%, rgba(124,58,237,0.06), transparent 18%),
+            linear-gradient(180deg, var(--bg-1) 0%, var(--bg-2) 100%);
+    color: var(--text);
+    font-family: var(--ff);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* container for admin pages */
+.container.admin {
+    max-width: var(--max-width);
+    margin: 2.25rem auto;
+    padding: 1.5rem;
+}
+
+/* -------------------- Header / hero -------------------- */
+.admin-header {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.admin-header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    letter-spacing: -0.2px;
+    color: var(--text);
+}
+
+.admin-sub {
+    color: var(--muted);
+    font-size: 0.95rem;
+    margin-top: 6px;
+}
+
+/* -------------------- Dash card (reusable) -------------------- */
+/* card look: glass + subtle purple tint, soft shadow */
+body.admin .dash-card {
+    background: linear-gradient(180deg, rgba(255,255,255,0.92), rgba(245,243,255,0.90));
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(124,58,237,0.06);
+    color: var(--text);
+    transition: transform .12s ease, box-shadow .12s ease;
+}
+body.admin .dash-card:hover { transform: translateY(-4px); box-shadow: 0 24px 48px rgba(20,16,60,0.12); }
+
+.dash-card h2, .dash-card h3 {
+    margin: 0 0 .6rem 0;
+    font-size: 1.1rem;
+    color: var(--text);
+}
+
+/* -------------------- Buttons -------------------- */
+.btn {
+    font-family: inherit;
+    padding: 10px 16px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-weight: 600;
+    transition: transform .18s ease, box-shadow .18s ease, background .12s ease;
+    box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    text-decoration: none;
+    color: var(--text);
+    background: var(--glass);
+    border: 1px solid rgba(124,58,237,0.05);
+}
+.btn:hover { transform: translateY(-3px); }
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
+    color: #fff;
+    box-shadow: 0 10px 28px rgba(124,58,237,0.15);
+    border: none;
+}
+.btn-primary:hover { box-shadow: 0 18px 40px rgba(124,58,237,0.22); }
+
+.btn-outline {
+    background: transparent;
+    color: var(--accent-1);
+    border: 1px solid rgba(124,58,237,0.12);
+}
+.btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border: none;
+}
+
+/* anchors that act like buttons */
+body.admin a.btn { display:inline-flex; align-items:center; justify-content:center; }
+
+/* -------------------- Forms / inputs -------------------- */
+form label {
+    display: block;
+    font-weight: 600;
+    color: var(--muted);
+    margin-bottom: .35rem;
+    font-size: .95rem;
+}
+
+input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"],
+input[type="tel"], input[type="email"], textarea, select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(17,15,46,0.06);
+    background: linear-gradient(180deg, #fff, #fcfbff);
+    font-size: .98rem;
+    transition: box-shadow .15s ease, border-color .15s ease, transform .08s ease;
+    box-shadow: none;
+}
+
+input:focus, textarea:focus, select:focus {
+    outline: none;
+    border-color: var(--accent-1);
+    box-shadow: 0 8px 26px var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+textarea { min-height: 110px; resize: vertical; }
+
+/* form grid helpers */
+.form-row {
+    display: flex;
+    gap: .8rem;
+    flex-wrap: wrap;
+}
+.form-row > * { flex: 1 1 220px; }
+
+/* helper text */
+.help { font-size: .85rem; color: var(--muted); margin-top: .35rem; }
+
+/* -------------------- Group card / items -------------------- */
+.group-card {
+    background: linear-gradient(180deg, rgba(167,139,250,0.04), rgba(214,187,255,0.02));
+    border-radius: 10px;
+    padding: .85rem;
+    border-left: 4px solid var(--accent-2);
+    box-shadow: var(--shadow-sm);
+}
+.group-card small { color: var(--muted); display:block; margin-top:.35rem; }
+
+/* public workshop item compatibility */
+.workshop-item {
+    background: linear-gradient(180deg, rgba(124,58,237,0.03), rgba(167,139,250,0.01));
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid rgba(124,58,237,0.04);
+}
+
+/* -------------------- Tables / lists for editors -------------------- */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: .6rem;
+    font-size: .95rem;
+}
+.table th, .table td {
+    padding: .6rem .75rem;
+    border-bottom: 1px dashed rgba(17,15,46,0.04);
+    text-align: left;
+}
+.table th {
+    font-weight: 700;
+    color: var(--muted);
+    font-size: .85rem;
+}
+
+/* -------------------- Stats / metric blocks -------------------- */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: .75rem;
+}
+.stat {
+    background: linear-gradient(180deg, rgba(255,255,255,0.96), rgba(251,248,255,0.96));
+    border-radius: 10px;
+    padding: .8rem;
+    box-shadow: var(--shadow-sm);
+    text-align: center;
+}
+.stat .value { font-size: 1.3rem; font-weight:700; color: var(--accent-1); }
+.stat .label { font-size:.85rem; color:var(--muted); }
+
+/* -------------------- Modal (dialog) styling -------------------- */
+.modal { border-radius: 12px; padding: 0; max-width: 760px; }
+.modal::backdrop { background: rgba(17,15,46,0.45); }
+.modal-content {
+    padding: 1.25rem;
+    display:flex;
+    flex-direction:column;
+    gap:.6rem;
+    background: linear-gradient(180deg,#fff,#fbf7ff);
+    border-radius: 10px;
+}
+
+/* modal actions */
+.modal-actions { display:flex; gap:.6rem; justify-content:flex-end; margin-top:.5rem; }
+
+/* -------------------- Notification pills -------------------- */
+.notify { padding: 8px 12px; border-radius: 10px; display:inline-block; font-weight:600; }
+.notify.ok { background: rgba(30,126,52,0.08); color:var(--success); border:1px solid rgba(30,126,52,0.06); }
+.notify.err { background: rgba(176,42,55,0.06); color:var(--danger); }
+
+/* -------------------- Admin-specific overrides -------------------- */
+/* ensure admin area visually wins vs generic dashboard.css */
+body.admin .dash-card[style] { border-color: rgba(124,58,237,0.05); }
+
+/* anchors in admin sidebar */
+body.admin #adminSidebar a { color: var(--accent-1); text-decoration: none; }
+body.admin #adminSidebar a:hover { text-decoration: underline; }
+
+/* small helper for empty states */
+.admin-empty {
+    padding: 1rem;
+    text-align: center;
+    color: var(--muted);
+    border-radius: 10px;
+    background: linear-gradient(180deg, rgba(124,58,237,0.02), rgba(167,139,250,0.01));
+    border: 1px solid rgba(124,58,237,0.03);
+}
+
+/* -------------------- Accessibility / focus -------------------- */
+:focus { outline: none; }
+a:focus, button:focus, input:focus, select:focus {
+    box-shadow: 0 12px 36px rgba(124,58,237,0.12);
+    border-color: var(--accent-1);
+}
+
+/* -------------------- Micro animations -------------------- */
+.fade-in { animation: fadeInUp .35s ease both; }
+@keyframes fadeInUp { from { transform: translateY(8px); opacity:0 } to { transform: translateY(0); opacity:1 } }
+
+/* -------------------- Responsive -------------------- */
+@media (max-width: 900px) {
+    .form-row { flex-direction: column; }
+    .admin-header { flex-direction: column; align-items:flex-start; gap:.5rem; }
+    .container.admin { padding: 1rem; }
+}
+
+/* -------------------- Small tweaks for contrast reduction -------------------- */
+/* reduce pure-white backgrounds in other included CSS that may bleed through */
+body.admin .btn-outline, body.admin .btn-ghost { box-shadow: none; }
+body.admin main, body.admin section, body.admin article { background: transparent; }
+
+/* End of admin-panel.css */

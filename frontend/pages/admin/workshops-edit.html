@@ -8,108 +8,205 @@
     <link rel="stylesheet" href="../../styles/dashboard.css"/>
     <link rel="stylesheet" href="../../styles/workshops.css"/>
     <link rel="stylesheet" href="../../styles/admin-workshops.css"/>
+    <link rel="stylesheet" href="../../styles/admin-panel.css"/>
 </head>
-<body>
-<!-- header/footer injected by partials -->
-<main class="container" style="padding:1.5rem;">
-    <h1>Workshops — Manage</h1>
-    <p>List, edit, publish and add groups to workshops.</p>
+<body class="admin">
+<!-- header/footer injected by partials-loader -->
 
-    <section style="display:grid;grid-template-columns: 1fr 420px; gap:1rem; margin-top:1rem;">
+<main class="container admin" aria-labelledby="pageTitle">
+    <header class="admin-header" role="banner">
+        <div>
+            <h1 id="pageTitle">Workshops — Manage</h1>
+            <p class="admin-sub">List, edit, publish and add groups to workshops.</p>
+        </div>
+
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+            <a class="btn btn-outline" href="../../pages/dashboard/dashboard.html">User Dashboard</a>
+            <a class="btn btn-outline" href="../admin/reports.html">Reports</a>
+        </div>
+    </header>
+
+    <!-- Top quick actions -->
+    <section class="admin-actions" aria-hidden="false" style="margin-top:.6rem;">
+        <a class="btn btn-primary" href="#" id="btnNewWorkshop">+ New workshop</a>
+        <a class="btn btn-outline" href="../admin/performances-edit.html">Performances</a>
+        <a class="btn btn-outline" href="../admin/groups.html">Groups</a>
+        <a class="btn btn-outline" href="../admin/venues.html">Venues</a>
+        <a class="btn btn-outline" href="../admin/activities.html">Activities</a>
+        <a class="btn btn-outline" href="../admin/users.html">Users</a>
+
+        <div style="margin-left:auto;display:flex;gap:.5rem;align-items:center;">
+            <label for="filterStatus" class="help" style="margin-right:.5rem;">Status</label>
+            <select id="filterStatus" aria-label="Filter status" class="form-control">
+                <option value="ALL">All</option>
+                <option value="PUBLISHED">Published</option>
+                <option value="DRAFT">Draft</option>
+                <option value="ARCHIVED">Archived</option>
+            </select>
+
+            <input id="searchWorkshop" class="form-control" placeholder="Search workshops..." aria-label="Search workshops" />
+        </div>
+    </section>
+
+    <!-- Main grid -->
+    <section id="manageGrid" style="margin-top:1rem; display:grid; grid-template-columns: 1fr 420px; gap:1rem; align-items:start;">
         <!-- LEFT: list + filters -->
-        <div class="dash-card">
-            <div style="display:flex;justify-content:space-between;align-items:center;">
-                <h2>Existing Workshops</h2>
-                <div>
-                    <select id="filterStatus" aria-label="Filter status">
-                        <option value="ALL">All</option>
-                        <option value="PUBLISHED">Published</option>
-                        <option value="DRAFT">Draft</option>
-                        <option value="ARCHIVED">Archived</option>
-                    </select>
-                    <input id="searchWorkshop" placeholder="Search..." style="margin-left:8px;"/>
-                </div>
+        <div class="dash-card" aria-labelledby="existingTitle">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;">
+                <h2 id="existingTitle">Existing Workshops</h2>
+                <div class="help" aria-hidden="true">Click a workshop to edit or open groups</div>
             </div>
 
-            <div id="workshopsList" style="margin-top:1rem;max-height:60vh;overflow:auto;">
-                <!-- JS renders workshop items: each item shows title, dates, status, actions -->
+            <div id="workshopsList" style="margin-top:1rem; max-height:62vh; overflow:auto;">
+                <!-- JS will render workshop items here -->
+                <div class="admin-empty">Loading workshops…</div>
+            </div>
+
+            <div id="workshopsListFooter" style="margin-top:0.75rem; display:flex; justify-content:flex-end; gap:.5rem;">
+                <button class="btn btn-ghost" id="prevPage" disabled>Prev</button>
+                <button class="btn btn-ghost" id="nextPage" disabled>Next</button>
             </div>
         </div>
 
         <!-- RIGHT: create/edit -->
-        <aside class="dash-card">
-            <h2 id="formTitle">Create new workshop</h2>
-            <form id="workshopForm" autocomplete="off">
-                <input type="hidden" id="workshopId"/>
-                <label>Title
-                    <input id="wTitle" required/>
-                </label>
-                <label>Short description
-                    <textarea id="wDescription" rows="3"></textarea>
-                </label>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <label>Start <input type="date" id="wStart" required/></label>
-                    <label>End <input type="date" id="wEnd"/></label>
-                    <label>Price (€) <input type="number" id="wPrice" step="0.01" min="0"/></label>
-                    <label>Max participants <input type="number" id="wMax" min="1"/></label>
+        <aside class="dash-card" aria-labelledby="formTitle">
+            <h2 id="formTitle">Create / Edit workshop</h2>
+
+            <form id="workshopForm" autocomplete="off" novalidate>
+                <input type="hidden" id="workshopId" />
+
+                <div class="form-row">
+                    <div style="flex:1;">
+                        <label for="wTitle">Title</label>
+                        <input id="wTitle" class="form-control" required placeholder="Workshop title (de/en/ua)"/>
+                    </div>
                 </div>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
-                    <label>Teacher
-                        <select id="wTeacher">
+
+                <label for="wDescription">Short description</label>
+                <textarea id="wDescription" class="form-control" rows="3" placeholder="Short description for list/detail"></textarea>
+
+                <div class="form-row" style="margin-top:.5rem;">
+                    <label for="wStart">Start
+                        <input type="date" id="wStart" class="form-control" required />
+                    </label>
+                    <label for="wEnd">End
+                        <input type="date" id="wEnd" class="form-control" />
+                    </label>
+                </div>
+
+                <div class="form-row" style="margin-top:.5rem;">
+                    <label for="wPrice">Price (€)
+                        <input type="number" id="wPrice" class="form-control" step="0.01" min="0" />
+                    </label>
+                    <label for="wMax">Max participants
+                        <input type="number" id="wMax" class="form-control" min="1" />
+                    </label>
+                </div>
+
+                <div class="form-row" style="margin-top:.5rem;">
+                    <label for="wTeacher">Teacher
+                        <select id="wTeacher" class="form-control" aria-label="Select teacher">
                             <option value="">— none —</option>
                         </select>
                     </label>
-                    <label>Venue
-                        <select id="wVenue">
+
+                    <label for="wVenue">Venue
+                        <select id="wVenue" class="form-control" aria-label="Select venue">
                             <option value="">— none —</option>
                         </select>
                     </label>
-                    <label>Language
-                        <select id="wLanguage">
+
+                    <label for="wLanguage">Language
+                        <select id="wLanguage" class="form-control" aria-label="Select language">
                             <option value="">default</option>
                         </select>
                     </label>
                 </div>
 
-                <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
-                    <button class="btn btn-primary" type="submit" id="saveWorkshopBtn">Save</button>
-                    <button type="button" class="btn" id="clearWorkshopBtn">Reset</button>
-                    <button type="button" class="btn" id="openGroupsBtn" style="margin-left:auto;">Open Groups</button>
+                <div class="form-row" style="margin-top:.75rem; align-items:center;">
+                    <div style="display:flex;gap:.5rem;">
+                        <button class="btn btn-primary" type="submit" id="saveWorkshopBtn">Save</button>
+                        <button type="button" class="btn" id="clearWorkshopBtn">Reset</button>
+                    </div>
+                    <div style="margin-left:auto;display:flex;gap:.5rem;">
+                        <button type="button" class="btn btn-outline" id="togglePublishBtn">Publish</button>
+                        <button type="button" class="btn btn-outline" id="openGroupsBtn">Open Groups</button>
+                    </div>
                 </div>
             </form>
 
-            <div id="workshopFormResult" style="margin-top:0.75rem;"></div>
+            <div id="workshopFormResult" style="margin-top:0.75rem;" aria-live="polite"></div>
         </aside>
     </section>
 
-    <!-- Groups section (toggleable) -->
-    <section id="workshopGroupsPanel" style="display:none;margin-top:1rem;">
+    <!-- Groups panel (toggleable) -->
+    <section id="workshopGroupsPanel" style="display:none; margin-top:1rem;">
         <div class="dash-card">
-            <h2>Groups for: <span id="groupsWorkshopTitle"></span></h2>
-            <form id="groupCreateForm" style="margin-top:0.5rem;">
-                <input type="hidden" id="groupsWorkshopId"/>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                    <label>Title <input id="gTitle" required/></label>
-                    <label>Capacity <input id="gCapacity" type="number" min="1" value="10"/></label>
-                    <label>Start <input id="gStart" type="datetime-local"/></label>
-                    <label>End <input id="gEnd" type="datetime-local"/></label>
-                    <label>Teacher <select id="gTeacher">
-                        <option value="">— none —</option>
-                    </select></label>
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h2>Groups for: <span id="groupsWorkshopTitle">—</span></h2>
+                <div>
+                    <button id="closeGroupsPanel" class="btn btn-ghost">Close</button>
                 </div>
-                <div style="margin-top:0.5rem;">
+            </div>
+
+            <form id="groupCreateForm" style="margin-top:.6rem;" autocomplete="off">
+                <input type="hidden" id="groupsWorkshopId" />
+                <div class="form-row">
+                    <label for="gTitle">Title
+                        <input id="gTitle" class="form-control" required placeholder="Group title (EN)"/>
+                    </label>
+                    <label for="gCapacity">Capacity
+                        <input id="gCapacity" class="form-control" type="number" min="1" value="10"/>
+                    </label>
+                </div>
+
+                <div class="form-row" style="margin-top:.4rem;">
+                    <label for="gStart">Start
+                        <input id="gStart" class="form-control" type="datetime-local"/>
+                    </label>
+                    <label for="gEnd">End
+                        <input id="gEnd" class="form-control" type="datetime-local"/>
+                    </label>
+                    <label for="gTeacher">Teacher
+                        <select id="gTeacher" class="form-control">
+                            <option value="">— none —</option>
+                        </select>
+                    </label>
+                </div>
+
+                <div style="margin-top:.5rem; display:flex; gap:.5rem;">
                     <button class="btn btn-primary" type="submit">Add group</button>
-                    <button type="button" class="btn" id="closeGroupsPanel">Close</button>
+                    <button type="button" class="btn" id="refreshGroupsBtn">Refresh</button>
                 </div>
             </form>
 
-            <div id="groupsListContainer" style="margin-top:1rem;"></div>
+            <div id="groupsListContainer" style="margin-top:1rem;">
+                <div class="admin-empty">No groups yet — add the first group.</div>
+            </div>
         </div>
     </section>
 </main>
 
+<!-- Optional lightweight inline templates -->
+<template id="tmplWorkshopItem">
+    <div class="workshop-item" data-id="">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+                <strong class="wi-title"></strong>
+                <div class="help wi-dates" style="margin-top:.25rem;"></div>
+            </div>
+            <div style="display:flex;gap:.5rem;align-items:center;">
+                <button class="btn btn-outline wi-edit">Edit</button>
+                <button class="btn btn-ghost wi-groups">Groups</button>
+            </div>
+        </div>
+        <div class="wi-meta" style="margin-top:.5rem;color:var(--muted);font-size:.9rem;"></div>
+    </div>
+</template>
+
 <script src="../../js/main.js"></script>
 <script src="../../js/partials-loader.js"></script>
 <script src="../../js/admin-workshop.js"></script>
+
 </body>
 </html>

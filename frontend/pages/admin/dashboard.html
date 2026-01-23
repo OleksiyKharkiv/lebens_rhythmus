@@ -6,37 +6,86 @@
     <meta name="viewport" content="width=device-width,initial-scale=1"/>
     <link rel="stylesheet" href="../../styles/main.css"/>
     <link rel="stylesheet" href="../../styles/dashboard.css"/>
+    <link rel="stylesheet" href="../../styles/admin-panel.css"/>
 </head>
-<body>
-<!-- partials will inject header/footer -->
-<main style="max-width:1100px;margin:2rem auto;padding:1rem;">
-    <h1>Admin / Content Manager</h1>
-    <p>Quick access panel for creating and managing content: workshops, performances, groups, venues, activities, users.</p>
+<body class="admin">
+<!-- ... -->
+<main class="container admin" style="margin:2rem auto;">
 
-    <section style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
-        <a class="btn btn-primary" href="../admin/workshops-edit.html">Manage Workshops</a>
-        <a class="btn" href="../admin/performances-edit.html">Manage Performance</a>
-        <a class="btn" href="../admin/groups.html">Manage Groups</a>
-        <a class="btn" href="../admin/venues.html">Manage Venues</a>
-        <a class="btn" href="../admin/activities.html">Manage Activities</a>
-        <a class="btn" href="../admin/users.html">Manage Users</a>
-        <a class="btn" href="../admin/reports.html">Reports / Photo Uploads</a>
-    </section>
-
-    <section id="adminMain" style="margin-top:1.5rem;display:grid;grid-template-columns:1fr 320px;gap:1rem;">
-        <div id="adminActions" class="dash-card">
-            <h2>Recent actions</h2>
-            <div id="recentActions">No actions yet.</div>
+    <header style="display:flex;justify-content:space-between;align-items:center;gap:1rem;">
+        <div>
+            <h1 style="margin:0 0 0.25rem 0;">Admin / Content Manager</h1>
+            <p style="margin:0;color:#555">Quick panel — create & manage workshops, groups, performances, venues,
+                users.</p>
         </div>
 
+        <div style="display:flex;gap:0.5rem;align-items:center;">
+            <a class="btn btn-outline" href="../../pages/dashboard/dashboard.html">User Dashboard</a>
+            <button id="logoutBtn" class="btn btn-outline">Logout</button>
+        </div>
+    </header>
+
+    <!-- Quick action buttons -->
+    <section style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:1rem;">
+        <a class="btn btn-primary" href="../admin/workshops-edit.html">Manage Workshops</a>
+        <a class="btn btn-outline" href="../admin/performances-edit.html">Manage Performances</a>
+        <a class="btn btn-outline" href="../admin/groups.html">Manage Groups</a>
+        <a class="btn btn-outline" href="../admin/venues.html">Manage Venues</a>
+        <a class="btn btn-outline" href="../admin/activities.html">Manage Activities</a>
+        <a class="btn btn-outline" href="../admin/users.html">Manage Users</a>
+        <a class="btn btn-outline" href="../admin/reports.html">Reports / Media</a>
+
+        <!-- quick inline create (opens modal) -->
+        <button class="btn" id="quickCreateWorkshopBtn">+ New Workshop</button>
+        <button class="btn" id="quickCreateGroupBtn">+ New Group</button>
+    </section>
+
+    <!-- Main grid -->
+    <section id="adminMain"
+             style="margin-top:1.5rem;display:grid;grid-template-columns:1fr 360px;gap:1rem;align-items:start;">
+        <!-- left column -->
+        <div>
+            <div class="dash-card" style="margin-bottom:1rem;">
+                <h2>Recent actions</h2>
+                <div id="recentActions" style="min-height:80px;padding-top:6px;">Loading recent items…</div>
+            </div>
+
+            <div class="dash-card" style="margin-bottom:1rem;">
+                <h2>Quick editors</h2>
+                <p style="margin:0 0 0.75rem 0;color:#555">Open an editor to list / edit existing objects or create new
+                    ones.</p>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:0.5rem;">
+                    <a class="btn btn-outline" href="../admin/workshops-edit.html">Workshops</a>
+                    <a class="btn btn-outline" href="../admin/performances-edit.html">Performances</a>
+                    <a class="btn btn-outline" href="../admin/groups.html">Groups</a>
+                    <a class="btn btn-outline" href="../admin/venues.html">Venues</a>
+                    <a class="btn btn-outline" href="../admin/activities.html">Activities</a>
+                    <a class="btn btn-outline" href="../admin/users.html">Users</a>
+                </div>
+            </div>
+
+            <div id="recentWorkshopsCard" class="dash-card" style="margin-bottom:1rem;">
+                <h2>Upcoming Workshops</h2>
+                <div id="recentWorkshopsList">Loading…</div>
+            </div>
+
+            <div id="recentEnrollmentsCard" class="dash-card" style="margin-bottom:1rem;">
+                <h2>Recent Enrollments</h2>
+                <div id="recentEnrollmentsList">Loading…</div>
+            </div>
+        </div>
+
+        <!-- right column / sidebar -->
         <aside id="adminSidebar">
             <div id="adminStatsBox" class="dash-card">
                 <h3>Loading stats…</h3>
+                <div id="adminStatsContent" style="margin-top:0.5rem;"></div>
             </div>
 
             <div class="dash-card" style="margin-top:1rem;">
                 <h3>Quick links</h3>
-                <ul>
+                <ul style="margin:0;padding-left:1rem;">
                     <li><a href="../workshops/workshops.html">Public Workshops</a></li>
                     <li><a href="../performances/performances.html">Public Performances</a></li>
                     <li><a href="../dashboard/dashboard.html">User Dashboard</a></li>
@@ -46,8 +95,90 @@
     </section>
 </main>
 
+<!-- ========== Quick-create modals (hidden) ========== -->
+<dialog id="modalCreateWorkshop" class="modal" aria-hidden="true" style="display:none;">
+    <form method="dialog" id="modalCreateWorkshopForm" class="modal-content">
+        <h3>Create workshop</h3>
+        <label>Title <input id="m_title" required/></label>
+        <label>Description <textarea id="m_description" rows="3"></textarea></label>
+        <div style="display:flex;gap:0.5rem;">
+            <label>Start <input id="m_start" type="date"/></label>
+            <label>End <input id="m_end" type="date"/></label>
+        </div>
+        <div style="display:flex;gap:0.5rem;margin-top:.5rem;">
+            <label>Price <input id="m_price" type="number" step="0.01"/></label>
+            <label>Max <input id="m_max" type="number" min="1"/></label>
+        </div>
+        <div class="modal-actions" style="margin-top:0.75rem;">
+            <button id="m_create" class="btn btn-primary" type="submit">Create</button>
+            <button id="m_cancel" class="btn" type="button">Cancel</button>
+        </div>
+        <div id="m_result" style="margin-top:0.5rem;"></div>
+    </form>
+</dialog>
+
+<dialog id="modalCreateGroup" class="modal" aria-hidden="true" style="display:none;">
+    <form method="dialog" id="modalCreateGroupForm" class="modal-content">
+        <h3>Create group</h3>
+        <label>Workshop ID <input id="g_workshopId" type="number" required/></label>
+        <label>Title <input id="g_title" required/></label>
+        <label>Capacity <input id="g_capacity" type="number" min="1" value="10"/></label>
+        <label>Start (datetime-local) <input id="g_start" type="datetime-local"/></label>
+        <label>End (datetime-local) <input id="g_end" type="datetime-local"/></label>
+        <div class="modal-actions" style="margin-top:.5rem;">
+            <button id="g_create" class="btn btn-primary" type="submit">Create</button>
+            <button id="g_cancel" class="btn" type="button">Cancel</button>
+        </div>
+        <div id="g_result" style="margin-top:0.5rem;"></div>
+    </form>
+</dialog>
+
+<script>
+    // small client glue: logout + open modals (fine to keep minimal — main JS will enhance)
+    document.addEventListener('DOMContentLoaded', () => {
+        const logoutBtn = document.getElementById('logoutBtn');
+        logoutBtn?.addEventListener('click', () => {
+            window.logout?.();
+        });
+
+        // open quick create modal
+        document.getElementById('quickCreateWorkshopBtn')?.addEventListener('click', () => {
+            const d = document.getElementById('modalCreateWorkshop');
+            if (d?.showModal) {
+                d.showModal();
+                d.style.display = 'block';
+            }
+        });
+        document.getElementById('quickCreateGroupBtn')?.addEventListener('click', () => {
+            const d = document.getElementById('modalCreateGroup');
+            if (d?.showModal) {
+                d.showModal();
+                d.style.display = 'block';
+            }
+        });
+
+        // simple modal cancel handlers
+        document.getElementById('m_cancel')?.addEventListener('click', () => {
+            const d = document.getElementById('modalCreateWorkshop');
+            if (d.close) {
+                d.close();
+                d.style.display = 'none';
+            }
+        });
+        document.getElementById('g_cancel')?.addEventListener('click', () => {
+            const d = document.getElementById('modalCreateGroup');
+            if (d.close) {
+                d.close();
+                d.style.display = 'none';
+            }
+        });
+    });
+</script>
+
 <script src="../../js/main.js"></script>
 <script src="../../js/partials-loader.js"></script>
 <script src="../../js/admin-dashboard.js"></script>
+<!-- admin-workshop.js подключаем для возможности быстрого создания -->
+<script src="../../js/admin-workshop.js"></script>
 </body>
 </html>
