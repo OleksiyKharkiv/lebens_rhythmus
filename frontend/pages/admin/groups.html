@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8"/>
+    <title>Manage Groups — Admin</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="stylesheet" href="../../styles/main.css"/>
+    <link rel="stylesheet" href="../../styles/dashboard.css"/>
+    <link rel="stylesheet" href="../../styles/groups.css"/>
+</head>
+<body>
+<main class="container" style="padding:1.5rem;">
+    <h1>Groups — Manage</h1>
+
+    <section style="display:grid;grid-template-columns:1fr 380px;gap:1rem;">
+        <div class="dash-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h2>Groups</h2>
+                <select id="groupsWorkshopFilter">
+                    <option value="">All workshops</option>
+                </select>
+            </div>
+            <div id="groupsList" style="margin-top:1rem;max-height:60vh;overflow:auto;"></div>
+        </div>
+
+        <aside class="dash-card">
+            <h2>Create Group</h2>
+            <form id="groupForm">
+                <label>Workshop <select id="groupWorkshop" required>
+                    <option value="">— choose —</option>
+                </select></label>
+                <label>Title <input id="groupTitle" required/></label>
+                <label>Capacity <input id="groupCap" type="number" min="1" value="10"/></label>
+                <label>Start <input id="groupStartLocal" type="datetime-local"/></label>
+                <label>End <input id="groupEndLocal" type="datetime-local"/></label>
+                <div style="margin-top:0.5rem;">
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </div>
+            </form>
+        </aside>
+    </section>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/partials-loader.js"></script>
+<script src="../../js/admin-groups.js"></script>
+</body>
+</html>

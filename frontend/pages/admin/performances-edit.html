@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8"/>
+    <title>Manage Performances — Admin</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="stylesheet" href="../../styles/main.css"/>
+    <link rel="stylesheet" href="../../styles/dashboard.css"/>
+    <link rel="stylesheet" href="../../styles/performances.css"/>
+</head>
+<body>
+<main class="container" style="padding:1.5rem;">
+    <h1>Performances — Manage</h1>
+    <section style="display:grid;grid-template-columns:1fr 380px;gap:1rem;">
+        <div class="dash-card">
+            <h2>Existing Performances</h2>
+            <div id="performancesList" style="margin-top:1rem;max-height:60vh;overflow:auto;"></div>
+        </div>
+
+        <aside class="dash-card">
+            <h2>Create Performance</h2>
+            <form id="performanceForm">
+                <label>Title <input id="pTitle" required/></label>
+                <label>Workshop <select id="pWorkshop">
+                    <option value="">— choose —</option>
+                </select></label>
+                <label>Date & time <input id="pDate" type="datetime-local" required/></label>
+                <label>Venue <select id="pVenue">
+                    <option value="">— choose —</option>
+                </select></label>
+                <div style="margin-top:0.5rem;">
+                    <button class="btn btn-primary" type="submit">Create</button>
+                </div>
+            </form>
+        </aside>
+    </section>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/partials-loader.js"></script>
+<script src="../../js/admin-performances.js"></script>
+</body>
+</html>

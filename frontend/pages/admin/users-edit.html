@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="utf-8"/>
+    <title>Manage Users — Admin</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1"/>
+    <link rel="stylesheet" href="../../styles/main.css"/>
+    <link rel="stylesheet" href="../../styles/dashboard.css"/>
+    <link rel="stylesheet" href="../../styles/admin-users.css"/>
+</head>
+<body>
+<main class="container" style="padding:1.5rem;">
+    <h1>Users — Manage</h1>
+    <p>Search users, change role/status (no personal data edit here).</p>
+
+    <section style="display:grid;grid-template-columns:1fr 380px;gap:1rem;">
+        <div class="dash-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+                <h2>Users</h2>
+                <input id="userSearch" placeholder="Search by email or name"/>
+            </div>
+            <div id="usersList" style="margin-top:1rem;max-height:60vh;overflow:auto;"></div>
+        </div>
+
+        <aside class="dash-card">
+            <h2>User actions</h2>
+            <div id="userEditor">
+                <p>Select a user from the list to change role / enable/disable.</p>
+                <form id="userActionForm" style="display:none;">
+                    <input type="hidden" id="uId"/>
+                    <div>
+                        <label>Role
+                            <select id="uRole">
+                                <option value="USER">USER</option>
+                                <option value="TEACHER">TEACHER</option>
+                                <option value="BUSINESS_OWNER">BUSINESS_OWNER</option>
+                                <option value="ADMIN">ADMIN</option>
+                            </select>
+                        </label>
+                    </div>
+                    <div style="margin-top:0.5rem;">
+                        <label><input type="checkbox" id="uEnabled"/> Enabled</label>
+                    </div>
+                    <div style="margin-top:0.75rem;">
+                        <button class="btn btn-primary" id="saveUserRoleBtn">Save</button>
+                        <button type="button" class="btn" id="cancelUserEdit">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </aside>
+    </section>
+</main>
+
+<script src="../../js/main.js"></script>
+<script src="../../js/partials-loader.js"></script>
+<script src="../../js/admin-users.js"></script>
+</body>
+</html>
