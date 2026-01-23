@@ -8,7 +8,65 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
     }
     loadWorkshops();
+
+    // Add form submission handler
+    const form = document.getElementById('workshop-registration-form');
+    if (form) {
+        form.addEventListener('submit', handleRegistration);
+    }
 });
+
+async function handleRegistration(e) {
+    e.preventDefault();
+    if (!isAuthenticated()) {
+        const currentPath = window.location.pathname;
+        const page = currentPath.substring(currentPath.lastIndexOf('/') + 1);
+        location.href = `../login/login.html?redirect=${page}`;
+        return;
+    }
+
+    const form = e.target;
+    const workshopId = form.workshopId.value;
+    if (!workshopId) {
+        alert('Bitte wählen Sie einen Workshop aus.');
+        return;
+    }
+
+    const submitBtn = form.querySelector('button[type="submit"]');
+    if (submitBtn) submitBtn.disabled = true;
+
+    try {
+        const res = await fetch(`${window.API_BASE_URL}/workshops/${workshopId}/enroll`, {
+            method: 'POST',
+            headers: Object.assign({}, window.getAuthHeaders(), { 'Content-Type': 'application/json' }),
+            body: JSON.stringify({})
+        });
+
+        if (res.ok) {
+            alert('Anmeldung erfolgreich!');
+            form.reset();
+        } else {
+            const data = await safeJsonOrEmpty(res);
+            alert('Fehler: ' + (data.message || 'Anmeldung fehlgeschlagen'));
+        }
+    } catch (err) {
+        console.error(err);
+        alert('Netzwerkfehler bei der Anmeldung.');
+    } finally {
+        if (submitBtn) submitBtn.disabled = false;
+    }
+}
+
+window.scrollToRegistration = function(id) {
+    const sel = document.getElementById('workshop-select');
+    if (sel) {
+        sel.value = String(id);
+    }
+    const section = document.querySelector('.workshop-registration');
+    if (section) {
+        section.scrollIntoView({ behavior: 'smooth' });
+    }
+};
 
 async function loadWorkshops() {
     const container = document.getElementById('workshops-content');
@@ -57,8 +115,9 @@ function renderWorkshopCard(w) {
     }
 
     const enrollText = isAuthenticated() ? 'Anmelden' : 'Login zum Anmelden';
+    // The registration button now scrolls to the registration form on the same page
     const enrollAction = isAuthenticated()
-        ? `onclick="location.href='workshop-detail.html?id=${w.id}'"`
+        ? `onclick="scrollToRegistration(${w.id})"`
         : `onclick="location.href='../login/login.html?redirect=workshops'"`;
 
     return `
@@ -87,21 +146,21 @@ function populateWorkshopSelect(workshops) {
     // keep the default placeholder option
     sel.innerHTML = '<option value="">Choose a workshop...</option>';
 
-    // Filter: show only published workshops for registration
-    const published = (workshops || []).filter(w => {
+    // Filter: show workshops that are not ARCHIVED or CANCELLED
+    const available = (workshops || []).filter(w => {
         const s = (w.status || '').toString().toUpperCase();
-        return s === 'PUBLISHED';
+        return s !== 'ARCHIVED' && s !== 'CANCELLED';
     });
 
     // Sort by startDate ascending (nulls last)
-    published.sort((a, b) => {
+    available.sort((a, b) => {
         if (!a.startDate && !b.startDate) return 0;
         if (!a.startDate) return 1;
         if (!b.startDate) return -1;
         return new Date(a.startDate) - new Date(b.startDate);
     });
 
-    published.forEach(w => {
+    available.forEach(w => {
         const opt = document.createElement('option');
         opt.value = String(w.id);
         const dateLabel = w.startDate ? ` — ${formatLocalDate(w.startDate)}` : '';
@@ -109,13 +168,23 @@ function populateWorkshopSelect(workshops) {
         sel.appendChild(opt);
     });
 
-    // If no published workshops, add disabled placeholder
-    if (published.length === 0) {
+    // If no workshops, add disabled placeholder
+    if (available.length === 0) {
         const opt = document.createElement('option');
         opt.value = '';
         opt.textContent = 'No workshops available';
         opt.disabled = true;
         sel.appendChild(opt);
+    }
+
+    // Check if there is a 'register' param in URL to auto-select
+    const params = new URLSearchParams(window.location.search);
+    const regId = params.get('register');
+    if (regId) {
+        sel.value = regId;
+        // Also scroll to it
+        const section = document.querySelector('.workshop-registration');
+        if (section) section.scrollIntoView({ behavior: 'smooth' });
     }
 }
 

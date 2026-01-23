@@ -41,6 +41,9 @@ function renderWorkshop(w) {
     <p><strong>End:</strong> ${formatLocalDate(w.endDate)}</p>
     <p><strong>Ort:</strong> ${escapeHtml(w.venueName || 'TBA')}</p>
     <p><strong>Preis:</strong> ${w.price != null ? formatPrice(w.price) : 'auf Anfrage'}</p>
+    <div class="workshop-actions" style="margin-top: 1rem;">
+      <button class="btn primary" onclick="location.href='workshops.html?register=${w.id}#workshop-registration'">Anmelden</button>
+    </div>
   `;
 
     const groupsEl = document.getElementById('groups-list');
