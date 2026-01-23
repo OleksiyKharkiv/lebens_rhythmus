@@ -1,182 +1,195 @@
 // frontend/js/admin-workshop.js
-// Admin helper: create workshop + add groups to created workshop.
-// Uses window.API_BASE_URL and window.getAuthHeaders()
 
-document.addEventListener('DOMContentLoaded', () => {
-    // === Auth + role guard ===
-    if (!window.isAuthenticated || !window.isAuthenticated()) {
-        location.href = '/pages/login/login.html';
-        return;
-    }
-    let user = {};
-    try { user = JSON.parse(localStorage.getItem('userData') || '{}'); } catch {}
-    const allowed = ['ADMIN','TEACHER','BUSINESS_OWNER'];
-    if (!allowed.includes((user.role || '').toUpperCase())) {
-        document.body.innerHTML = '<main style="padding:2rem"><h2>Unauthorized</h2><p>Du hast keine Rechte für diese Seite.</p></main>';
+document.addEventListener('DOMContentLoaded', init);
+
+let cachedWorkshops = [];
+
+async function init() {
+    if (!window.API_BASE_URL) {
+        console.error('API base not defined');
         return;
     }
 
-    // === DOM refs ===
-    const form = document.getElementById('createWorkshopForm');
-    const result = document.getElementById('createResult');
-    const resetBtn = document.getElementById('resetBtn');
+    bindEditor();
+    await loadAndRenderWorkshops();
+}
 
-    const groupsSection = document.getElementById('groupsSection');
-    const createdWorkshopTitle = document.getElementById('createdWorkshopTitle');
-    const createdWorkshopId = document.getElementById('createdWorkshopId');
-    const groupsList = document.getElementById('groupsList');
-    const groupForm = document.getElementById('createGroupForm');
+/* =========================
+   Main bindings
+========================= */
 
-    // If page wasn't loaded with expected DOM, bail quietly
-    if (!form) return;
+function bindEditor() {
+    const form = document.getElementById('workshopForm');
+    const clearBtn = document.getElementById('clearWorkshopBtn');
 
-    // === Create workshop ===
-    form.addEventListener('submit', async (e) => {
+    clearBtn?.addEventListener('click', clearForm);
+
+    form?.addEventListener('submit', async (e) => {
         e.preventDefault();
-        result.innerHTML = '';
-
-        const payload = {
-            title: document.getElementById('title').value.trim(),
-            description: document.getElementById('description').value.trim(),
-            startDate: document.getElementById('startDate').value || null,
-            endDate: document.getElementById('endDate').value || null,
-            price: parseFloat(document.getElementById('price').value || 0) || 0,
-            maxParticipants: parseInt(document.getElementById('maxParticipants').value) || null,
-            teacherId: (document.getElementById('teacherId').value) ? Number(document.getElementById('teacherId').value) : null,
-            venueId: (document.getElementById('venueId').value) ? Number(document.getElementById('venueId').value) : null,
-            status: 'PUBLISHED'
-        };
-
-        const btn = form.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.textContent = 'Creating...';
-
-        try {
-            const res = await fetchJson(`${window.API_BASE_URL}/workshops`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(payload)
-            });
-
-            // Expect server returns created WorkshopDetailDTO
-            const created = await safeParse(res);
-            result.innerHTML = `<div class="success">Workshop created: <strong>${escapeHtml(created.title || created.workshopName || '—')}</strong> (id: ${created.id})</div>`;
-
-            // Show groups panel
-            createdWorkshopTitle.textContent = created.title || created.workshopName || '';
-            createdWorkshopId.value = created.id;
-            groupsSection.style.display = 'block';
-            groupsList.innerHTML = '';
-            if (Array.isArray(created.groups) && created.groups.length) renderGroups(created.groups);
-
-            groupsSection.scrollIntoView({behavior:'smooth'});
-        } catch (err) {
-            console.error('create workshop error', err);
-            // show user-friendly message
-            result.innerHTML = `<div class="error">${escapeHtml(err.message || 'Failed to create')}</div>`;
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Erstellen';
-        }
+        await saveWorkshop();
     });
+}
 
-    resetBtn?.addEventListener('click', () => { form.reset(); });
+/* =========================
+   Edit handler (GLOBAL)
+========================= */
 
-    // === Create group inside workshop ===
-    groupForm?.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const workshopId = document.getElementById('createdWorkshopId').value;
-        if (!workshopId) {
-            alert('No workshop id found. Create workshop first.');
+window.editWorkshop = async function (id) {
+    if (!id) return;
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/workshops/${id}`, {
+            headers: getAuthHeaders()
+        });
+
+        if (!res.ok) {
+            console.error('Failed to load workshop', id, res.status);
             return;
         }
 
-        const groupPayload = {
-            titleEn: document.getElementById('groupTitleEn').value.trim(),
-            capacity: parseInt(document.getElementById('groupCapacity').value) || 10,
-            startDateTime: document.getElementById('groupStart').value || null,
-            endDateTime: document.getElementById('groupEnd').value || null,
-            teacherId: document.getElementById('groupTeacherId').value ? Number(document.getElementById('groupTeacherId').value) : null,
-            workshopId: Number(workshopId)
-        };
+        const w = await res.json();
 
-        const btn = groupForm.querySelector('button[type="submit"]');
-        btn.disabled = true;
-        btn.textContent = 'Adding...';
+        document.getElementById('workshopId').value = w.id;
+        document.getElementById('wTitle').value = w.title || '';
+        document.getElementById('wDescription').value = w.shortDescription || '';
+        document.getElementById('wStart').value = toDateInput(w.startDate);
+        document.getElementById('wEnd').value = toDateInput(w.endDate);
+        document.getElementById('wPrice').value = w.price ?? '';
+        document.getElementById('wMax').value = w.maxParticipants ?? '';
+        document.getElementById('wTeacher').value = w.teacherId || '';
+        document.getElementById('wVenue').value = w.venueId || '';
+        document.getElementById('wLanguage').value = w.language || '';
 
-        try {
-            const res = await fetchJson(`${window.API_BASE_URL}/groups`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify(groupPayload)
-            });
+        document.getElementById('formTitle').textContent = 'Edit workshop';
+        document.getElementById('workshopFormResult').innerHTML = '';
 
-            const createdGroup = await safeParse(res);
-            // prepend to UI
-            prependGroupToList(createdGroup);
-            groupForm.reset();
-        } catch (err) {
-            console.error('create group error', err);
-            groupsList.insertAdjacentHTML('afterbegin', `<div class="error">Error: ${escapeHtml(err.message || 'Failed')}</div>`);
-        } finally {
-            btn.disabled = false;
-            btn.textContent = 'Gruppe hinzufügen';
-        }
+        document.getElementById('manageGrid')
+            .scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    } catch (err) {
+        console.error('editWorkshop error', err);
+    }
+};
+
+/* =========================
+   Save
+========================= */
+
+async function saveWorkshop() {
+    const id = document.getElementById('workshopId').value;
+
+    const payload = {
+        title: document.getElementById('wTitle').value.trim(),
+        shortDescription: document.getElementById('wDescription').value.trim(),
+        startDate: document.getElementById('wStart').value || null,
+        endDate: document.getElementById('wEnd').value || null,
+        price: document.getElementById('wPrice').value || null,
+        maxParticipants: document.getElementById('wMax').value || null,
+        teacherId: document.getElementById('wTeacher').value || null,
+        venueId: document.getElementById('wVenue').value || null,
+        language: document.getElementById('wLanguage').value || null
+    };
+
+    const method = id ? 'PUT' : 'POST';
+    const url = id
+        ? `${API_BASE_URL}/admin/workshops/${id}`
+        : `${API_BASE_URL}/admin/workshops`;
+
+    const res = await fetch(url, {
+        method,
+        headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+        },
+        body: JSON.stringify(payload)
     });
 
-    // === Helpers ===
+    const resultBox = document.getElementById('workshopFormResult');
 
-    // fetchJson wrapper that attaches Authorization header and throws on 4xx/5xx with parsed message
-    async function fetchJson(url, opts = {}) {
-        const final = Object.assign({}, opts);
-        final.headers = Object.assign({}, final.headers || {}, window.getAuthHeaders ? window.getAuthHeaders() : {});
-        const res = await fetch(url, final);
-        if (!res.ok) {
-            // try parse meaningful error body
-            const text = await res.text().catch(()=>'');
-            let parsed;
-            if (text) {
-                try { parsed = JSON.parse(text); } catch { parsed = { message: text }; }
-            }
-            const msg = parsed?.message || parsed?.error || `HTTP ${res.status}`;
-            const err = new Error(msg);
-            err.status = res.status;
-            throw err;
+    if (!res.ok) {
+        resultBox.innerHTML = `<span class="error">Save failed</span>`;
+        return;
+    }
+
+    resultBox.innerHTML = `<span class="success">Saved</span>`;
+    clearForm();
+    await loadAndRenderWorkshops();
+}
+
+/* =========================
+   Load & render list
+========================= */
+
+async function loadAndRenderWorkshops() {
+    const list = document.getElementById('workshopsList');
+    list.innerHTML = '<div class="admin-empty">Loading workshops…</div>';
+
+    try {
+        const res = await fetch(`${API_BASE_URL}/workshops`, {
+            headers: getAuthHeaders()
+        });
+
+        const raw = await safeJsonOrEmpty(res);
+        cachedWorkshops = Array.isArray(raw) ? raw : raw?.content || [];
+
+        if (cachedWorkshops.length === 0) {
+            list.innerHTML = '<div class="admin-empty">No workshops</div>';
+            return;
         }
-        return res;
-    }
 
-    async function safeParse(res) {
-        const ct = res.headers.get('content-type') || '';
-        if (!ct.includes('application/json')) {
-            const t = await res.text().catch(()=>'');
-            try { return JSON.parse(t); } catch { return t; }
-        }
-        return res.json();
-    }
+        list.innerHTML = cachedWorkshops.map(renderWorkshopRow).join('');
 
-    async function safeText(res) { try { return await res.text(); } catch { return ''; } }
+    } catch (err) {
+        console.error(err);
+        list.innerHTML = '<div class="admin-empty">Error loading</div>';
+    }
+}
 
-    function prependGroupToList(g) {
-        groupsList.insertAdjacentHTML('afterbegin', groupCardHtml(g));
-    }
-    function renderGroups(groups) {
-        groupsList.innerHTML = groups.map(groupCardHtml).join('');
-    }
-    function groupCardHtml(g) {
-        const title = escapeHtml(g.name || g.titleEn || g.title || 'Gruppe');
-        const cap = g.capacity || 0;
-        const start = g.startDateTime ? formatLocalDateTime(g.startDateTime) : '';
-        const end = g.endDateTime ? formatLocalDateTime(g.endDateTime) : '';
-        return `<div class="group-card" style="border:1px solid #eee;padding:0.6rem;margin-bottom:0.5rem;">
-              <strong>${title}</strong>
-              <div style="font-size:0.9rem;color:#555;">
-                <div>${start} — ${end}</div>
-                <div>Kapazität: ${cap}</div>
-              </div>
-            </div>`;
-    }
+function renderWorkshopRow(w) {
+    const start = w.startDate ? formatDate(w.startDate) : 'TBA';
 
-    function escapeHtml(t){ const d=document.createElement('div'); d.textContent = t||''; return d.innerHTML; }
-    function formatLocalDateTime(d){ if(!d) return ''; try { return new Date(d).toLocaleString('de-DE',{dateStyle:'medium',timeStyle:'short'});}catch{return d;} }
-});
+    return `
+    <div class="admin-workshop-item">
+        <div class="admin-workshop-main">
+            <strong>${escapeHtml(w.title)}</strong>
+            <span class="badge ${w.status?.toLowerCase() || 'draft'}">${w.status || 'DRAFT'}</span>
+        </div>
+        <div class="admin-workshop-meta">Start: ${start}</div>
+        <div class="admin-workshop-actions">
+            <button class="btn btn-outline btn-sm" onclick="editWorkshop(${w.id})">Edit</button>
+        </div>
+    </div>`;
+}
+
+/* =========================
+   Utils
+========================= */
+
+function clearForm() {
+    document.getElementById('workshopForm').reset();
+    document.getElementById('workshopId').value = '';
+    document.getElementById('formTitle').textContent = 'Create / Edit workshop';
+}
+
+function toDateInput(d) {
+    if (!d) return '';
+    return new Date(d).toISOString().slice(0, 10);
+}
+
+function formatDate(d) {
+    return new Date(d).toLocaleDateString('de-DE');
+}
+
+function escapeHtml(s) {
+    const div = document.createElement('div');
+    div.textContent = s || '';
+    return div.innerHTML;
+}
+
+async function safeJsonOrEmpty(res) {
+    try {
+        return await res.json();
+    } catch {
+        return [];
+    }
+}

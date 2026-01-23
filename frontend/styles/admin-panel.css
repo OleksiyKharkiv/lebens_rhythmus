@@ -276,6 +276,19 @@ a:focus, button:focus, input:focus, select:focus {
 
 /* -------------------- Micro animations -------------------- */
 .fade-in { animation: fadeInUp .35s ease both; }
+.admin-workshop-actions .btn {
+    padding: .35rem .65rem;
+    font-size: .85rem;
+    line-height: 1.2;
+}
+
+.admin-workshop-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: .4rem;
+}
+
+
 @keyframes fadeInUp { from { transform: translateY(8px); opacity:0 } to { transform: translateY(0); opacity:1 } }
 
 /* -------------------- Responsive -------------------- */
