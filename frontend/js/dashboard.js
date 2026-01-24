@@ -11,7 +11,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load local userData (populated on login/registration)
     let localUser = {};
-    try { localUser = JSON.parse(localStorage.getItem('userData') || '{}'); } catch (e) { console.warn('dashboard: bad userData', e); }
+    try {
+        localUser = JSON.parse(localStorage.getItem('userData') || '{}');
+    } catch (e) {
+        console.warn('dashboard: bad userData', e);
+    }
 
     // Display first name (fallback to email)
     const displayName = localUser.firstName || localUser.email || 'Gast';
@@ -29,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Try to refresh a profile from server (non-blocking)
     try {
-        const profileRes = await fetch(`${window.API_BASE_URL}/users/me`, { headers: window.getAuthHeaders() });
+        const profileRes = await fetch(`${window.API_BASE_URL}/users/me`, {headers: window.getAuthHeaders()});
         if (profileRes.ok) {
             const profile = await safeJson(profileRes);
             // update header if server has a newer firstName
@@ -43,7 +47,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 ud.lastName = profile.lastName || ud.lastName;
                 ud.role = profile.role || ud.role;
                 localStorage.setItem('userData', JSON.stringify(ud));
-            } catch (e) { /* non-fatal */ }
+            } catch (e) { /* non-fatal */
+            }
         }
     } catch (err) {
         console.warn('dashboard: profile refresh failed', err);
@@ -51,7 +56,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load enrollments (Meine Kurse)
     try {
-        const enrollRes = await fetch(`${window.API_BASE_URL}/users/me/enrollments`, { headers: window.getAuthHeaders() });
+        const enrollRes = await fetch(`${window.API_BASE_URL}/users/me/enrollments`, {headers: window.getAuthHeaders()});
         if (!enrollRes.ok) throw new Error(`Enrollments fetch failed (${enrollRes.status})`);
         const enrollments = await safeJson(enrollRes);
         renderMyCourses(enrollments || []);
@@ -66,6 +71,31 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadAdminStats().catch(e => console.warn('admin stats load failed', e));
     }
 });
+
+// ---  Login -> Logout ---
+function updateAuthButtons() {
+    const loginTexts = ['Login', 'Anmelden', 'Sign in', 'Einloggen', 'Log in'];
+    const candidates = Array.from(document.querySelectorAll('a, button')).filter(el => loginTexts.includes((el.textContent || '').trim()));
+
+    candidates.forEach(el => {
+        const newEl = el.cloneNode(true);
+        newEl.textContent = 'Logout';
+        newEl.classList.remove('btn-primary');
+        newEl.classList.add('btn-outline');
+        newEl.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (typeof window.logout === 'function') window.logout();
+            else {
+                localStorage.removeItem('authToken');
+                localStorage.removeItem('userData');
+                location.href = '../login/login.html';
+            }
+        });
+        el.parentNode?.replaceChild(newEl, el);
+    });
+}
+
+updateAuthButtons();
 
 // Renders enrollment list to DOM
 function renderMyCourses(enrollments) {
@@ -91,7 +121,7 @@ async function loadAdminStats() {
     const statsBox = document.getElementById('adminStatsBox');
     if (!statsBox) return;
     try {
-        const res = await fetch(`${window.API_BASE_URL}/users/stats/count`, { headers: window.getAuthHeaders() });
+        const res = await fetch(`${window.API_BASE_URL}/users/stats/count`, {headers: window.getAuthHeaders()});
         if (!res.ok) {
             statsBox.innerHTML = '<div>Stats nicht verfügbar</div>';
             return;
@@ -123,9 +153,22 @@ async function safeJson(res) {
     if (!ct.includes('application/json')) {
         const txt = await res.text().catch(() => '');
         if (!txt) return Array.isArray(txt) ? [] : {};
-        try { return JSON.parse(txt); } catch { return {}; }
+        try {
+            return JSON.parse(txt);
+        } catch {
+            return {};
+        }
     }
-    try { return await res.json(); } catch (err) { console.warn('safeJson parse failed', err); return {}; }
+    try {
+        return await res.json();
+    } catch (err) {
+        console.warn('safeJson parse failed', err);
+        return {};
+    }
 }
 
-function escapeHtml(t){ const d=document.createElement('div'); d.textContent = t||''; return d.innerHTML; }
+function escapeHtml(t) {
+    const d = document.createElement('div');
+    d.textContent = t || '';
+    return d.innerHTML;
+}
