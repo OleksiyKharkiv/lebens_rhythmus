@@ -27,7 +27,7 @@ public class WorkshopFile {
     private String filename;
 
     @Column(nullable = false)
-    private String fileUrl; // ссылка (S3 / local / CDN)
+    private String fileUrl; // link (S3 / local / CDN)
 
     @Column(length = 100)
     private String contentType; // application/pdf, image/png
