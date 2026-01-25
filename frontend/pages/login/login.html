@@ -6,56 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/x-icon" href="../../assets/favicon_io/favicon.ico">
     <link rel="stylesheet" href="../../styles/main.css">
+    <link rel="stylesheet" href="../../styles/admin-panel.css">
 </head>
 
 <body>
 <main>
-    <header>
-        <div class="logo">
-            <a href="../home/index.html" class="logo-link">Lebens Rhythmus</a>
-        </div>
-        <nav>
-            <nav>
-                <a href="../home/index.html" class="nav-button">Startseite</a>
-                <a href="../about/about.html" class="nav-button">Über uns</a>
-                <a href="../activities/activities.html" class="nav-button">Aktivitäten</a>
-                <a href="../workshops/workshops.html" class="nav-button">Kurse/Workshops</a>
-                <a href="../performances/performances.html" class="nav-button">Aufführungen</a>
-                <a href="../corporate/corporate.html" class="nav-button">Für Unternehmen</a>
-                <a href="../feedback/feedback.html" class="nav-button">Feedback</a>
-                <a href="../contact/contact.html" class="nav-button">Kontakt</a>
-            </nav>
-        </nav>
-        <nav>
-            <a href="../dashboard/dashboard.html" class="nav-button">Dashboard</a>
-            <a href="../login/login.html" class="nav-button">Login/Register</a>
-        </nav>
-        <div class="langs">
-            <button class="active">DE</button>
-            <button>EN</button>
-            <button>UA</button>
-        </div>
-
-        <!--Toggle mobile menu-->
-        <div class="mobile-toggle" onclick="toggleMobileMenu()">☰</div>
-    </header>
-    <!--Mobile menu-->
-    <div class="mobile-menu" id="mobileMenu" style="display: none;">
-        <a href="../home/index.html" class="nav-button">Startseite</a>
-        <a href="../about/about.html" class="nav-button">Über uns</a>
-        <a href="../activities/activities.html" class="nav-button">Aktivitäten</a>
-        <a href="../workshops/workshops.html" class="nav-button">Kurse/Workshops</a>
-        <a href="../performances/performances.html" class="nav-button">Aufführungen</a>
-        <a href="../corporate/corporate.html" class="nav-button">Für Unternehmen</a>
-        <a href="../feedback/feedback.html" class="nav-button">Feedback</a>
-        <a href="../contact/contact.html" class="nav-button">Kontakt</a>
-        <a href="../dashboard/dashboard.html" class="nav-button">Dashboard</a>
-        <a href="../login/login.html" class="nav-button active">Login/Register</a>
-    </div>
-
     <!--Hero section-->
-    <section class="hero" id="login"
-             style="background-image: url('../../assets/pinguins.jpg'); background-size: cover; background-position: center;">
+    <section class="hero" id="login">
+<!--             style="background-image: url('../../assets/pinguins.jpg'); background-size: cover; background-position: center;">-->
         <h1>Login/Registrieren</h1><br>
         <div class="login-container">
             <!-- Login Form -->
@@ -128,9 +86,9 @@
                     <label class="checkbox-label">
                         <input type="checkbox" id="acceptTerms" required>
                         <span>
-                            Ich akzeptiere die
-                            <a href="../impressum/impressum.html#terms" target="_blank">
-                                Allgemeinen Geschäftsbedingungen
+                            Ich akzeptiere die <br>
+                            <a href="../impressum/agb.html#terms" target="_blank">
+                                Allgemeine Geschäftsbedingungen
                             </a>
                             <span class="required-star">*</span>
                         </span>
@@ -138,8 +96,8 @@
                     <label class="checkbox-label">
                         <input type="checkbox" id="acceptPrivacy" required>
                         <span>
-                            Ich akzeptiere die
-                            <a href="../impressum/impressum.html#privacy" target="_blank">
+                            Ich akzeptiere die <br>
+                            <a href="../impressum/datenschutzerklaerung.html#privacy" target="_blank">
                                 Datenschutzbestimmungen
                             </a>
                             <span class="required-star">*</span>
@@ -159,10 +117,6 @@
     <script src="../../js/login.js"></script>
     <script src="../../js/main.js"></script>
 </main>
-<footer>
-    <p>
-        © 2025 Lebens Rhythmus - <a href="../impressum/impressum.html">Impressum</a>
-    </p>
-</footer>
+<script src="../../js/partials-loader.js"></script>
 </body>
 </html>

@@ -100,8 +100,8 @@ nav {
 
 .login-form,
 .register-form {
-    max-width: 400px;
-    margin: 2rem auto;
+    max-width: 80rem;
+    margin: 2rem;
     padding: 2rem;
     background: rgba(255, 255, 255, 0.5);
     border-radius: 10px;
@@ -400,7 +400,7 @@ footer {
 /* ===== Login/Register Specific Styles ===== */
 
 .login-container {
-    max-width: 800px;
+    max-width: 70rem;
     margin: 0 auto;
     padding: 2rem;
     display: flex;
@@ -539,7 +539,7 @@ footer {
 }
 
 .checkbox-label {
-    display: flex;
+    /*display: flex;*/
     align-items: flex-start;
     margin-bottom: 0.8rem;
     cursor: pointer;
