@@ -172,7 +172,7 @@ body {
 
 .workshop-details p {
     margin: 8px 0;
-    font-size: 0.95rem;
+    font-size: 1.2rem;
     display: flex;
     justify-content: space-between;
     color: var(--text-main);
