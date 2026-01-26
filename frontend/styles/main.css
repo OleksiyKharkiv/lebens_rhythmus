@@ -300,7 +300,6 @@ nav {
     text-align: center;
     padding: 0 20px;
     background-image: linear-gradient(180deg, rgb(221, 121, 238, 0.5) 0%, rgba(232, 220, 255, 0.95) 50%);
-);
     position: relative;
 }
 
@@ -369,7 +368,7 @@ footer {
     height: 3vh;
     font-size: 0.9rem;
     color: #666;
-    background-color: rgba(244, 244, 244, 0.5);
+    background-color: rgba(244, 244, 244, 0.75);
 }
 
 .footer-link {
@@ -643,12 +642,15 @@ footer {
     }
 }
 
-/* ===== Responsive ===== */
-@media (max-width: 768px) {
-    nav {
-        display: none;
+/* ========== BREAKPOINTS (mobile-first, use em for accessibility) ========== */
+/* >= 48em (≈768px) — tablets and up */
+@media (min-width: 48em) {
+    main { padding-top: 3.75rem; } /* unchanged, but explicit */
+    .hero {
+        margin: 5rem 4rem;
+        min-height: 70vh;
+        padding: 1.25rem 20px;
     }
-
     .mobile-toggle {
         display: block;
         cursor: pointer;
@@ -657,4 +659,37 @@ footer {
     .mobile-menu {
         display: flex;
     }
+    .login-container { max-width: 70rem; padding: 2rem; gap: 2rem; }
+    .password-input-container input { padding: 0.8rem; border-radius: 4px 0 0 4px; }
+    .toggle-password { width: 44px; height: 44px; }
+}
+
+/* >= 64em (≈1024px) — large tablets / small desktops */
+@media (min-width: 64em) {
+    .mobile-toggle {
+        display: block;
+        cursor: pointer;
+    }
+
+    .mobile-menu {
+        display: flex;
+    }
+    .hero { margin: 5rem 8rem; min-height: 80vh; }
+    .login-container { gap: 3rem; padding: 2rem; }
+    .hero h1 { font-size: 3rem; }
+    .hero h3 { font-size: 1.7rem; }
+}
+
+/* >= 90em (≈1440px) — wide screens */
+@media (min-width: 90em) {
+    .mobile-toggle {
+        display: block;
+        cursor: pointer;
+    }
+
+    .mobile-menu {
+        display: flex;
+    }
+    .hero { margin: 5rem 10rem; }
+    .login-container { max-width: 80rem; }
 }
