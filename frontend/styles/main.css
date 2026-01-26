@@ -711,7 +711,6 @@ footer {
         font-size: 1.7rem;
     }
 }
-
 /* >= 90em (≈1440px) — wide screens */
 @media (min-width: 90em) {
     .mobile-toggle {
