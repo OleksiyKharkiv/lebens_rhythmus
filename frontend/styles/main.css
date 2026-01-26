@@ -639,8 +639,21 @@ footer {
 }
 
 /* ========== BREAKPOINTS (mobile-first, use em for accessibility) ========== */
+@media (max-width: 63.99em) { /* <= ~1023px */
+    .hero {
+        margin: 1rem !important;
+        min-height: 80vh !important;
+    }
+}
 /* >= 48em (≈768px) — tablets and up */
 @media (min-width: 48em) {
+    header {
+        padding: 0;
+        height: 3.75rem; /* 60px  or 3.75rem*/
+        z-index: 1000;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
     main {
         padding-top: 3.75rem;
     }
@@ -690,13 +703,13 @@ footer {
     }
 
     .hero {
-        margin: 5rem 8rem;
+        margin: 1rem ;
         min-height: 80vh;
     }
 
     .login-container {
-        gap: 3rem;
-        padding: 2rem;
+        gap: 1rem;
+        padding: 1rem;
     }
 
     .hero h1 {
