@@ -666,7 +666,16 @@ footer {
         max-width: 70rem !important;
         margin: 0 auto !important;
     }
+    nav {
+        display: none;
+    }
+    .mobile-toggle {
+        display: block;
+    }
 
+    .mobile-menu {
+        display: none !important;
+    }
 
 }
 
@@ -696,7 +705,7 @@ footer {
     }
 
     .mobile-menu {
-        display: flex;
+        display: none;
     }
 
     .login-container {
@@ -749,12 +758,12 @@ footer {
 /* >= 90em (≈1440px) — wide screens */
 @media (min-width: 90em) {
     .mobile-toggle {
-        display: block;
+        display: none;
         cursor: pointer;
     }
 
     .mobile-menu {
-        display: flex;
+        display: none;
     }
 
     .hero {
