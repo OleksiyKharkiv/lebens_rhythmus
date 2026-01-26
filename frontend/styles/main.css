@@ -633,20 +633,20 @@ footer {
     }
 
     .hero {
-        margin: 1rem !important;
+        margin: 10px !important;
         min-height: 80vh !important;
     }
 
     .hero h1 {
-        font-size: 2rem;
+        font-size: 20px;
     }
 
     .required-note {
-        font-size: 0.5em !important;
+        font-size: 10px !important;
     }
 
     a {
-        font-size: 1em !important;
+        font-size: 15px !important;
     }
 
     .login-container {
@@ -658,11 +658,11 @@ footer {
 
     .form-row {
         flex-direction: column;
-        gap: 1.2rem;
+        gap: 12px;
     }
 
     .separator {
-        margin: 1rem 0;
+        margin: 10px 0;
     }
 }
 
@@ -683,27 +683,27 @@ footer {
     }
 
     header {
-        height: 3.75rem;
+        height: 20px;
     }
 
     main {
-        padding-top: 3.75rem;
+        padding-top: 20pxrem;
     }
 
     .hero {
-        margin: 5rem 4rem;
+        margin: 50px 40px;
         min-height: 70vh;
-        padding: 1.25rem 20px;
+        padding: 12px 20px;
     }
 
     .login-container {
         max-width: 70rem;
-        padding: 2rem;
-        gap: 2rem;
+        padding: 2opx;
+        gap: 20px;
     }
 
     .password-input-container input {
-        padding: 0.8rem;
+        padding: 8px;
         border-radius: 4px 0 0 4px;
     }
 
