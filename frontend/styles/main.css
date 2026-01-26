@@ -380,6 +380,7 @@ footer {
     font-size: 0.9rem;
     text-shadow: 0 0 2px rgba(255, 255, 255, 0.8);
 }
+
 .footer-link:hover {
     color: #333;
     background-color: rgba(0, 0, 0, 0.05);
@@ -645,12 +646,17 @@ footer {
 /* ========== BREAKPOINTS (mobile-first, use em for accessibility) ========== */
 /* >= 48em (≈768px) — tablets and up */
 @media (min-width: 48em) {
-    main { padding-top: 3.75rem; } /* unchanged, but explicit */
+    main {
+        padding-top: 3.75rem;
+    }
+
+    /* unchanged, but explicit */
     .hero {
         margin: 5rem 4rem;
         min-height: 70vh;
         padding: 1.25rem 20px;
     }
+
     .mobile-toggle {
         display: block;
         cursor: pointer;
@@ -659,9 +665,22 @@ footer {
     .mobile-menu {
         display: flex;
     }
-    .login-container { max-width: 70rem; padding: 2rem; gap: 2rem; }
-    .password-input-container input { padding: 0.8rem; border-radius: 4px 0 0 4px; }
-    .toggle-password { width: 44px; height: 44px; }
+
+    .login-container {
+        max-width: 70rem;
+        padding: 2rem;
+        gap: 2rem;
+    }
+
+    .password-input-container input {
+        padding: 0.8rem;
+        border-radius: 4px 0 0 4px;
+    }
+
+    .toggle-password {
+        width: 44px;
+        height: 44px;
+    }
 }
 
 /* >= 64em (≈1024px) — large tablets / small desktops */
@@ -674,10 +693,24 @@ footer {
     .mobile-menu {
         display: flex;
     }
-    .hero { margin: 5rem 8rem; min-height: 80vh; }
-    .login-container { gap: 3rem; padding: 2rem; }
-    .hero h1 { font-size: 3rem; }
-    .hero h3 { font-size: 1.7rem; }
+
+    .hero {
+        margin: 5rem 8rem;
+        min-height: 80vh;
+    }
+
+    .login-container {
+        gap: 3rem;
+        padding: 2rem;
+    }
+
+    .hero h1 {
+        font-size: 3rem;
+    }
+
+    .hero h3 {
+        font-size: 1.7rem;
+    }
 }
 
 /* >= 90em (≈1440px) — wide screens */
@@ -690,6 +723,12 @@ footer {
     .mobile-menu {
         display: flex;
     }
-    .hero { margin: 5rem 10rem; }
-    .login-container { max-width: 80rem; }
+
+    .hero {
+        margin: 5rem 10rem;
+    }
+
+    .login-container {
+        max-width: 80rem;
+    }
 }
