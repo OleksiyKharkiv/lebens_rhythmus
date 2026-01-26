@@ -615,11 +615,15 @@ footer {
 }
 
 /* Responsive adjustments for login */
-@media (max-width: 768px) {
+/* ========== RESPONSIVE (mobile-first, ascending) ========== */
+
+/* === Phones: <= 767px === */
+@media (max-width: 767px) {
+
     nav {
         display: none;
     }
-    /* show hamburger, menu hidden (JS will open) */
+
     .mobile-toggle {
         display: block;
     }
@@ -627,40 +631,10 @@ footer {
     .mobile-menu {
         display: none;
     }
-    /*.mobile-menu {*/
-    /*    width: 100%;*/
-    /*}*/
 
-    .login-container {
-        flex-direction: column;
-        gap: 2rem;
-        padding: 1.5rem;
-    }
-
-    .login-form,
-    .register-form {
-        padding: 1.2rem;
-    }
-
-    .form-row {
-        flex-direction: column;
-        gap: 1.2rem;
-    }
-
-    .separator {
-        margin: 1rem 0;
-    }
-}
-
-/* ========== MOBILE OVERRIDES (ascending device sizes) ========== */
-
-/* Phones and very small devices: <= 47.99em (~767px) */
-@media (max-width: 47.99em) {
-    /* hero compact for phones */
     .hero {
         margin: 1rem !important;
         min-height: 80vh !important;
-        font-size: 2rem !important;
     }
 
     .hero h1 {
@@ -676,51 +650,50 @@ footer {
     }
 
     .login-container {
+        flex-direction: column;
         gap: 1rem !important;
         padding: 0.5rem !important;
-        max-width: 70rem !important;
         margin: 0 auto !important;
     }
 
-    /* show hamburger, menu hidden (JS will open) */
+    .form-row {
+        flex-direction: column;
+        gap: 1.2rem;
+    }
+
+    .separator {
+        margin: 1rem 0;
+    }
+}
+
+/* === Tablets: 768px – 1023px === */
+@media (min-width: 768px) and (max-width: 1023px) {
+
+    nav {
+        display: none;
+    }
+
     .mobile-toggle {
         display: block;
+        cursor: pointer;
     }
 
     .mobile-menu {
         display: none;
     }
-}
 
-/* Tablets: >= 48em (~768px) and <= 63.99em (~1023px) */
-@media (min-width: 48em) and (max-width: 63.99em) {
     header {
-        padding: 0;
-        height: 3.75rem; /* 60px  or 3.75rem*/
-        z-index: 1000;
-        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        height: 3.75rem;
     }
 
     main {
         padding-top: 3.75rem;
     }
 
-    /* tablet hero */
     .hero {
         margin: 5rem 4rem;
         min-height: 70vh;
         padding: 1.25rem 20px;
-    }
-
-    /* keep hamburger visible on tablets so user can open menu */
-    .mobile-toggle {
-        display: block;
-        cursor: pointer;
-    }
-
-    /* mobile menu remains JS-controlled */
-    .mobile-menu {
-        display: none;
     }
 
     .login-container {
@@ -740,19 +713,18 @@ footer {
     }
 }
 
-/* Desktop and large tablets: >= 64em (~1024px) */
-@media (min-width: 64em) {
+/* === Desktop: >= 1024px === */
+@media (min-width: 1024px) {
+
     nav {
         display: flex;
         gap: 20px;
     }
 
-    /* hide hamburger on desktop */
     .mobile-toggle {
         display: none;
     }
 
-    /* ensure mobile menu never shown by CSS on desktop */
     .mobile-menu {
         display: none !important;
     }
