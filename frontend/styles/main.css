@@ -203,7 +203,6 @@ nav {
     }
 }
 
-/* Улучшенные стили для форм */
 .login-container input {
     transition: border-color 0.3s, box-shadow 0.3s;
 }
@@ -620,10 +619,17 @@ footer {
     nav {
         display: none;
     }
+    /* show hamburger, menu hidden (JS will open) */
+    .mobile-toggle {
+        display: block;
+    }
 
     .mobile-menu {
-        width: 100%;
+        display: none;
     }
+    /*.mobile-menu {*/
+    /*    width: 100%;*/
+    /*}*/
 
     .login-container {
         flex-direction: column;
