@@ -246,6 +246,7 @@ nav {
     color: white;
     background: linear-gradient(to right, purple, pink);
 }
+
 /*_________________________________________________________________________________*/
 /*Mobile menu*/
 .mobile-menu {
@@ -639,12 +640,36 @@ footer {
 }
 
 /* ========== BREAKPOINTS (mobile-first, use em for accessibility) ========== */
-@media (max-width: 63.99em) { /* <= ~1023px */
+@media (max-width: 63.99em) {
+    /* <= ~1023px */
     .hero {
         margin: 1rem !important;
         min-height: 80vh !important;
+        font-size: 2rem !important;
     }
+
+    .hero h1 {
+        font-size: 2rem;
+    }
+
+    .required-note {
+        font-size: 0.5em !important;
+    }
+
+    a {
+        font-size: 0.5em !important;
+    }
+
+    .login-container {
+        gap: 1rem !important;
+        padding: 0.5rem !important;
+        max-width: 70rem !important;
+        margin: 0 auto !important;
+    }
+
+
 }
+
 /* >= 48em (≈768px) — tablets and up */
 @media (min-width: 48em) {
     header {
@@ -703,7 +728,7 @@ footer {
     }
 
     .hero {
-        margin: 1rem ;
+        margin: 1rem;
         min-height: 80vh;
     }
 
@@ -720,6 +745,7 @@ footer {
         font-size: 1.7rem;
     }
 }
+
 /* >= 90em (≈1440px) — wide screens */
 @media (min-width: 90em) {
     .mobile-toggle {
