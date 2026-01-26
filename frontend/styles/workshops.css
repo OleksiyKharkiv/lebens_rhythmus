@@ -1,6 +1,5 @@
 /*
-   Workshops Page - Modern Design for Creativ Studio
-   Theme: Soft Purple Dusk / Professional & Approachable
+      Theme: Soft Purple Dusk
 */
 
 :root {
@@ -63,6 +62,7 @@ body {
     padding: 100px 24px;
     margin-bottom: 40px;
     position: relative;
+    z-index: 1;
     overflow: hidden;
 }
 
