@@ -651,8 +651,8 @@ footer {
 
     .login-container {
         flex-direction: column;
-        gap: 1rem !important;
-        padding: 0.5rem !important;
+        gap: 10px !important;
+        padding: 7px !important;
         margin: 0 auto !important;
     }
 
@@ -687,7 +687,7 @@ footer {
     }
 
     main {
-        padding-top: 20pxrem;
+        padding-top: 20px;
     }
 
     .hero {
@@ -697,8 +697,8 @@ footer {
     }
 
     .login-container {
-        max-width: 70rem;
-        padding: 2opx;
+        max-width: 700px;
+        padding: 20px;
         gap: 20px;
     }
 
