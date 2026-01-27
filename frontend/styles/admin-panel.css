@@ -43,7 +43,6 @@ body.admin {
     margin: 4rem 2rem 1rem 2rem;
 }
 
-
 /* container for admin pages */
 .container.admin {
     max-width: var(--max-width);
@@ -408,5 +407,3 @@ body.admin .btn-outline, body.admin .btn-ghost {
 body.admin main, body.admin section, body.admin article {
     background: transparent;
 }
-
-/* End of admin-panel.css */
