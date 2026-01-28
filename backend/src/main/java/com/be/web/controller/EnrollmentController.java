@@ -33,7 +33,7 @@ public class EnrollmentController {
     }
 
     /**
-     * Enroll current user into a workshop.
+     * Enroll the current user into a workshop.
      */
     @PostMapping("/workshops/{workshopId}/enroll")
     @PreAuthorize("""
@@ -81,7 +81,7 @@ public class EnrollmentController {
 
     /**
      * Cancel enrollment.
-     * User can cancel own enrollment.
+     * User can cancel their own enrollment.
      * Admin / business owner can cancel any.
      */
     @DeleteMapping("/enrollments/{id}")
@@ -103,7 +103,7 @@ public class EnrollmentController {
     }
 
     /**
-     * Admin / business owner: list participants of workshop.
+     * Admin / business owner: list participants of the workshop.
      */
     @GetMapping("/admin/workshops/{workshopId}/participants")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
@@ -119,7 +119,7 @@ public class EnrollmentController {
     }
 
     /**
-     * Teacher / admin: list participants of group.
+     * Teacher / admin: list participants of the group.
      */
     @GetMapping("/teacher/groups/{groupId}/participants")
     @PreAuthorize("hasRole('TEACHER') or hasRole('BUSINESS_OWNER') or hasRole('ADMIN')")

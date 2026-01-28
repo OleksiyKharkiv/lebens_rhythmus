@@ -58,7 +58,7 @@ public class Order {
     private Workshop workshop;
 
     /**
-     * If the order is for an event (e.g. performance) — alternative target.
+     * If the order is for an event (e.g., performance) — alternative target.
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
@@ -77,7 +77,7 @@ public class Order {
     private String currency;
 
     /**
-     * Quantity — e.g. number of seats/tickets in this order.
+     * Quantity — e.g., number of seats/tickets in this order.
      */
     private Integer quantity;
 
@@ -95,7 +95,7 @@ public class Order {
     private String note;
 
     /**
-     * Payments related to this order (1..N). Payment entity should have field 'order' mapped back.
+     * Payments related to this order (1…N). Payment entity should have field 'order' mapped back.
      * Cascade so payments persist with order; orphanRemoval true to allow removing payments via order.
      */
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)

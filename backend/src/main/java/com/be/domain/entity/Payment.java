@@ -48,30 +48,30 @@ public class Payment {
     private String currency;
 
     /**
-     * Payment provider / gateway (stripe, paypal, sepa, etc.).
+     * Payment provider / gateway (Stripe, PayPal, Sepa, etc.).
      */
     private String provider;
 
     /**
-     * Free-text method name (card, sepa, invoice...). Useful until PaymentMethod entity is implemented.
+     * Free-text method name (card, sepa, invoice...). Useful until the PaymentMethod entity is implemented.
      */
     private String methodName;
 
     /**
-     * External transaction id returned by provider.
+     * External transaction id returned by the provider.
      */
     @Column(name = "transaction_id", length = 200)
     private String transactionId;
 
     /**
-     * Payment status (e.g. PENDING / COMPLETED / FAILED / REFUNDED).
+     * Payment status (e.g., PENDING / COMPLETED / FAILED / REFUNDED).
      * Kept as String for now — optionally switch to enum.
      */
     @Column(length = 40)
     private String status;
 
     /**
-     * When provider confirmed the payment.
+     * When the provider confirmed the payment.
      */
     private LocalDateTime paidAt;
 

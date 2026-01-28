@@ -10,7 +10,7 @@ import java.util.List;
 
 /**
  * Event — public performance / single event instance.
- * Can be linked to a Workshop (e.g. final performance) or be standalone (Performance).
+ * Can be linked to a Workshop (e.g., final performance) or be standalone (Performance).
  */
 @Entity
 @Table(name = "events", indexes = {
@@ -50,7 +50,7 @@ public class Event {
     private Venue venue;
 
     /**
-     * Optionally tied to a workshop (e.g. workshop final performance)
+     * Optionally tied to a workshop (e.g., workshop final performance)
      */
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "workshop_id")

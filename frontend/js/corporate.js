@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initializePage() {
     servicesContainer = document.querySelector('.services-container');
 
-    // Create and add loading indicator if it doesn't exist
+    // Create and add a loading indicator if it doesn't exist
     if (!document.querySelector('.loading')) {
         loadingIndicator = document.createElement('div');
         loadingIndicator.className = 'loading';
@@ -160,7 +160,7 @@ function showErrorMessage(message) {
     if (servicesSection) {
         servicesSection.insertBefore(errorDiv, servicesContainer);
 
-        // Remove error message after 5 seconds
+        // Remove the error message after 5 seconds
         setTimeout(() => {
             errorDiv.remove();
         }, 5000);

@@ -8,7 +8,7 @@ function getAuthToken() {
     return localStorage.getItem('jwt_token') || sessionStorage.getItem('jwt_token');
 }
 
-// Display success message
+// Display a success message
 function showSuccessMessage(message) {
     const form = document.getElementById('feedbackForm');
     const successDiv = document.createElement('div');
@@ -144,14 +144,14 @@ async function handleFormSubmit(event) {
     }
 }
 
-// Initialize feedback form
+// Initialize a feedback form
 function initializeFeedbackForm() {
     const form = document.getElementById('feedbackForm');
 
     if (form) {
         form.addEventListener('submit', handleFormSubmit);
 
-        // Add character counter for message field
+        // Add character counter for the message field
         const messageField = document.getElementById('message');
         if (messageField) {
             messageField.addEventListener('input', function () {

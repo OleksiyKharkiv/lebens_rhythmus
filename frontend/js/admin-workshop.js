@@ -49,7 +49,7 @@ function bindEditor() {
             alert('Open groups: create or select a workshop first.');
             return;
         }
-        // open groups panel and load groups for workshop (if you have endpoint)
+        // open the groups panel and load groups for workshop (if you have an endpoint)
         document.getElementById('groupsWorkshopId').value = id;
         document.getElementById('groupsWorkshopTitle').textContent = document.getElementById('wTitle').value || '—';
         document.getElementById('workshopGroupsPanel').style.display = 'block';
@@ -131,7 +131,7 @@ window.editWorkshop = async function (id) {
         document.getElementById('wPrice').value = (w.price != null) ? String(w.price) : '';
         // maxParticipants might be missing in detail DTO — try to read if present, else blank
         document.getElementById('wMax').value = (w.maxParticipants != null) ? w.maxParticipants : (w.maxParticipants ?? w.max_participants ?? '');
-        // teacher from nested teacher object if present
+        // teacher from a nested teacher object if present
         try {
             document.getElementById('wTeacher').value = w.teacher?.id ?? '';
         } catch { document.getElementById('wTeacher').value = ''; }
@@ -165,7 +165,7 @@ async function saveWorkshop() {
         venueId: (document.getElementById('wVenue').value) ? Number(document.getElementById('wVenue').value) : null,
         maxParticipants: document.getElementById('wMax').value ? Number(document.getElementById('wMax').value) : null,
         price: (document.getElementById('wPrice').value) ? Number(document.getElementById('wPrice').value) : null,
-        status: 'DRAFT' // default; toggle Publish button will call separate flow if needed
+        status: 'DRAFT' // default; toggle Publish button will call a separate flow if needed
     };
 
     const url = isEdit ? `${apiBase()}/workshops/${id}` : `${apiBase()}/workshops`;

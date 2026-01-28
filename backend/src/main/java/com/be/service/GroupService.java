@@ -73,7 +73,7 @@ public class GroupService {
     }
 
     /**
-     * Adds participant to group if capacity allows
+     * Adds participant to the group if capacity allows
      */
     @Transactional
     public boolean addParticipant(Long groupId, Participant participant) {

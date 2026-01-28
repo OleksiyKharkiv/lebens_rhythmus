@@ -29,8 +29,6 @@ public class UserController {
         this.userMapper = userMapper;
     }
 
-    // ========== USER PROFILE ENDPOINTS ==========
-
     // ========== USER PROFILE ENDPOINTS (updated to use Jwt principal) ==========
 
     /**

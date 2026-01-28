@@ -5,7 +5,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // === Auth + role check ===
     if (!window.isAuthenticated || !window.isAuthenticated()) {
-        // not logged in -> back to login
+        // not logged in -> back to the login
         location.href = '/pages/login/login.html';
         return;
     }
@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const role = (user.role || '').toUpperCase();
     const allowed = ['ADMIN', 'TEACHER', 'BUSINESS_OWNER'];
     if (!allowed.includes(role)) {
-        // show friendly unauthorized message
+        // show a friendly unauthorized message
         document.body.innerHTML = '<main style="padding:2rem"><h2>Unauthorized</h2><p>Du hast keine Rechte für diese Seite.</p></main>';
         return;
     }
@@ -84,7 +84,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 /* ---------------- helpers ---------------- */
 
 // Thin wrapper around fetch that attaches Authorization header if available.
-// Accepts same args as fetch; returns raw Response (doesn't throw on non-ok).
+// Accepts the same args as fetch; returns raw Response (doesn't throw on non-ok).
 async function safeFetch(url, opts = {}) {
     const final = Object.assign({}, opts);
     final.headers = Object.assign({}, final.headers || {}, window.getAuthHeaders ? window.getAuthHeaders() : {});

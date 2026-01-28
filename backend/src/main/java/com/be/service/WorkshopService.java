@@ -90,5 +90,4 @@ public class WorkshopService {
     public List<Workshop> findByTeacher(Long teacherId) {
         return workshopRepository.findByTeacherId(teacherId);
     }
-
 }

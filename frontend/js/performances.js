@@ -3,7 +3,7 @@ const API_BASE_URL = window.location.hostname === 'localhost'
     ? 'http://localhost:8080/api'
     : 'https://api.tlab29.com/api';
 
-// Fetch performances from backend
+// Fetch performances from the backend
 async function fetchPerformances() {
     try {
         const response = await fetch(`${API_BASE_URL}/performances`, {
@@ -40,7 +40,7 @@ function renderPerformances(performances) {
     const performancesList = document.querySelector('.performances-list');
 
     if (!performances || performances.length === 0) {
-        performancesList.innerHTML = '<p class="no-performances">No performances scheduled at the moment. Check back soon!</p>';
+        performancesList.innerHTML = '<p class="no-performances">No performances are scheduled at the moment. Check back soon!</p>';
         return;
     }
 

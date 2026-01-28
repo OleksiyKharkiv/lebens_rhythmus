@@ -1,7 +1,7 @@
 // API Configuration
 const API_BASE_URL = 'http://localhost:8080/api';
 
-// Fetch activities from backend
+// Fetch activities from the backend
 async function fetchActivities(filters = {}) {
     showLoading();
     hideNoResults();
@@ -158,7 +158,7 @@ function getDayLabel(day) {
 
 // Enroll in activity
 function enrollActivity(activityId) {
-    // Check if user is logged in
+    // Check if the user is logged in
     const token = localStorage.getItem('authToken');
 
     if (!token) {
@@ -167,7 +167,7 @@ function enrollActivity(activityId) {
         return;
     }
 
-    // Redirect to enrollment page or show enrollment modal
+    // Redirect to the enrollment page or show enrollment modal
     window.location.href = `../enrollment/enrollment.html?activityId=${activityId}`;
 }
 

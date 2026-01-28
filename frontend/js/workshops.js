@@ -1,6 +1,6 @@
 // frontend/js/workshops.js
-// Loads public list of workshops, renders cards and populates registration <select>.
-// Uses global window.API_BASE_URL and helper isAuthenticated()
+// Loads a public list of workshops, renders cards and populates registration <select>.
+// Uses a global window.API_BASE_URL and helper isAuthenticated()
 
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof window.API_BASE_URL === 'undefined') {
@@ -168,7 +168,7 @@ function populateWorkshopSelect(workshops) {
         sel.appendChild(opt);
     });
 
-    // If no workshops, add disabled placeholder
+    // If no workshops, add a disabled placeholder
     if (available.length === 0) {
         const opt = document.createElement('option');
         opt.value = '';
