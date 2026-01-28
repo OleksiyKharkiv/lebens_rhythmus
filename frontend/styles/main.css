@@ -747,3 +747,26 @@ footer {
         font-size: 1.7rem;
     }
 }
+
+/* Wide screens */
+@media (min-width: 1440px) {
+    nav {
+        display: flex;
+    }
+
+    .mobile-toggle {
+        display: none;
+    }
+
+    .mobile-menu {
+        display: none;
+    }
+
+    .hero {
+        margin: 5rem 10rem;
+    }
+
+    .login-container {
+        max-width: 80rem;
+    }
+}
