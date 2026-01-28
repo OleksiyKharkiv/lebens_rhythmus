@@ -59,8 +59,8 @@ body {
     background: var(--grad-hero);
     color: white;
     text-align: center;
-    padding: 100px 24px;
-    margin: 15rem 3rem 3rem 3rem;
+    padding: 50px 24px;
+    margin: 5rem 3rem 3rem 3rem;
     position: relative;
     z-index: 1;
     overflow: hidden;
