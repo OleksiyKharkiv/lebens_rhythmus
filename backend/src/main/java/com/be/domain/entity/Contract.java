@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Contract — represents an agreement / contract (e.g. with a venue, a partner, or a client)
+ * Contract — represents an agreement / contract (e.g., with a venue, a partner, or a client)
  * which can be associated with Events.
  */
 @Entity
@@ -40,7 +40,7 @@ public class Contract {
     private String title;
 
     /**
-     * Party (counterparty) name (e.g. venue owner or client)
+     * Party (counterparty) name (e.g., venue owner or client)
      */
     private String partyName;
 
@@ -74,7 +74,7 @@ public class Contract {
     private String status;
 
     /**
-     * Optional URL to stored contract file (or relation to ContractFile entity).
+     * Optional URL to a stored contract file (or relation to ContractFile entity).
      */
     private String contractUrl;
 
