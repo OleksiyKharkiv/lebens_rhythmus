@@ -713,70 +713,79 @@ footer {
     }
 }
 
-/*!* === Desktop: >= 1024px === *!*/
-/*@media (min-width: 1024px) and (max-width: 1439px){*/
+/* === Desktop: >= 1024px === */
+@media (min-width: 1024px) and (max-width: 1439px){
 
-/*    nav {*/
-/*        display: flex;*/
-/*        gap: 20px;*/
-/*    }*/
+    nav {
+        display: flex;
+        gap: 20px;
+    }
 
-/*    .mobile-toggle {*/
-/*        display: none;*/
-/*    }*/
+    .mobile-toggle {
+        display: none;
+    }
 
-/*    .mobile-menu {*/
-/*        display: none !important;*/
-/*    }*/
+    .mobile-menu {
+        display: none !important;
+    }
 
-/*    .hero {*/
-/*        margin: 1rem;*/
-/*        min-height: 80vh;*/
-/*    }*/
+    .hero {
+        min-height: 85vh;
+        margin: 5rem 10rem 5rem 10rem;
+        border-radius: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 0 20px;
+        background-image: linear-gradient(180deg, rgb(221, 121, 238, 0.5) 0%, rgba(232, 220, 255, 0.9) 70%);
+        position: relative;
+    }
 
-/*    .login-container {*/
-/*        gap: 1rem;*/
-/*        padding: 1rem;*/
-/*    }*/
+    .login-container {
+        gap: 1rem;
+        padding: 1rem;
+    }
 
-/*    .hero h1 {*/
-/*        font-size: 3rem;*/
-/*    }*/
+    .hero h1 {
+        font-size: 3rem;
+    }
 
-/*    .hero h3 {*/
-/*        font-size: 1.7rem;*/
-/*    }*/
-/*}*/
+    .hero h3 {
+        font-size: 1.7rem;
+    }
+}
 
-/*!* Wide screens *!*/
-/*@media (min-width: 1440px) {*/
-/*    nav {*/
-/*        display: flex;*/
-/*    }*/
+/* Wide screens */
+@media (min-width: 1440px) {
+    nav {
+        display: flex;
+    }
 
-/*    .mobile-toggle {*/
-/*        display: none;*/
-/*    }*/
+    .mobile-toggle {
+        display: none;
+    }
 
-/*    .mobile-menu {*/
-/*        display: none;*/
-/*    }*/
+    .mobile-menu {
+        display: none;
+    }
 
-/*    .hero {*/
-/*        min-height: 85vh;*/
-/*        margin: 5rem 10rem 5rem 10rem;*/
-/*        border-radius: 1rem;*/
-/*        display: flex;*/
-/*        flex-direction: column;*/
-/*        justify-content: center;*/
-/*        align-items: center;*/
-/*        text-align: center;*/
-/*        padding: 0 20px;*/
-/*        background-image: linear-gradient(180deg, rgb(221, 121, 238, 0.5) 0%, rgba(232, 220, 255, 0.9) 70%);*/
-/*        position: relative;*/
-/*    }*/
+    .hero {
+        min-height: 85vh;
+        margin: 5rem 10rem 5rem 10rem;
+        border-radius: 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        padding: 0 20px;
+        background-image: linear-gradient(180deg, rgb(221, 121, 238, 0.5) 0%, rgba(232, 220, 255, 0.9) 70%);
+        position: relative;
+    }
 
-/*    .login-container {*/
-/*        max-width: 80rem;*/
-/*    }*/
-/*}*/
+    .login-container {
+        max-width: 80rem;
+    }
+}
