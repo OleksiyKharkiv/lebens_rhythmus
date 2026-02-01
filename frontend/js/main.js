@@ -98,11 +98,74 @@ async function fetchJson(url, opts = {}) {
     }
 }
 
+// ========== UTILS ==========
+
+/**
+ * Escape HTML to prevent XSS.
+ */
+function escapeHtml(text) {
+    if (text === null || text === undefined) return '';
+    const div = document.createElement('div');
+    div.textContent = String(text);
+    return div.innerHTML;
+}
+
+/**
+ * Format ISO date string to local German format.
+ */
+function formatLocalDate(dateStr) {
+    if (!dateStr) return '';
+    try {
+        const date = new Date(dateStr);
+        if (isNaN(date.getTime())) return dateStr;
+        return date.toLocaleDateString('de-DE', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+    } catch (e) {
+        return dateStr;
+    }
+}
+
+/**
+ * Format price (Number) to Euro currency string.
+ */
+function formatPrice(price) {
+    if (price === null || price === undefined) return '';
+    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(price);
+}
+
+/**
+ * Safe JSON parser for fetch responses.
+ */
+async function safeJson(res) {
+    const ct = res.headers.get('content-type') || '';
+    if (!ct.includes('application/json')) {
+        const text = await res.text().catch(() => '');
+        if (!text) return {};
+        try {
+            return JSON.parse(text);
+        } catch {
+            return {};
+        }
+    }
+    try {
+        return await res.json();
+    } catch {
+        return {};
+    }
+}
+
 // export to global
 window.isAuthenticated = isAuthenticated;
 window.getAuthHeaders = getAuthHeaders;
 window.logout = logout;
 window.fetchJson = fetchJson;
+window.escapeHtml = escapeHtml;
+window.formatLocalDate = formatLocalDate;
+window.formatPrice = formatPrice;
+window.safeJson = safeJson;
 
 // ========== small UI helpers kept in main.js ==========
 function toggleMobileMenu() {

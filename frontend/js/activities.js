@@ -1,6 +1,3 @@
-// API Configuration
-const API_BASE_URL = 'http://localhost:8080/api';
-
 // Fetch activities from the backend
 async function fetchActivities(filters = {}) {
     showLoading();
@@ -19,17 +16,11 @@ async function fetchActivities(filters = {}) {
             queryParams.append('day', filters.dayOfWeek);
         }
 
-        const url = `${API_BASE_URL}/activities${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const activities = await response.json();
+        const url = `${window.API_BASE_URL}/activities${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+        const activities = await window.fetchJson(url);
         hideLoading();
 
-        if (activities.length === 0) {
+        if (!activities || activities.length === 0) {
             showNoResults();
         } else {
             renderActivities(activities);
@@ -159,16 +150,14 @@ function getDayLabel(day) {
 // Enroll in activity
 function enrollActivity(activityId) {
     // Check if the user is logged in
-    const token = localStorage.getItem('authToken');
-
-    if (!token) {
+    if (!window.isAuthenticated()) {
         alert('Bitte melden Sie sich an, um sich für eine Aktivität anzumelden.');
         window.location.href = '../login/login.html';
         return;
     }
 
     // Redirect to the enrollment page or show enrollment modal
-    window.location.href = `../enrollment/enrollment.html?activityId=${activityId}`;
+    window.location.href = `../workshops/workshops.html?register=${activityId}`;
 }
 
 // Event listeners

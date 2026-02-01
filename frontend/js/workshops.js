@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function handleRegistration(e) {
     e.preventDefault();
-    if (!isAuthenticated()) {
+    if (!window.isAuthenticated()) {
         const currentPath = window.location.pathname;
         const page = currentPath.substring(currentPath.lastIndexOf('/') + 1);
         location.href = `../login/login.html?redirect=${page}`;
@@ -36,22 +36,16 @@ async function handleRegistration(e) {
     if (submitBtn) submitBtn.disabled = true;
 
     try {
-        const res = await fetch(`${window.API_BASE_URL}/workshops/${workshopId}/enroll`, {
+        await window.fetchJson(`${window.API_BASE_URL}/workshops/${workshopId}/enroll`, {
             method: 'POST',
-            headers: Object.assign({}, window.getAuthHeaders(), { 'Content-Type': 'application/json' }),
             body: JSON.stringify({})
         });
 
-        if (res.ok) {
-            alert('Anmeldung erfolgreich!');
-            form.reset();
-        } else {
-            const data = await safeJsonOrEmpty(res);
-            alert('Fehler: ' + (data.message || 'Anmeldung fehlgeschlagen'));
-        }
+        alert('Anmeldung erfolgreich!');
+        form.reset();
     } catch (err) {
         console.error(err);
-        alert('Netzwerkfehler bei der Anmeldung.');
+        alert('Fehler: ' + (err.message || 'Anmeldung fehlgeschlagen'));
     } finally {
         if (submitBtn) submitBtn.disabled = false;
     }
@@ -74,15 +68,7 @@ async function loadWorkshops() {
     container.innerHTML = '<p>Loading...</p>';
 
     try {
-        // Public GET - no auth required
-        const res = await fetch(`${window.API_BASE_URL}/workshops`);
-        if (!res.ok) {
-            const text = await safeText(res);
-            console.error('Failed to fetch workshops', res.status, text);
-            throw new Error('Failed to fetch workshops');
-        }
-
-        const workshops = await safeJsonOrEmpty(res);
+        const workshops = await window.fetchJson(`${window.API_BASE_URL}/workshops`);
 
         if (!workshops || workshops.length === 0) {
             container.innerHTML = '<p class="no-workshops">No upcoming workshops are available right now.</p>';
@@ -103,9 +89,9 @@ async function loadWorkshops() {
 }
 
 function renderWorkshopCard(w) {
-    const start = w.startDate ? formatLocalDate(w.startDate) : 'TBA';
+    const start = w.startDate ? window.formatLocalDate(w.startDate) : 'TBA';
     const venue = w.venueName || 'TBA';
-    const price = (w.price != null) ? formatPrice(w.price) : 'auf Anfrage';
+    const price = (w.price != null) ? window.formatPrice(w.price) : 'auf Anfrage';
 
     // If API returns currentParticipants & maxParticipants, show spots.
     let spotsInfo = '';
@@ -114,20 +100,20 @@ function renderWorkshopCard(w) {
         spotsInfo = `<p><strong>Verfügbar:</strong> ${left}/${w.maxParticipants}</p>`;
     }
 
-    const enrollText = isAuthenticated() ? 'Anmelden' : 'Login zum Anmelden';
+    const enrollText = window.isAuthenticated() ? 'Anmelden' : 'Login zum Anmelden';
     // The registration button now scrolls to the registration form on the same page
-    const enrollAction = isAuthenticated()
+    const enrollAction = window.isAuthenticated()
         ? `onclick="scrollToRegistration(${w.id})"`
         : `onclick="location.href='../login/login.html?redirect=workshops'"`;
 
     return `
     <div class="workshop-item">
-      <h3>${escapeHtml(w.title)}</h3>
-      <p class="workshop-description">${escapeHtml(w.shortDescription || '')}</p>
+      <h3>${window.escapeHtml(w.title)}</h3>
+      <p class="workshop-description">${window.escapeHtml(w.shortDescription || '')}</p>
       <div class="workshop-details">
-        <p><strong>Start:</strong> ${escapeHtml(start)}</p>
-        <p><strong>Ort:</strong> ${escapeHtml(venue)}</p>
-        <p><strong>Preis:</strong> ${escapeHtml(price)}</p>
+        <p><strong>Start:</strong> ${window.escapeHtml(start)}</p>
+        <p><strong>Ort:</strong> ${window.escapeHtml(venue)}</p>
+        <p><strong>Preis:</strong> ${window.escapeHtml(price)}</p>
         ${spotsInfo}
       </div>
       <div class="workshop-actions">
@@ -185,54 +171,5 @@ function populateWorkshopSelect(workshops) {
         // Also scroll to it
         const section = document.querySelector('.workshop-registration');
         if (section) section.scrollIntoView({ behavior: 'smooth' });
-    }
-}
-
-/* ===== helpers ===== */
-function formatLocalDate(d) {
-    try {
-        const date = new Date(d);
-        return date.toLocaleDateString('de-DE', {year: 'numeric', month: 'short', day: 'numeric'});
-    } catch {
-        return d;
-    }
-}
-
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text || '';
-    return div.innerHTML;
-}
-
-function formatPrice(p) {
-    return p === 0 ? 'kostenlos' : new Intl.NumberFormat('de-DE', {style: 'currency', currency: 'EUR'}).format(p);
-}
-
-/* ======= Helpers: safe parsing to avoid JSON.parse errors on empty bodies ====== */
-async function safeText(res) {
-    try {
-        return await res.text();
-    } catch {
-        return '';
-    }
-}
-
-async function safeJsonOrEmpty(res) {
-    // if no content (204 or empty) return []
-    const ct = res.headers.get('content-type') || '';
-    if (!ct.includes('application/json')) {
-        const t = await safeText(res);
-        if (!t) return [];
-        try {
-            return JSON.parse(t);
-        } catch {
-            return [];
-        }
-    }
-    try {
-        return await res.json();
-    } catch (err) {
-        console.warn('safeJsonOrEmpty: parse failed', err);
-        return [];
     }
 }

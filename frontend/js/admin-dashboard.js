@@ -31,15 +31,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (recent) recent.innerHTML = '<p>Loading recent items…</p>';
 
     try {
-        const res = await safeFetch(`${window.API_BASE_URL}/workshops?upcoming=true`);
-        const workshops = res.ok ? await safeJson(res) : [];
+        const workshops = await window.fetchJson(`${window.API_BASE_URL}/workshops?upcoming=true`);
         if (!workshops || workshops.length === 0) {
             if (recent) recent.innerHTML = '<p>No recent workshops</p>';
         } else {
             const items = workshops.slice(0, 5).map(w => {
-                const date = w.startDate ? escapeHtml(formatLocalDate(w.startDate)) : '';
+                const date = w.startDate ? window.escapeHtml(window.formatLocalDate(w.startDate)) : '';
                 return `<div style="padding:6px 0;border-bottom:1px solid #eee;">
-                  <strong>${escapeHtml(w.title || w.workshopName || '—')}</strong><br/>
+                  <strong>${window.escapeHtml(w.title || w.workshopName || '—')}</strong><br/>
                   <small>${date}</small>
                 </div>`;
             }).join('');
@@ -55,11 +54,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (statsBox) {
         statsBox.innerHTML = '<h3>Loading stats…</h3>';
         try {
-            // GET protected stats — use auth headers
-            const r = await safeFetch(`${window.API_BASE_URL}/users/stats/count`, { headers: window.getAuthHeaders() });
-            if (r.ok) {
-                const s = await safeJson(r);
-                statsBox.innerHTML = `<div>
+            const s = await window.fetchJson(`${window.API_BASE_URL}/users/stats/count`);
+            statsBox.innerHTML = `<div>
           <h3>Platform stats</h3>
           <ul>
             <li>Total users: ${Number(s.totalUsers || 0)}</li>
@@ -69,14 +65,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             <li>Admins: ${Number(s.adminCount || 0)}</li>
           </ul>
         </div>`;
-            } else if (r.status === 403) {
-                statsBox.innerHTML = '<div><h3>Stats</h3><p>Access denied</p></div>';
-            } else {
-                statsBox.innerHTML = '<div><h3>Stats</h3><p>Not available</p></div>';
-            }
         } catch (err) {
             console.warn('admin stats error', err);
-            statsBox.innerHTML = '<div><h3>Stats</h3><p>Error</p></div>';
+            statsBox.innerHTML = `<div><h3>Stats</h3><p>${err.status === 403 ? 'Access denied' : 'Error'}</p></div>`;
         }
     }
 });

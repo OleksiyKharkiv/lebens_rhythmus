@@ -33,9 +33,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Try to refresh a profile from server (non-blocking)
     try {
-        const profileRes = await fetch(`${window.API_BASE_URL}/users/me`, {headers: window.getAuthHeaders()});
-        if (profileRes.ok) {
-            const profile = await safeJson(profileRes);
+        const profile = await window.fetchJson(`${window.API_BASE_URL}/users/me`);
+        if (profile) {
             // update header if server has a newer firstName
             const name = profile.firstName || profile.email || displayName;
             document.querySelectorAll('.userName').forEach(el => el.textContent = name);
@@ -56,9 +55,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Load enrollments (Meine Kurse)
     try {
-        const enrollRes = await fetch(`${window.API_BASE_URL}/users/me/enrollments`, {headers: window.getAuthHeaders()});
-        if (!enrollRes.ok) throw new Error(`Enrollments fetch failed (${enrollRes.status})`);
-        const enrollments = await safeJson(enrollRes);
+        const enrollments = await window.fetchJson(`${window.API_BASE_URL}/users/me/enrollments`);
         renderMyCourses(enrollments || []);
     } catch (err) {
         console.error('dashboard init error', err);
@@ -107,10 +104,10 @@ function renderMyCourses(enrollments) {
     }
     list.innerHTML = enrollments.map(e => `
       <li>
-        <span class="course-title">${escapeHtml(e.workshopTitle || e.workshop?.title || 'Kurs')}</span>
+        <span class="course-title">${window.escapeHtml(e.workshopTitle || e.workshop?.title || 'Kurs')}</span>
         <div class="course-meta">
-          <span class="status">${escapeHtml(e.status)}</span>
-          <span class="date">${e.createdAt ? new Date(e.createdAt).toLocaleDateString('de-DE') : ''}</span>
+          <span class="status">${window.escapeHtml(e.status)}</span>
+          <span class="date">${e.createdAt ? window.formatLocalDate(e.createdAt) : ''}</span>
         </div>
       </li>
     `).join('');
@@ -121,12 +118,7 @@ async function loadAdminStats() {
     const statsBox = document.getElementById('adminStatsBox');
     if (!statsBox) return;
     try {
-        const res = await fetch(`${window.API_BASE_URL}/users/stats/count`, {headers: window.getAuthHeaders()});
-        if (!res.ok) {
-            statsBox.innerHTML = '<div>Stats nicht verfügbar</div>';
-            return;
-        }
-        const s = await safeJson(res);
+        const s = await window.fetchJson(`${window.API_BASE_URL}/users/stats/count`);
         statsBox.innerHTML = `
             <div class="dash-card">
                 <h3>Platform stats</h3>
@@ -143,32 +135,4 @@ async function loadAdminStats() {
         console.warn('loadAdminStats error', err);
         statsBox.innerHTML = '<div>Stats load error</div>';
     }
-}
-
-// Utilities
-
-// safe JSON parse helper: returns parsed json or {}/[] depending on content
-async function safeJson(res) {
-    const ct = res.headers.get('content-type') || '';
-    if (!ct.includes('application/json')) {
-        const txt = await res.text().catch(() => '');
-        if (!txt) return Array.isArray(txt) ? [] : {};
-        try {
-            return JSON.parse(txt);
-        } catch {
-            return {};
-        }
-    }
-    try {
-        return await res.json();
-    } catch (err) {
-        console.warn('safeJson parse failed', err);
-        return {};
-    }
-}
-
-function escapeHtml(t) {
-    const d = document.createElement('div');
-    d.textContent = t || '';
-    return d.innerHTML;
 }

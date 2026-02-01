@@ -6,20 +6,9 @@ document.addEventListener('DOMContentLoaded', init);
 
 let cachedWorkshops = [];
 
-function apiBase() {
-    return window.API_BASE_URL || '/api/v1';
-}
-
-function authHeaders() {
-    if (typeof window.getAuthHeaders === 'function') return window.getAuthHeaders();
-    // fallback: try common tokens in localStorage
-    const token = localStorage.getItem('token') || localStorage.getItem('accessToken') || localStorage.getItem('jwt');
-    if (token) return { Authorization: `Bearer ${token}` };
-    return {};
-}
 
 async function init() {
-    if (!apiBase()) {
+    if (typeof window.API_BASE_URL === 'undefined') {
         console.error('API base not defined');
         return;
     }
@@ -66,8 +55,7 @@ async function loadAndRenderWorkshops() {
     list.innerHTML = '<div class="admin-empty">Loading workshops…</div>';
 
     try {
-        const res = await fetch(`${apiBase()}/workshops`);
-        const raw = await safeJsonOrEmpty(res);
+        const raw = await window.fetchJson(`${window.API_BASE_URL}/workshops`);
         cachedWorkshops = Array.isArray(raw) ? raw : (raw?.content || []);
         if (!cachedWorkshops || cachedWorkshops.length === 0) {
             list.innerHTML = '<div class="admin-empty">No workshops</div>';
@@ -81,10 +69,10 @@ async function loadAndRenderWorkshops() {
 }
 
 function renderWorkshopRow(w) {
-    const start = w.startDate ? formatDate(w.startDate) : 'TBA';
+    const start = w.startDate ? window.formatLocalDate(w.startDate) : 'TBA';
     const statusClass = (w.status || 'DRAFT').toLowerCase();
-    const title = escapeHtml(w.title || w.workshopName || 'Untitled');
-    const venue = escapeHtml(w.venueName || '');
+    const title = window.escapeHtml(w.title || w.workshopName || 'Untitled');
+    const venue = window.escapeHtml(w.venueName || '');
 
     return `
     <div class="admin-workshop-item" data-id="${w.id}" style="padding:.65rem;border-bottom:1px dashed rgba(0,0,0,0.04);">
@@ -114,13 +102,7 @@ function openGroupsFor(id, title) {
 window.editWorkshop = async function (id) {
     if (!id) return;
     try {
-        // detail endpoint (public) returns WorkshopDetailDTO
-        const res = await fetch(`${apiBase()}/workshops/${id}`, { headers: authHeaders() });
-        if (!res.ok) {
-            console.error('Failed to load workshop', id, res.status);
-            return;
-        }
-        const w = await res.json();
+        const w = await window.fetchJson(`${window.API_BASE_URL}/workshops/${id}`);
 
         // fill fields — be defensive: some DTOs may not include all admin fields (maxParticipants etc.)
         document.getElementById('workshopId').value = w.id ?? '';
@@ -129,13 +111,10 @@ window.editWorkshop = async function (id) {
         document.getElementById('wStart').value = toDateInput(w.startDate);
         document.getElementById('wEnd').value = toDateInput(w.endDate);
         document.getElementById('wPrice').value = (w.price != null) ? String(w.price) : '';
-        // maxParticipants might be missing in detail DTO — try to read if present, else blank
-        document.getElementById('wMax').value = (w.maxParticipants != null) ? w.maxParticipants : (w.maxParticipants ?? w.max_participants ?? '');
-        // teacher from a nested teacher object if present
+        document.getElementById('wMax').value = (w.maxParticipants != null) ? w.maxParticipants : '';
         try {
             document.getElementById('wTeacher').value = w.teacher?.id ?? '';
         } catch { document.getElementById('wTeacher').value = ''; }
-        // venue: detail DTO gives venueName but not id — we attempt to set by venueId if present, else leave
         document.getElementById('wVenue').value = w.venueId ?? '';
         document.getElementById('wLanguage').value = w.language ?? '';
 
@@ -148,10 +127,6 @@ window.editWorkshop = async function (id) {
     }
 };
 
-/* =========================
-   SAVE (create/update)
-   build payload matching WorkshopCreateDTO on backend
-========================= */
 async function saveWorkshop() {
     const id = document.getElementById('workshopId').value;
     const isEdit = Boolean(id);
@@ -165,36 +140,27 @@ async function saveWorkshop() {
         venueId: (document.getElementById('wVenue').value) ? Number(document.getElementById('wVenue').value) : null,
         maxParticipants: document.getElementById('wMax').value ? Number(document.getElementById('wMax').value) : null,
         price: (document.getElementById('wPrice').value) ? Number(document.getElementById('wPrice').value) : null,
-        status: 'DRAFT' // default; toggle Publish button will call a separate flow if needed
+        status: 'DRAFT'
     };
 
-    const url = isEdit ? `${apiBase()}/workshops/${id}` : `${apiBase()}/workshops`;
+    const url = isEdit ? `${window.API_BASE_URL}/workshops/${id}` : `${window.API_BASE_URL}/workshops`;
     const method = isEdit ? 'PUT' : 'POST';
 
     const resultBox = document.getElementById('workshopFormResult');
     resultBox.innerHTML = ''; // clear
 
     try {
-        const res = await fetch(url, {
+        await window.fetchJson(url, {
             method,
-            headers: Object.assign({ 'Content-Type': 'application/json' }, authHeaders()),
             body: JSON.stringify(payload)
         });
 
-        if (!res.ok) {
-            const txt = await res.text().catch(()=>null);
-            console.error('Save failed', res.status, txt);
-            resultBox.innerHTML = `<div class="notify err">Save failed (${res.status})</div>`;
-            return;
-        }
-
-        const saved = await safeJsonOrEmpty(res);
         resultBox.innerHTML = `<div class="notify ok">Saved</div>`;
         clearForm();
         await loadAndRenderWorkshops();
     } catch (err) {
         console.error('saveWorkshop error', err);
-        resultBox.innerHTML = `<div class="notify err">Network error</div>`;
+        resultBox.innerHTML = `<div class="notify err">${err.message || 'Network error'}</div>`;
     }
 }
 
@@ -207,9 +173,7 @@ async function loadTeacherAndVenueSelects() {
     try {
         const sel = document.getElementById('wTeacher');
         if (sel) {
-            // try endpoint variants
-            const r1 = await fetch(`${apiBase()}/users?role=TEACHER`, { headers: authHeaders() });
-            const data = r1.ok ? await safeJsonOrEmpty(r1) : [];
+            const data = await window.fetchJson(`${window.API_BASE_URL}/users/role/TEACHER`);
             const list = Array.isArray(data) ? data : data?.content || [];
             // clear existing except default option
             const defaultOpt = sel.querySelector('option') ? sel.querySelector('option').outerHTML : '<option value="">— none —</option>';
@@ -227,8 +191,7 @@ async function loadTeacherAndVenueSelects() {
     try {
         const selV = document.getElementById('wVenue');
         if (selV) {
-            const r2 = await fetch(`${apiBase()}/venues`, { headers: authHeaders() });
-            const data = r2.ok ? await safeJsonOrEmpty(r2) : [];
+            const data = await window.fetchJson(`${window.API_BASE_URL}/venues`);
             const list = Array.isArray(data) ? data : data?.content || [];
             const defaultOpt = selV.querySelector('option') ? selV.querySelector('option').outerHTML : '<option value="">— none —</option>';
             selV.innerHTML = defaultOpt;
@@ -261,26 +224,14 @@ function toDateInput(d) {
 }
 
 function formatDate(d) {
-    try { return new Date(d).toLocaleDateString('de-DE'); } catch { return d; }
+    return window.formatLocalDate(d);
 }
 
 function escapeHtml(s) {
-    const div = document.createElement('div');
-    div.textContent = s || '';
-    return div.innerHTML;
+    return window.escapeHtml(s);
 }
 
 function escapeHtmlForAttr(s) {
     return (s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
-async function safeJsonOrEmpty(res) {
-    const ct = res?.headers?.get ? (res.headers.get('content-type') || '') : '';
-    if (!res) return [];
-    if (!ct.includes('application/json')) {
-        const t = await res.text().catch(()=>'');
-        if (!t) return [];
-        try { return JSON.parse(t); } catch { return []; }
-    }
-    try { return await res.json(); } catch { return []; }
-}

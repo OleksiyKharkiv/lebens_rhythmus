@@ -48,26 +48,18 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = 'Login...';
 
             try {
-                const response = await fetch(ENDPOINTS.LOGIN, {
+                const data = await window.fetchJson(ENDPOINTS.LOGIN, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({email, password})
                 });
 
-                if (!response.ok) {
-                    handleErrorResponse(response);
-                    return;
-                }
-
-                const data = await response.json();
                 persistAuth(data);
-
                 showNotification('Login erfolgreich!', 'success');
                 redirectBasedOnRole(data.role);
 
             } catch (err) {
                 console.error(err);
-                showNotification('Netzwerkfehler.', 'error');
+                showNotification(err.message || 'Netzwerkfehler.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Login';
@@ -95,9 +87,8 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.textContent = 'Registrieren...';
 
             try {
-                const response = await fetch(ENDPOINTS.REGISTER, {
+                const data = await window.fetchJson(ENDPOINTS.REGISTER, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         firstName: registerFirstName.value.trim(),
                         lastName: registerLastName.value.trim(),
@@ -106,20 +97,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     })
                 });
 
-                if (!response.ok) {
-                    handleErrorResponse(response);
-                    return;
-                }
-
-                const data = await response.json();
                 persistAuth(data);
-
                 showNotification('Registrierung erfolgreich!', 'success');
                 redirectBasedOnRole(data.role);
 
             } catch (err) {
                 console.error(err);
-                showNotification('Netzwerkfehler.', 'error');
+                showNotification(err.message || 'Netzwerkfehler.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.textContent = 'Registrieren';

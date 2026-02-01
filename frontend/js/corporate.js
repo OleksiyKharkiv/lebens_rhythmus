@@ -1,9 +1,6 @@
 // Corporate Page Script
 // Handles dynamic loading and display of corporate programs
 
-// API Configuration
-const API_BASE_URL = 'http://localhost:3000/api';
-const CORPORATE_ENDPOINT = `${API_BASE_URL}/corporate-programs`;
 
 // DOM Elements
 let servicesContainer;
@@ -41,13 +38,9 @@ async function loadCorporatePrograms() {
     try {
         showLoading(true);
 
-        const response = await fetch(CORPORATE_ENDPOINT);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const programs = await response.json();
+        // Corporate programs might be activities of a certain type or just a special endpoint
+        // For now, we try to fetch activities and filter if needed, or assume an endpoint exists
+        const programs = await window.fetchJson(`${window.API_BASE_URL}/activities?type=corporate`);
 
         if (programs && programs.length > 0) {
             renderCorporatePrograms(programs);
