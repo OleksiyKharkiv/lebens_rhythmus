@@ -91,6 +91,3 @@ async function safeJson(res) {
     }
     try { return await res.json(); } catch { return {}; }
 }
-
-function escapeHtml(t){ const d=document.createElement('div'); d.textContent = t||''; return d.innerHTML; }
-function formatLocalDate(d){ if(!d) return ''; try { return new Date(d).toLocaleDateString('de-DE',{year:'numeric',month:'short',day:'numeric'});}catch{ return d; } }

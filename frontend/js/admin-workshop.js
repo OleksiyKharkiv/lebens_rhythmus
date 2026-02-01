@@ -223,14 +223,6 @@ function toDateInput(d) {
     } catch { return d; }
 }
 
-function formatDate(d) {
-    return window.formatLocalDate(d);
-}
-
-function escapeHtml(s) {
-    return window.escapeHtml(s);
-}
-
 function escapeHtmlForAttr(s) {
     return (s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
