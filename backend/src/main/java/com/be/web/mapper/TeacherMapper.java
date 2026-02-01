@@ -11,9 +11,6 @@ import java.util.stream.Collectors;
 @Component
 public class TeacherMapper {
 
-    /**
-     * Maps teacher list to the info DTO list
-     */
     public List<TeacherInfoDTO> toInfoDTOList(List<Teacher> teachers) {
         if (teachers == null) {
             return Collections.emptyList();
@@ -29,9 +26,34 @@ public class TeacherMapper {
         }
         return TeacherInfoDTO.builder()
                 .id(teacher.getId())
+                .firstName(teacher.getFirstName())
+                .lastName(teacher.getLastName())
+                .email(teacher.getEmail())
+                .phone(teacher.getPhone())
                 .title(teacher.getTitle())
-                .bio(teacher.getBioDe())
                 .approved(teacher.isApproved())
+                .bioDe(teacher.getBioDe())
+                .bioEn(teacher.getBioEn())
+                .bioUa(teacher.getBioUa())
+                .active(teacher.isActive())
+                .build();
+    }
+
+    public Teacher fromRequestDTO(com.be.web.dto.request.TeacherRequestDTO dto) {
+        if (dto == null) {
+            return null;
+        }
+        return Teacher.builder()
+                .firstName(dto.getFirstName())
+                .lastName(dto.getLastName())
+                .email(dto.getEmail())
+                .phone(dto.getPhone())
+                .title(dto.getTitle())
+                .approved(dto.isApproved())
+                .bioDe(dto.getBioDe())
+                .bioEn(dto.getBioEn())
+                .bioUa(dto.getBioUa())
+                .active(dto.isActive())
                 .build();
     }
 }

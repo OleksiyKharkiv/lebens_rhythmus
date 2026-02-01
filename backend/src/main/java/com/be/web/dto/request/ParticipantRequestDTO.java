@@ -1,24 +1,22 @@
-package com.be.web.dto;
+package com.be.web.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TeacherInfoDTO {
-    private Long id;
+public class ParticipantRequestDTO {
     private String firstName;
     private String lastName;
     private String email;
     private String phone;
-    private String title;
-    private boolean approved;
-    private String bioDe;
-    private String bioEn;
-    private String bioUa;
+    private LocalDate birthDate;
+    private Long groupId;
     private boolean active;
 }

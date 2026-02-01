@@ -1,4 +1,4 @@
-package com.be.web.dto;
+package com.be.web.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -9,8 +9,7 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class TeacherInfoDTO {
-    private Long id;
+public class TeacherRequestDTO {
     private String firstName;
     private String lastName;
     private String email;
