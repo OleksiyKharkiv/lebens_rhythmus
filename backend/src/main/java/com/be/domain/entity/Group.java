@@ -51,16 +51,16 @@ public class Group {
     private LocalDateTime endDateTime;
 
     // belongs to Activity 
-    @ManyToOne(fetch = LAZY, optional = false)
-    @JoinColumn(name = "activity_id", nullable = false)
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "activity_id", nullable = true)
     private Activity activity;
 
-    @ManyToOne(fetch = LAZY, optional = false)
-    @JoinColumn(name = "age_group_id", nullable = false)
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "age_group_id", nullable = true)
     private AgeGroup ageGroup;
 
-    @ManyToOne(fetch = LAZY, optional = false)
-    @JoinColumn(name = "language_id", nullable = false)
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "language_id", nullable = true)
     private Language language;
 
     // relationship to workshop 

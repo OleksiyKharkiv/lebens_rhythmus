@@ -10,6 +10,8 @@ async function init() {
         return;
     }
     await loadWorkshops();
+    await loadActivities();
+    await loadTeachers();
     await loadGroups();
     bindEvents();
 }
@@ -39,21 +41,52 @@ async function loadWorkshops() {
     }
 }
 
+async function loadActivities() {
+    try {
+        const activities = await window.fetchJson(`${window.API_BASE_URL}/activities`);
+        const select = document.getElementById('groupActivity');
+        if (select) {
+            const options = (activities || []).map(a => `<option value="${a.id}">${window.escapeHtml(a.titleEn || a.titleDe)}</option>`).join('');
+            select.innerHTML += options;
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+async function loadTeachers() {
+    try {
+        const sel = document.getElementById('groupTeacher');
+        if (sel) {
+            const data = await window.fetchJson(`${window.API_BASE_URL}/users/role/TEACHER`);
+            const list = Array.isArray(data) ? data : data?.content || [];
+            const options = list.map(u => {
+                const name = `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || `User #${u.id}`;
+                return `<option value="${u.id}">${window.escapeHtml(name)}</option>`;
+            }).join('');
+            sel.innerHTML += options;
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
 async function loadGroups(workshopId = '') {
     const list = document.getElementById('groupsList');
     if (!list) return;
     try {
-        // Assume groups can be fetched via workshop or all groups
-        // If no all-groups endpoint, we might need to iterate or fix backend
-        // For now, assume a generic groups endpoint or filter by workshop
         const url = workshopId ? `${window.API_BASE_URL}/groups?workshopId=${workshopId}` : `${window.API_BASE_URL}/groups`;
         const groups = await window.fetchJson(url);
-        list.innerHTML = (groups || []).map(g => `
-            <div class="group-item" style="padding: 10px; border-bottom: 1px solid #eee;">
-                <strong>${window.escapeHtml(g.name || g.titleEn)}</strong> (Workshop ID: ${g.workshopId})<br/>
-                <small>Capacity: ${g.enrolledCount}/${g.capacity}</small>
-            </div>
-        `).join('') || '<p>No groups found.</p>';
+        list.innerHTML = (groups || []).map(g => {
+            const title = g.titleEn || g.titleDe || g.titleUa || 'Unnamed Group';
+            const wId = g.workshop ? g.workshop.id : (g.workshopId || '—');
+            return `
+                <div class="group-item" style="padding: 10px; border-bottom: 1px solid #eee;">
+                    <strong>${window.escapeHtml(title)}</strong> (Workshop ID: ${wId})<br/>
+                    <small>Capacity: ${g.enrolledCount ?? 0}/${g.capacity}</small>
+                </div>
+            `;
+        }).join('') || '<p>No groups found.</p>';
     } catch (err) {
         console.error(err);
         list.innerHTML = '<p>Error loading groups.</p>';
@@ -61,13 +94,33 @@ async function loadGroups(workshopId = '') {
 }
 
 async function createGroup() {
+    const workshopId = parseInt(document.getElementById('groupWorkshop').value);
+    const activityId = document.getElementById('groupActivity').value;
+    const teacherId = document.getElementById('groupTeacher').value;
+    const workshop = allWorkshops.find(w => w.id === workshopId);
+    
     const payload = {
-        workshopId: parseInt(document.getElementById('groupWorkshop').value),
-        name: document.getElementById('groupTitle').value,
+        workshop: { id: workshopId },
+        titleDe: document.getElementById('groupTitle').value,
+        titleEn: document.getElementById('groupTitle').value,
+        titleUa: document.getElementById('groupTitle').value,
         capacity: parseInt(document.getElementById('groupCap').value),
+        capacityLeft: parseInt(document.getElementById('groupCap').value),
         startDateTime: document.getElementById('groupStartLocal').value,
-        endDateTime: document.getElementById('groupEndLocal').value
+        endDateTime: document.getElementById('groupEndLocal').value,
+        active: true
     };
+
+    if (activityId) payload.activity = { id: parseInt(activityId) };
+    if (teacherId) payload.teacher = { id: parseInt(teacherId) };
+
+    // If workshop has these, we can pass them along (if the API supports it)
+    if (workshop) {
+        if (workshop.ageGroup) payload.ageGroup = { id: workshop.ageGroup.id };
+        if (workshop.language) payload.language = { id: workshop.language.id };
+        // Workshop might not have activity directly
+    }
+
     try {
         await window.fetchJson(`${window.API_BASE_URL}/groups`, {
             method: 'POST',

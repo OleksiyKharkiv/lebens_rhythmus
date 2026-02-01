@@ -113,4 +113,9 @@ public class GroupService {
         Teacher teacher = Teacher.builder().id(teacherId).build();
         return groupRepository.findByTeacher(teacher);
     }
+
+    @Transactional(readOnly = true)
+    public List<Group> findByWorkshopId(Long workshopId) {
+        return groupRepository.findByWorkshopId(workshopId);
+    }
 }

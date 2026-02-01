@@ -15,7 +15,10 @@ async function init() {
     bindEditor();
     await loadAndRenderWorkshops();
     // try populate selects (best-effort)
-    try { await loadTeacherAndVenueSelects(); } catch { /* ignore */ }
+    try { 
+        await loadTeacherAndVenueSelects(); 
+        await loadActivitySelect();
+    } catch { /* ignore */ }
 }
 
 /* =========================
@@ -25,6 +28,9 @@ function bindEditor() {
     const form = document.getElementById('workshopForm');
     const clearBtn = document.getElementById('clearWorkshopBtn');
     const openGroupsBtn = document.getElementById('openGroupsBtn');
+    const groupForm = document.getElementById('groupCreateForm');
+    const closeGroupsBtn = document.getElementById('closeGroupsPanel');
+    const refreshGroupsBtn = document.getElementById('refreshGroupsBtn');
 
     clearBtn?.addEventListener('click', clearForm);
     form?.addEventListener('submit', async (e) => {
@@ -38,11 +44,21 @@ function bindEditor() {
             alert('Open groups: create or select a workshop first.');
             return;
         }
-        // open the groups panel and load groups for workshop (if you have an endpoint)
-        document.getElementById('groupsWorkshopId').value = id;
-        document.getElementById('groupsWorkshopTitle').textContent = document.getElementById('wTitle').value || '—';
-        document.getElementById('workshopGroupsPanel').style.display = 'block';
-        // optional: loadGroupsForWorkshop(id);
+        openGroupsFor(id, document.getElementById('wTitle').value || '—');
+    });
+
+    groupForm?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await createGroupInPanel();
+    });
+
+    closeGroupsBtn?.addEventListener('click', () => {
+        document.getElementById('workshopGroupsPanel').style.display = 'none';
+    });
+
+    refreshGroupsBtn?.addEventListener('click', () => {
+        const id = document.getElementById('groupsWorkshopId').value;
+        if (id) loadGroupsForWorkshop(id);
     });
 }
 
@@ -83,7 +99,7 @@ function renderWorkshopRow(w) {
             </div>
             <div style="display:flex;gap:.5rem;align-items:center;">
                 <button class="btn btn-outline btn-sm" onclick="editWorkshop(${w.id})">Edit</button>
-                <button class="btn btn-ghost btn-sm" onclick="openGroupsFor(${w.id}, '${escapeHtmlForAttr(w.title || '')}')">Groups</button>
+                <button class="btn btn-ghost btn-sm" onclick="openGroupsFor(${w.id}, '${escapeHtmlForAttr(w.title || w.workshopName || '')}')">Groups</button>
             </div>
         </div>
     </div>`;
@@ -93,7 +109,85 @@ function openGroupsFor(id, title) {
     document.getElementById('groupsWorkshopId').value = id;
     document.getElementById('groupsWorkshopTitle').textContent = title || '—';
     document.getElementById('workshopGroupsPanel').style.display = 'block';
-    // optionally: load groups via API
+    loadGroupsForWorkshop(id);
+}
+
+async function loadGroupsForWorkshop(workshopId) {
+    const container = document.getElementById('groupsListContainer');
+    if (!container) return;
+    container.innerHTML = '<div class="admin-empty">Loading groups…</div>';
+    try {
+        const groups = await window.fetchJson(`${window.API_BASE_URL}/groups?workshopId=${workshopId}`);
+        if (!groups || groups.length === 0) {
+            container.innerHTML = '<div class="admin-empty">No groups yet — add the first group.</div>';
+            return;
+        }
+        container.innerHTML = groups.map(g => `
+            <div style="padding:.5rem; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                    <strong>${window.escapeHtml(g.titleEn || g.titleDe || 'Unnamed')}</strong>
+                    <div style="font-size:.85rem; color:#666;">
+                        ${window.formatLocalDate(g.startDateTime)} • Capacity: ${g.enrolledCount ?? 0}/${g.capacity}
+                    </div>
+                </div>
+                <button class="btn btn-ghost btn-sm" onclick="deleteGroup(${g.id})">Delete</button>
+            </div>
+        `).join('');
+    } catch (err) {
+        container.innerHTML = '<div class="admin-empty">Error loading groups.</div>';
+    }
+}
+
+async function createGroupInPanel() {
+    const workshopId = document.getElementById('groupsWorkshopId').value;
+    const title = document.getElementById('gTitle').value.trim();
+    const capacity = parseInt(document.getElementById('gCapacity').value);
+    const activityId = document.getElementById('gActivity').value;
+    const teacherId = document.getElementById('gTeacher').value;
+    
+    // Find workshop in cached list to get language/ageGroup
+    const workshop = cachedWorkshops.find(w => String(w.id) === String(workshopId));
+
+    const payload = {
+        workshop: { id: Number(workshopId) },
+        titleDe: title,
+        titleEn: title,
+        titleUa: title,
+        capacity: capacity,
+        capacityLeft: capacity,
+        startDateTime: document.getElementById('gStart').value || null,
+        endDateTime: document.getElementById('gEnd').value || null,
+        active: true
+    };
+    
+    if (activityId) payload.activity = { id: Number(activityId) };
+    if (teacherId) payload.teacher = { id: Number(teacherId) };
+
+    if (workshop) {
+        if (workshop.ageGroup) payload.ageGroup = { id: workshop.ageGroup.id };
+        if (workshop.language) payload.language = { id: workshop.language.id };
+    }
+
+    try {
+        await window.fetchJson(`${window.API_BASE_URL}/groups`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        });
+        document.getElementById('groupCreateForm').reset();
+        loadGroupsForWorkshop(workshopId);
+    } catch (err) {
+        alert('Failed to create group: ' + err.message);
+    }
+}
+
+window.deleteGroup = async function(id) {
+    if (!confirm('Delete group?')) return;
+    try {
+        await window.fetchJson(`${window.API_BASE_URL}/groups/${id}`, { method: 'DELETE' });
+        loadGroupsForWorkshop(document.getElementById('groupsWorkshopId').value);
+    } catch (err) {
+        alert('Delete failed: ' + err.message);
+    }
 }
 
 /* =========================
@@ -172,18 +266,18 @@ async function loadTeacherAndVenueSelects() {
     // teachers
     try {
         const sel = document.getElementById('wTeacher');
-        if (sel) {
+        const gSel = document.getElementById('gTeacher'); // group teacher too
+        if (sel || gSel) {
             const data = await window.fetchJson(`${window.API_BASE_URL}/users/role/TEACHER`);
             const list = Array.isArray(data) ? data : data?.content || [];
-            // clear existing except default option
-            const defaultOpt = sel.querySelector('option') ? sel.querySelector('option').outerHTML : '<option value="">— none —</option>';
-            sel.innerHTML = defaultOpt;
-            list.forEach(u => {
-                const opt = document.createElement('option');
-                opt.value = u.id;
-                opt.textContent = `${u.firstName || ''} ${u.lastName || ''}`.trim() || (u.email || `user#${u.id}`);
-                sel.appendChild(opt);
-            });
+            
+            const options = list.map(u => {
+                const name = `${u.firstName || ''} ${u.lastName || ''}`.trim() || (u.email || `user#${u.id}`);
+                return `<option value="${u.id}">${window.escapeHtml(name)}</option>`;
+            }).join('');
+
+            if (sel) sel.innerHTML += options;
+            if (gSel) gSel.innerHTML += options;
         }
     } catch (e) { /* ignore */ }
 
@@ -193,14 +287,20 @@ async function loadTeacherAndVenueSelects() {
         if (selV) {
             const data = await window.fetchJson(`${window.API_BASE_URL}/venues`);
             const list = Array.isArray(data) ? data : data?.content || [];
-            const defaultOpt = selV.querySelector('option') ? selV.querySelector('option').outerHTML : '<option value="">— none —</option>';
-            selV.innerHTML = defaultOpt;
-            list.forEach(v => {
-                const opt = document.createElement('option');
-                opt.value = v.id;
-                opt.textContent = v.name || `venue#${v.id}`;
-                selV.appendChild(opt);
-            });
+            const options = list.map(v => `<option value="${v.id}">${window.escapeHtml(v.name || v.venueName || 'Venue')}</option>`).join('');
+            selV.innerHTML += options;
+        }
+    } catch (e) { /* ignore */ }
+}
+
+async function loadActivitySelect() {
+    try {
+        const sel = document.getElementById('gActivity');
+        if (sel) {
+            const activities = await window.fetchJson(`${window.API_BASE_URL}/activities`);
+            const list = Array.isArray(activities) ? activities : (activities?.content || []);
+            const options = list.map(a => `<option value="${a.id}">${window.escapeHtml(a.titleEn || a.titleDe)}</option>`).join('');
+            sel.innerHTML += options;
         }
     } catch (e) { /* ignore */ }
 }

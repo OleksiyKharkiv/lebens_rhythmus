@@ -17,7 +17,10 @@ public class GroupController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<Group> getAllGroups() {
+    public List<Group> getAllGroups(@RequestParam(required = false) Long workshopId) {
+        if (workshopId != null) {
+            return groupService.findByWorkshopId(workshopId);
+        }
         return groupService.findAll();
     }
 
