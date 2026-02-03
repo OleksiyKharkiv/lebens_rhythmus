@@ -325,12 +325,15 @@ body {
         border-radius: 0.75rem;
         color: #fff;
     }
+
     h2 {
         font-size: 1rem !important;
     }
+
     li {
         font-size: 1rem !important;
     }
+
     /* Headline / greeting — more compact, higher contrast */
     .dashboard-hero h1 {
         font-size: 1rem;
