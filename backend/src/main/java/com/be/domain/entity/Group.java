@@ -99,4 +99,12 @@ public class Group {
     public boolean isFull() {
         return getEnrolledCount() >= capacity;
     }
+
+    @PrePersist
+    protected void onCreate() {
+        if (capacityLeft == 0) {
+            capacityLeft = capacity;
+        }
+    }
+
 }
