@@ -28,7 +28,7 @@ public class Workshop {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "workshop_id")
-    private Long id; // Long, не long
+    private Long id;
 
     @NotBlank
     @Size(max = 200)
