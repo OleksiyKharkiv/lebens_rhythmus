@@ -41,7 +41,7 @@ public class ContractService {
     @Transactional
     public Contract update(Long id, ContractRequestDTO dto) {
         Contract existing = getById(id);
-        
+
         if (dto.getContractNumber() != null) existing.setContractNumber(dto.getContractNumber());
         if (dto.getTitle() != null) existing.setTitle(dto.getTitle());
         if (dto.getPartyName() != null) existing.setPartyName(dto.getPartyName());

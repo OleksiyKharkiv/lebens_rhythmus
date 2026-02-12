@@ -46,13 +46,13 @@ public class PaymentService {
     @Transactional
     public Payment create(PaymentRequestDTO dto) {
         Payment payment = paymentMapper.fromRequestDTO(dto);
-        
+
         if (dto.getOrderId() != null) {
             Order order = orderRepository.findById(dto.getOrderId())
                     .orElseThrow(() -> new RuntimeException("Order not found"));
             payment.setOrder(order);
         }
-        
+
         if (dto.getUserId() != null) {
             User user = userRepository.findById(dto.getUserId())
                     .orElseThrow(() -> new RuntimeException("User not found"));

@@ -52,7 +52,7 @@ public class ParticipantService {
     @Transactional
     public Participant update(Long id, ParticipantRequestDTO dto) {
         Participant existing = getById(id);
-        
+
         if (dto.getFirstName() != null) existing.setFirstName(dto.getFirstName());
         if (dto.getLastName() != null) existing.setLastName(dto.getLastName());
         if (dto.getEmail() != null) existing.setEmail(dto.getEmail());

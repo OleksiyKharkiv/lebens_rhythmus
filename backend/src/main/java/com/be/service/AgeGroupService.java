@@ -41,7 +41,7 @@ public class AgeGroupService {
     @Transactional
     public AgeGroup update(Long id, AgeGroupRequestDTO dto) {
         AgeGroup existing = getById(id);
-        
+
         if (dto.getTitleDe() != null) existing.setTitleDe(dto.getTitleDe());
         if (dto.getTitleEn() != null) existing.setTitleEn(dto.getTitleEn());
         if (dto.getTitleUa() != null) existing.setTitleUa(dto.getTitleUa());

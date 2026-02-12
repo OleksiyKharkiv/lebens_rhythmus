@@ -7,5 +7,6 @@ import com.be.domain.entity.Workshop;
 
 public interface NotificationService {
     void notifyWorkshopEnrollment(Workshop workshop, Group group, User user, EnrollmentStatus status, String message);
+
     void notifyEnrollmentCancelled(Workshop workshop, Group group, User user, EnrollmentStatus status, String message);
 }

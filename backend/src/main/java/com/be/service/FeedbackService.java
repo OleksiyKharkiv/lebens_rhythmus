@@ -41,7 +41,7 @@ public class FeedbackService {
     @Transactional
     public Feedback create(FeedbackRequestDTO dto, Long userId) {
         Feedback feedback = feedbackMapper.fromRequestDTO(dto);
-        
+
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
         feedback.setUser(user);

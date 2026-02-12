@@ -58,7 +58,7 @@ public class EventService {
     @Transactional
     public Event update(Long id, EventRequestDTO dto) {
         Event existing = getById(id);
-        
+
         if (dto.getTitle() != null) existing.setTitle(dto.getTitle());
         if (dto.getDescription() != null) existing.setDescription(dto.getDescription());
         if (dto.getStartDateTime() != null) existing.setStartDateTime(dto.getStartDateTime());

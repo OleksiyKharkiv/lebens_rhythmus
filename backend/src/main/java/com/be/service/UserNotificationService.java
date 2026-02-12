@@ -41,11 +41,11 @@ public class UserNotificationService {
     @Transactional
     public UserNotification create(UserNotificationRequestDTO dto) {
         UserNotification un = userNotificationMapper.fromRequestDTO(dto);
-        
+
         User user = userRepository.findById(dto.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         un.setUser(user);
-        
+
         Notification notification = notificationRepository.findById(dto.getNotificationId())
                 .orElseThrow(() -> new RuntimeException("Notification not found"));
         un.setNotification(notification);

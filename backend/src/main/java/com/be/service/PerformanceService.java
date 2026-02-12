@@ -56,7 +56,7 @@ public class PerformanceService {
     @Transactional
     public Performance update(Long id, PerformanceRequestDTO dto) {
         Performance existing = getById(id);
-        
+
         if (dto.getTitle() != null) existing.setTitle(dto.getTitle());
         if (dto.getDescription() != null) existing.setDescription(dto.getDescription());
         if (dto.getPerformanceDate() != null) existing.setPerformanceDate(dto.getPerformanceDate());

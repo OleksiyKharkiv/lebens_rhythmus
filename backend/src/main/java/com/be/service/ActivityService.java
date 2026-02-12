@@ -41,7 +41,7 @@ public class ActivityService {
     @Transactional
     public Activity updateActivity(Long id, ActivityRequestDTO dto) {
         Activity existing = getActivityById(id);
-        
+
         if (dto.getTitleDe() != null) existing.setTitleDe(dto.getTitleDe());
         if (dto.getTitleEn() != null) existing.setTitleEn(dto.getTitleEn());
         if (dto.getTitleUa() != null) existing.setTitleUa(dto.getTitleUa());

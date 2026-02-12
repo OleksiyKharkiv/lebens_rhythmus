@@ -41,7 +41,7 @@ public class VenueService {
     @Transactional
     public Venue update(Long id, VenueRequestDTO dto) {
         Venue existing = getById(id);
-        
+
         if (dto.getName() != null) existing.setName(dto.getName());
         if (dto.getAddress() != null) existing.setAddress(dto.getAddress());
         if (dto.getCity() != null) existing.setCity(dto.getCity());

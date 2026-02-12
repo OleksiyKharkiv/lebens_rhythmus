@@ -41,7 +41,7 @@ public class LanguageService {
     @Transactional
     public Language update(Long id, LanguageRequestDTO dto) {
         Language existing = getById(id);
-        
+
         if (dto.getNameDe() != null) existing.setNameDe(dto.getNameDe());
         if (dto.getNameEn() != null) existing.setNameEn(dto.getNameEn());
         if (dto.getNameUa() != null) existing.setNameUa(dto.getNameUa());
