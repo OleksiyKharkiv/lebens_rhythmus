@@ -72,7 +72,6 @@ public class Group {
     @JoinColumn(name = "participant_id")
     private Set<Participant> participants = new HashSet<>();
 
-
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "teacher_id")
     private Teacher teacher;
@@ -88,8 +87,8 @@ public class Group {
     @Builder.Default
     @Column(nullable = false)
     private boolean active = true;
-    // ---- helper methods ----
 
+    // ---- helper methods ----
     @Transient
     public int getEnrolledCount() {
         return enrollments == null ? 0 : enrollments.size();
@@ -106,5 +105,4 @@ public class Group {
             capacityLeft = capacity;
         }
     }
-
 }
