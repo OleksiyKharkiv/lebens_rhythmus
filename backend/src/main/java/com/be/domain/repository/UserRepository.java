@@ -17,9 +17,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Basic CRUD operations
     Optional<User> findByEmail(String email);
+
     boolean existsByEmail(String email);
+
     List<User> findByRole(Role role);
+
     List<User> findByEnabledTrue();
+
     List<User> findByEmailVerifiedTrue();
 
     // Security related
@@ -40,6 +44,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     // Statistics
     long countByRole(Role role);
+
     long countByEnabledTrue();
 
     // GDPR compliance
