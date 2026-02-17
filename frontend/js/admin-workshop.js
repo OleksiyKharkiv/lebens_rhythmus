@@ -6,7 +6,6 @@ document.addEventListener('DOMContentLoaded', init);
 
 let cachedWorkshops = [];
 
-
 async function init() {
     if (typeof window.API_BASE_URL === 'undefined') {
         console.error('API base not defined');
@@ -15,10 +14,13 @@ async function init() {
     bindEditor();
     await loadAndRenderWorkshops();
     // try populate selects (best-effort)
-    try { 
-        await loadTeacherAndVenueSelects(); 
+    try {
+        await loadTeacherAndVenueSelects();
         await loadActivitySelect();
-    } catch { /* ignore */ }
+    } catch (e) {
+        // non-fatal
+        console.warn('selects load failed', e);
+    }
 }
 
 /* =========================
@@ -86,10 +88,8 @@ async function loadAndRenderWorkshops() {
 
 function renderWorkshopRow(w) {
     const start = w.startDate ? window.formatLocalDate(w.startDate) : 'TBA';
-    const statusClass = (w.status || 'DRAFT').toLowerCase();
     const title = window.escapeHtml(w.title || w.workshopName || 'Untitled');
     const venue = window.escapeHtml(w.venueName || '');
-
     return `
     <div class="admin-workshop-item" data-id="${w.id}" style="padding:.65rem;border-bottom:1px dashed rgba(0,0,0,0.04);">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;">
@@ -134,6 +134,7 @@ async function loadGroupsForWorkshop(workshopId) {
             </div>
         `).join('');
     } catch (err) {
+        console.error('loadGroupsForWorkshop error', err);
         container.innerHTML = '<div class="admin-empty">Error loading groups.</div>';
     }
 }
@@ -144,12 +145,12 @@ async function createGroupInPanel() {
     const capacity = parseInt(document.getElementById('gCapacity').value);
     const activityId = document.getElementById('gActivity').value;
     const teacherId = document.getElementById('gTeacher').value;
-    
+
     // Find workshop in cached list to get language/ageGroup
     const workshop = cachedWorkshops.find(w => String(w.id) === String(workshopId));
 
     const payload = {
-        workshop: { id: Number(workshopId) },
+        workshop: {id: Number(workshopId)},
         titleDe: title,
         titleEn: title,
         titleUa: title,
@@ -159,34 +160,35 @@ async function createGroupInPanel() {
         endDateTime: document.getElementById('gEnd').value || null,
         active: true
     };
-    
-    if (activityId) payload.activity = { id: Number(activityId) };
-    if (teacherId) payload.teacher = { id: Number(teacherId) };
+
+    if (activityId) payload.activity = {id: Number(activityId)};
+    if (teacherId) payload.teacher = {id: Number(teacherId)};
 
     if (workshop) {
-        if (workshop.ageGroup) payload.ageGroup = { id: workshop.ageGroup.id };
-        if (workshop.language) payload.language = { id: workshop.language.id };
+        if (workshop.ageGroup) payload.ageGroup = {id: workshop.ageGroup.id};
+        if (workshop.language) payload.language = {id: workshop.language.id};
     }
 
     try {
         await window.fetchJson(`${window.API_BASE_URL}/groups`, {
             method: 'POST',
+            headers: {'Content-Type': 'application/json', ...window.getAuthHeaders?.()},
             body: JSON.stringify(payload)
         });
         document.getElementById('groupCreateForm').reset();
         loadGroupsForWorkshop(workshopId);
     } catch (err) {
-        alert('Failed to create group: ' + err.message);
+        alert('Failed to create group: ' + (err.message || err));
     }
 }
 
-window.deleteGroup = async function(id) {
+window.deleteGroup = async function (id) {
     if (!confirm('Delete group?')) return;
     try {
-        await window.fetchJson(`${window.API_BASE_URL}/groups/${id}`, { method: 'DELETE' });
+        await window.fetchJson(`${window.API_BASE_URL}/groups/${id}`, {method: 'DELETE'});
         loadGroupsForWorkshop(document.getElementById('groupsWorkshopId').value);
     } catch (err) {
-        alert('Delete failed: ' + err.message);
+        alert('Delete failed: ' + (err.message || err));
     }
 }
 
@@ -206,16 +208,57 @@ window.editWorkshop = async function (id) {
         document.getElementById('wEnd').value = toDateInput(w.endDate);
         document.getElementById('wPrice').value = (w.price != null) ? String(w.price) : '';
         document.getElementById('wMax').value = (w.maxParticipants != null) ? w.maxParticipants : '';
+
+        // teacher (detail DTO includes teacher object)
         try {
-            document.getElementById('wTeacher').value = w.teacher?.id ?? '';
-        } catch { document.getElementById('wTeacher').value = ''; }
-        document.getElementById('wVenue').value = w.venueId ?? '';
-        document.getElementById('wLanguage').value = w.language ?? '';
+            const teacherSel = document.getElementById('wTeacher');
+            if (teacherSel) {
+                // teacher may be object {id,...} or id
+                const tid = w.teacher?.id ?? w.teacherId ?? null;
+                teacherSel.value = tid ?? '';
+            }
+        } catch (e) { /* ignore */
+        }
+
+        // venue: detail DTO may only include venueName (no id). Try id first, else match by name.
+        const venueSel = document.getElementById('wVenue');
+        try {
+            const vid = w.venueId ?? w.venue?.id ?? null;
+            if (venueSel) {
+                if (vid) {
+                    venueSel.value = String(vid);
+                } else if (w.venueName) {
+                    // try to find option matching venueName (case-insensitive, trim)
+                    const name = String(w.venueName).trim().toLowerCase();
+                    let found = false;
+                    for (const opt of Array.from(venueSel.options)) {
+                        if (String(opt.text).trim().toLowerCase() === name) {
+                            venueSel.value = opt.value;
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found) {
+                        // not found — leave as empty (admin may re-select)
+                        venueSel.value = '';
+                    }
+                } else {
+                    venueSel.value = '';
+                }
+            }
+        } catch (e) { /* ignore */
+        }
+
+        // language could be object or primitive
+        try {
+            document.getElementById('wLanguage').value = w.language?.id ?? w.language ?? '';
+        } catch (e) { /* ignore */
+        }
 
         document.getElementById('formTitle').textContent = 'Edit workshop';
         document.getElementById('workshopFormResult').innerHTML = '';
         // scroll to form
-        document.getElementById('manageGrid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('manageGrid')?.scrollIntoView({behavior: 'smooth', block: 'start'});
     } catch (err) {
         console.error('editWorkshop error', err);
     }
@@ -246,6 +289,7 @@ async function saveWorkshop() {
     try {
         await window.fetchJson(url, {
             method,
+            headers: {'Content-Type': 'application/json', ...window.getAuthHeaders?.()},
             body: JSON.stringify(payload)
         });
 
@@ -270,16 +314,18 @@ async function loadTeacherAndVenueSelects() {
         if (sel || gSel) {
             const data = await window.fetchJson(`${window.API_BASE_URL}/users/role/TEACHER`);
             const list = Array.isArray(data) ? data : data?.content || [];
-            
+
             const options = list.map(u => {
                 const name = `${u.firstName || ''} ${u.lastName || ''}`.trim() || (u.email || `user#${u.id}`);
                 return `<option value="${u.id}">${window.escapeHtml(name)}</option>`;
             }).join('');
 
-            if (sel) sel.innerHTML += options;
-            if (gSel) gSel.innerHTML += options;
+            if (sel) sel.innerHTML = `<option value="">— none —</option>` + options;
+            if (gSel) gSel.innerHTML = `<option value="">— none —</option>` + options;
         }
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+        console.warn('load teachers failed', e); /* ignore */
+    }
 
     // venues
     try {
@@ -288,9 +334,11 @@ async function loadTeacherAndVenueSelects() {
             const data = await window.fetchJson(`${window.API_BASE_URL}/venues`);
             const list = Array.isArray(data) ? data : data?.content || [];
             const options = list.map(v => `<option value="${v.id}">${window.escapeHtml(v.name || v.venueName || 'Venue')}</option>`).join('');
-            selV.innerHTML += options;
+            selV.innerHTML = `<option value="">— none —</option>` + options;
         }
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+        console.warn('load venues failed', e); /* ignore */
+    }
 }
 
 async function loadActivitySelect() {
@@ -300,9 +348,11 @@ async function loadActivitySelect() {
             const activities = await window.fetchJson(`${window.API_BASE_URL}/activities`);
             const list = Array.isArray(activities) ? activities : (activities?.content || []);
             const options = list.map(a => `<option value="${a.id}">${window.escapeHtml(a.titleEn || a.titleDe)}</option>`).join('');
-            sel.innerHTML += options;
+            sel.innerHTML = `<option value="">— choose (optional) —</option>` + options;
         }
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+        console.warn('load activities failed', e); /* ignore */
+    }
 }
 
 /* =========================
@@ -320,10 +370,11 @@ function toDateInput(d) {
     if (!d) return '';
     try {
         return new Date(d).toISOString().slice(0, 10);
-    } catch { return d; }
+    } catch {
+        return d;
+    }
 }
 
 function escapeHtmlForAttr(s) {
     return (s || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
-

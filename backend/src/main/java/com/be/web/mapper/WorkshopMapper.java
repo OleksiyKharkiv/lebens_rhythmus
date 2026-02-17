@@ -65,6 +65,7 @@ public class WorkshopMapper {
                 .startDate(w.getStartDate())
                 .endDate(w.getEndDate())
                 .venueName(w.getVenue() != null ? w.getVenue().getName() : null)
+                .venueId(w.getVenue() != null ? w.getVenue().getId() : null)
                 .price(w.getPrice())
                 .status(String.valueOf(w.getStatus()))
                 .groups(groups)

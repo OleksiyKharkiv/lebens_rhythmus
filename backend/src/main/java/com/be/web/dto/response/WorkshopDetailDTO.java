@@ -21,6 +21,7 @@ public class WorkshopDetailDTO {
     private LocalDate startDate;
     private LocalDate endDate;
     private String venueName;
+    private Long venueId;
     private BigDecimal price;
     private String status;
     private List<GroupDTO> groups;
