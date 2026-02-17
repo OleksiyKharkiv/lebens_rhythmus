@@ -51,14 +51,14 @@ async function handleRegistration(e) {
     }
 }
 
-window.scrollToRegistration = function(id) {
+window.scrollToRegistration = function (id) {
     const sel = document.getElementById('workshop-select');
     if (sel) {
         sel.value = String(id);
     }
     const section = document.querySelector('.workshop-registration');
     if (section) {
-        section.scrollIntoView({ behavior: 'smooth' });
+        section.scrollIntoView({behavior: 'smooth'});
     }
 };
 
@@ -93,18 +93,34 @@ function renderWorkshopCard(w) {
     const venue = w.venueName || 'TBA';
     const price = (w.price != null) ? window.formatPrice(w.price) : 'auf Anfrage';
 
+    // decide details URL so it works from admin pages and from public pages
+    function detailHrefFor(id) {
+        const p = window.location.pathname || '';
+        // if we're inside an "admin" path, go up one level to workshops folder
+        if (p.includes('/admin/')) {
+            return `../workshops/workshop-detail.html?id=${id}`;
+        }
+        // if already inside workshops folder
+        if (p.includes('/workshops/')) {
+            return `workshop-detail.html?id=${id}`;
+        }
+        // fallback to site-root /workshops (works on prod)
+        return `/workshops/workshop-detail.html?id=${id}`;
+    }
+
+    const detailHref = detailHrefFor(w.id);
+
+    const enrollText = window.isAuthenticated() ? 'Anmelden' : 'Login zum Anmelden';
+    const enrollAction = window.isAuthenticated()
+        ? `onclick="scrollToRegistration(${w.id})"`
+        : `onclick="location.href='../login/login.html?redirect=workshops'"`;
+
     // If API returns currentParticipants & maxParticipants, show spots.
     let spotsInfo = '';
     if (typeof w.currentParticipants !== 'undefined' && typeof w.maxParticipants !== 'undefined') {
         const left = Math.max(0, w.maxParticipants - w.currentParticipants);
         spotsInfo = `<p><strong>Verfügbar:</strong> ${left}/${w.maxParticipants}</p>`;
     }
-
-    const enrollText = window.isAuthenticated() ? 'Anmelden' : 'Login zum Anmelden';
-    // The registration button now scrolls to the registration form on the same page
-    const enrollAction = window.isAuthenticated()
-        ? `onclick="scrollToRegistration(${w.id})"`
-        : `onclick="location.href='../login/login.html?redirect=workshops'"`;
 
     return `
     <div class="workshop-item">
@@ -117,7 +133,7 @@ function renderWorkshopCard(w) {
         ${spotsInfo}
       </div>
       <div class="workshop-actions">
-        <button class="btn" onclick="location.href='workshop-detail.html?id=${w.id}'">Details</button>
+        <button class="btn" onclick="location.href='${detailHref}'">Details</button>
         <button class="btn primary" ${enrollAction}>${enrollText}</button>
       </div>
     </div>
@@ -170,6 +186,6 @@ function populateWorkshopSelect(workshops) {
         sel.value = regId;
         // Also scroll to it
         const section = document.querySelector('.workshop-registration');
-        if (section) section.scrollIntoView({ behavior: 'smooth' });
+        if (section) section.scrollIntoView({behavior: 'smooth'});
     }
 }
