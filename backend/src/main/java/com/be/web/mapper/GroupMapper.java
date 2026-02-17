@@ -12,15 +12,28 @@ public class GroupMapper {
 
         return GroupDTO.builder()
                 .id(group.getId())
-                .name(group.getTitleEn()) // или titleDe — реши стандарт
+                // titles
+                .titleDe(group.getTitleDe())
+                .titleEn(group.getTitleEn())
+                .titleUa(group.getTitleUa())
+                // times
                 .startDateTime(group.getStartDateTime())
                 .endDateTime(group.getEndDateTime())
+                // capacity / enrolled
                 .capacity(group.getCapacity())
-                .enrolledCount(
-                        group.getEnrollments() == null
-                                ? 0
-                                : group.getEnrollments().size()
+                .enrolledCount(group.getEnrollments() == null ? 0 : group.getEnrollments().size())
+                // relations by id
+                .workshopId(group.getWorkshop() != null ? group.getWorkshop().getId() : null)
+                .workshopTitle(
+                        group.getWorkshop() != null
+                                ? group.getWorkshop().getWorkshopName()
+                                : null
                 )
+                .activityId(group.getActivity() != null ? group.getActivity().getId() : null)
+                .teacherId(group.getTeacher() != null ? group.getTeacher().getId() : null)
+                .ageGroupId(group.getAgeGroup() != null ? group.getAgeGroup().getId() : null)
+                .languageId(group.getLanguage() != null ? group.getLanguage().getId() : null)
+                .active(group.isActive())
                 .build();
     }
 }

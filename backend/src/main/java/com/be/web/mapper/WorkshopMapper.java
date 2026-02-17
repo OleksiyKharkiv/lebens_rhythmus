@@ -75,14 +75,34 @@ public class WorkshopMapper {
     }
 
     private GroupDTO toGroupDTO(Group g) {
-        // Builds group DTO with start and end times
         return GroupDTO.builder()
                 .id(g.getId())
-                .name(g.getTitleEn())
+
+                // titles
+                .titleDe(g.getTitleDe())
+                .titleEn(g.getTitleEn())
+                .titleUa(g.getTitleUa())
+
+                // time
                 .startDateTime(g.getStartDateTime())
                 .endDateTime(g.getEndDateTime())
+
+                // capacity
                 .capacity(g.getCapacity())
-                .enrolledCount(g.getEnrollments() == null ? 0 : g.getEnrollments().size())
+                .enrolledCount(
+                        g.getEnrollments() == null
+                                ? 0
+                                : g.getEnrollments().size()
+                )
+
+                // relations by id
+                .workshopId(g.getWorkshop() != null ? g.getWorkshop().getId() : null)
+                .activityId(g.getActivity() != null ? g.getActivity().getId() : null)
+                .teacherId(g.getTeacher() != null ? g.getTeacher().getId() : null)
+                .ageGroupId(g.getAgeGroup() != null ? g.getAgeGroup().getId() : null)
+                .languageId(g.getLanguage() != null ? g.getLanguage().getId() : null)
+
+                .active(g.isActive())
                 .build();
     }
 
