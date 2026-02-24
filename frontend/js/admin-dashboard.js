@@ -11,7 +11,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     let user = {};
-    try { user = JSON.parse(localStorage.getItem('userData') || '{}'); } catch (e) { user = {}; }
+    try {
+        user = JSON.parse(localStorage.getItem('userData') || '{}');
+    } catch (e) {
+        user = {};
+    }
 
     const role = (user.role || '').toUpperCase();
     const allowed = ['ADMIN', 'TEACHER', 'BUSINESS_OWNER'];
@@ -85,9 +89,17 @@ async function safeFetch(url, opts = {}) {
 async function safeJson(res) {
     const ct = res.headers.get('content-type') || '';
     if (!ct.includes('application/json')) {
-        const t = await res.text().catch(()=>'');
+        const t = await res.text().catch(() => '');
         if (!t) return {};
-        try { return JSON.parse(t); } catch { return {}; }
+        try {
+            return JSON.parse(t);
+        } catch {
+            return {};
+        }
     }
-    try { return await res.json(); } catch { return {}; }
+    try {
+        return await res.json();
+    } catch {
+        return {};
+    }
 }

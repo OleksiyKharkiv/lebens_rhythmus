@@ -23,10 +23,10 @@ async function loadWorkshopsAndVenues() {
     try {
         const workshops = await window.fetchJson(`${window.API_BASE_URL}/workshops`);
         const venues = await window.fetchJson(`${window.API_BASE_URL}/venues`);
-        
+
         const wSelect = document.getElementById('pWorkshop');
         const vSelect = document.getElementById('pVenue');
-        
+
         if (wSelect) wSelect.innerHTML += (workshops || []).map(w => `<option value="${w.id}">${window.escapeHtml(w.title)}</option>`).join('');
         if (vSelect) vSelect.innerHTML += (venues || []).map(v => `<option value="${v.id}">${window.escapeHtml(v.name)}</option>`).join('');
     } catch (err) {

@@ -10,7 +10,7 @@ async function init() {
         console.error('API base not defined');
         return;
     }
-    
+
     // Auth check
     if (!window.isAuthenticated()) {
         location.href = '../login/login.html';
@@ -47,7 +47,7 @@ function bindEvents() {
 async function loadUsers() {
     const list = document.getElementById('usersList');
     if (list) list.innerHTML = '<p>Loading users...</p>';
-    
+
     try {
         allUsers = await window.fetchJson(`${window.API_BASE_URL}/users`);
         renderUsers(allUsers);
@@ -84,7 +84,7 @@ function renderUsers(users) {
     `).join('');
 }
 
-window.editUser = function(id) {
+window.editUser = function (id) {
     const user = allUsers.find(u => u.id === id);
     if (!user) return;
 
@@ -95,8 +95,8 @@ window.editUser = function(id) {
     document.getElementById('uId').value = user.id;
     document.getElementById('uRole').value = user.role;
     document.getElementById('uEnabled').checked = user.enabled;
-    
-    form.scrollIntoView({ behavior: 'smooth' });
+
+    form.scrollIntoView({behavior: 'smooth'});
 };
 
 async function saveUserChanges() {
@@ -116,7 +116,7 @@ async function saveUserChanges() {
                 method: 'DELETE'
             });
         }
-        
+
         // Note: Currently backend doesn't seem to have a simple "reactivate" endpoint in UserController
         // but we assume success for the role change.
 
@@ -131,7 +131,7 @@ async function saveUserChanges() {
 
 function debounce(func, wait) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(this, args), wait);
     };

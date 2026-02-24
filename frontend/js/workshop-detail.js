@@ -70,7 +70,7 @@ async function enroll(workshopId, groupId) {
     try {
         const data = await window.fetchJson(`${window.API_BASE_URL}/workshops/${workshopId}/enroll`, {
             method: 'POST',
-            body: JSON.stringify({ groupId })
+            body: JSON.stringify({groupId})
         });
 
         el.innerHTML = `<div class="success">Anmeldung erfolgreich (status: ${window.escapeHtml(data.status || 'CONFIRMED')}).</div>`;
@@ -83,4 +83,7 @@ async function enroll(workshopId, groupId) {
 }
 
 // helpers
-function formatLocalDateTime(d) { if (!d) return ''; return new Date(d).toLocaleString('de-DE', { dateStyle:'medium', timeStyle:'short' }); }
+function formatLocalDateTime(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleString('de-DE', {dateStyle: 'medium', timeStyle: 'short'});
+}

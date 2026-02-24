@@ -24,7 +24,7 @@ function isAuthenticated() {
  * Always returns an object (useful to spread into fetch options).
  */
 function getAuthHeaders() {
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {'Content-Type': 'application/json'};
     try {
         const token = localStorage.getItem('authToken');
         if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -64,7 +64,10 @@ async function fetchJson(url, opts = {}) {
 
     // Automatic handling for unauthorized responses => force re-login
     if (res.status === 401) {
-        try { localStorage.clear(); } catch (e) { /* ignore */ }
+        try {
+            localStorage.clear();
+        } catch (e) { /* ignore */
+        }
         // redirect to the login page (do not attempt further processing)
         window.location.href = '/pages/login/login.html';
         throw new Error('Unauthorized'); // caller can catch if needed
@@ -133,7 +136,7 @@ function formatLocalDate(dateStr) {
  */
 function formatPrice(price) {
     if (price === null || price === undefined) return '';
-    return new Intl.NumberFormat('de-DE', { style: 'currency', currency: 'EUR' }).format(price);
+    return new Intl.NumberFormat('de-DE', {style: 'currency', currency: 'EUR'}).format(price);
 }
 
 /**
@@ -176,7 +179,7 @@ function toggleMobileMenu() {
 
 function scrollToSection(id) {
     const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth' });
+    if (el) el.scrollIntoView({behavior: 'smooth'});
 }
 
 // ensure mobile menu hidden on load

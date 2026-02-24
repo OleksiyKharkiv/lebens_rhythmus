@@ -1,4 +1,3 @@
-
 // Submit feedback to backend API
 async function submitFeedback(feedbackData) {
     try {
