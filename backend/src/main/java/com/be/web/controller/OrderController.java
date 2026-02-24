@@ -44,11 +44,11 @@ public class OrderController {
         // Basic security check: user can only see their own order unless they are admin/owner
         Long userId = JwtAuthUtils.extractUserId(jwt);
         boolean isAdmin = jwt.getClaimAsStringList("roles").stream().anyMatch(r -> r.equals("ADMIN") || r.equals("BUSINESS_OWNER"));
-        
+
         if (!isAdmin && !order.getUser().getId().equals(userId)) {
             return ResponseEntity.status(403).build();
         }
-        
+
         return ResponseEntity.ok(orderMapper.toResponseDTO(order));
     }
 
