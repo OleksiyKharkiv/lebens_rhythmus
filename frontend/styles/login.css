@@ -64,7 +64,9 @@ body {
 }
 
 /* ===== Form fields ===== */
-#login .form-field { margin-bottom: 1rem; }
+#login .form-field {
+    margin-bottom: 1rem;
+}
 
 #login .form-field label {
     display: block;
@@ -101,19 +103,31 @@ body {
     border-color: #e53935;
     box-shadow: 0 6px 18px rgba(229, 57, 53, 0.10);
 }
+
 #login .form-field input.success {
     border-color: #2e7d32;
     box-shadow: 0 6px 18px rgba(46, 125, 50, 0.10);
 }
 
 /* ===== Password input with toggle ===== */
-#login .password-field { position: relative; }
-#login .password-input-container { position: relative; display: flex; align-items: stretch; }
-#login .password-input-container input { padding-right: 3rem; }
+#login .password-field {
+    position: relative;
+}
+
+#login .password-input-container {
+    position: relative;
+    display: flex;
+    align-items: stretch;
+}
+
+#login .password-input-container input {
+    padding-right: 3rem;
+}
 
 #login .toggle-password {
     position: absolute;
-    top: 0; right: 0;
+    top: 0;
+    right: 0;
     height: 100%;
     min-width: 2.5rem;
     display: inline-flex;
@@ -141,6 +155,7 @@ body {
     color: #6b6f7a;
     gap: .75rem;
 }
+
 #login .separator span {
     display: inline-block;
     background: #fff;
@@ -152,6 +167,7 @@ body {
     border: 1px solid rgba(156, 39, 176, 0.15);
     box-shadow: 0 4px 14px rgba(156, 39, 176, 0.10);
 }
+
 #login .separator::before,
 #login .separator::after {
     content: "";
@@ -168,11 +184,30 @@ body {
     border-radius: 0.5rem;
     border: 1px solid rgba(156, 39, 176, 0.08);
 }
-#login .checkbox-label { display: block; color: #333; font-size: .92rem; margin-bottom: .6rem; }
-#login .checkbox-label:last-child { margin-bottom: 0; }
-#login .checkbox-label a { color: #0066cc; text-decoration: none; }
-#login .checkbox-label a:hover { text-decoration: underline; }
-#login .required-star { color: #e53935; }
+
+#login .checkbox-label {
+    display: block;
+    color: #333;
+    font-size: .92rem;
+    margin-bottom: .6rem;
+}
+
+#login .checkbox-label:last-child {
+    margin-bottom: 0;
+}
+
+#login .checkbox-label a {
+    color: #0066cc;
+    text-decoration: none;
+}
+
+#login .checkbox-label a:hover {
+    text-decoration: underline;
+}
+
+#login .required-star {
+    color: #e53935;
+}
 
 /* ===== Buttons ===== */
 #login button[type="submit"],
@@ -189,11 +224,13 @@ body {
     box-shadow: 0 12px 28px rgba(156, 39, 176, 0.18);
     transition: transform .18s ease, box-shadow .18s ease, opacity .12s ease;
 }
+
 #login button[type="submit"]:hover,
 #login .btn-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 18px 40px rgba(156, 39, 176, 0.25);
 }
+
 #login button[type="submit"]:disabled {
     opacity: .6;
     cursor: not-allowed;
@@ -206,7 +243,10 @@ body {
     text-decoration: none;
     font-weight: 600;
 }
-#login .btn-link:hover { text-decoration: underline; }
+
+#login .btn-link:hover {
+    text-decoration: underline;
+}
 
 /* Required note */
 #login .required-note {
@@ -219,11 +259,17 @@ body {
 }
 
 /* First/last name row */
-#login .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+#login .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .75rem;
+}
 
 /* ===== Mobile optimizations ===== */
 @media (max-width: 48rem) {
-    body { background-attachment: scroll; }
+    body {
+        background-attachment: scroll;
+    }
 
     #login.hero {
         margin: 1rem;
@@ -231,9 +277,15 @@ body {
         border-radius: .9rem;
     }
 
-    #login.hero h1 { font-size: 1.35rem; }
+    #login.hero h1 {
+        font-size: 1.35rem;
+    }
 
-    #login .login-container { grid-template-columns: 1fr; gap: .75rem; padding: .25rem; }
+    #login .login-container {
+        grid-template-columns: 1fr;
+        gap: .75rem;
+        padding: .25rem;
+    }
 
     #login .login-form, #login .register-form {
         padding: .9rem;
@@ -242,9 +294,13 @@ body {
         backdrop-filter: none; /* perf */
     }
 
-    #login button[type="submit"] { min-height: 44px; }
+    #login button[type="submit"] {
+        min-height: 44px;
+    }
 
-    #login .form-row { grid-template-columns: 1fr; }
+    #login .form-row {
+        grid-template-columns: 1fr;
+    }
 }
 
 /* Motion reduction for accessibility */
