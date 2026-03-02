@@ -1,7 +1,6 @@
 // Corporate Page Script
 // Handles dynamic loading and display of corporate programs
 
-
 // DOM Elements
 let servicesContainer;
 let loadingIndicator;

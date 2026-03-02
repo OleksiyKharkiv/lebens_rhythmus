@@ -29,7 +29,7 @@ async function loadVenues() {
                 <strong>${window.escapeHtml(v.name)}</strong><br/>
                 <small>${window.escapeHtml(v.address || '')}, ${window.escapeHtml(v.city || '')}</small>
             </div>
-        `).join('') || '<p>No venues found.</p>';
+        `).join('') || '<p>No venues were found.</p>';
     } catch (err) {
         console.error(err);
         list.innerHTML = '<p>Error loading venues.</p>';

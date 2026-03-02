@@ -146,7 +146,7 @@ async function createGroupInPanel() {
     const activityId = document.getElementById('gActivity').value;
     const teacherId = document.getElementById('gTeacher').value;
 
-    // Find workshop in cached list to get language/ageGroup
+    // Find a workshop in a cached list to get language/ageGroup
     const workshop = cachedWorkshops.find(w => String(w.id) === String(workshopId));
 
     const payload = {
@@ -209,7 +209,7 @@ window.editWorkshop = async function (id) {
         document.getElementById('wPrice').value = (w.price != null) ? String(w.price) : '';
         document.getElementById('wMax').value = (w.maxParticipants != null) ? w.maxParticipants : '';
 
-        // teacher (detail DTO includes teacher object)
+        // teacher (detail DTO includes a teacher object)
         try {
             const teacherSel = document.getElementById('wTeacher');
             if (teacherSel) {
