@@ -110,7 +110,7 @@ async function saveUserChanges() {
             method: 'PUT'
         });
 
-        // If enabled checkbox was unchecked, deactivate user
+        // If the enabled checkbox was unchecked, deactivate the user
         if (!enabled) {
             await window.fetchJson(`${window.API_BASE_URL}/users/${id}`, {
                 method: 'DELETE'

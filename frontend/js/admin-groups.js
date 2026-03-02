@@ -153,7 +153,7 @@ async function createGroup() {
     if (activityId) payload.activity = {id: parseInt(activityId)};
     if (teacherId) payload.teacher = {id: parseInt(teacherId)};
 
-    // If we have workshop in memory, pass ageGroup/language if present
+    // If we have a workshop in memory, pass ageGroup/language if present
     const workshop = allWorkshops.find(w => Number(w.id) === Number(workshopId));
     if (workshop) {
         if (workshop.ageGroup) payload.ageGroup = {id: workshop.ageGroup.id};
