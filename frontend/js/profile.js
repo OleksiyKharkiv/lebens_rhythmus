@@ -63,7 +63,7 @@ function initProfile() {
             // Use fetchJson wrapper: throws on non-ok and handles 401
             const updated = await window.fetchJson(`${window.API_BASE_URL}/users/me`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify(payload)
             });
 
@@ -120,8 +120,8 @@ function initProfile() {
             // PUT /users/me/password — uses fetchJson: will throw on non-ok
             await window.fetchJson(`${window.API_BASE_URL}/users/me/password`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ currentPassword: current, newPassword: next })
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({currentPassword: current, newPassword: next})
             });
 
             showNotification('Passwort erfolgreich geändert.', 'success');
@@ -140,7 +140,7 @@ function initProfile() {
     async function loadProfile() {
         try {
             // GET /users/me via fetchJson (handles 401)
-            const p = await window.fetchJson(`${window.API_BASE_URL}/users/me`, { method: 'GET' });
+            const p = await window.fetchJson(`${window.API_BASE_URL}/users/me`, {method: 'GET'});
             populateProfile(p);
         } catch (err) {
             console.error('loadProfile error', err);

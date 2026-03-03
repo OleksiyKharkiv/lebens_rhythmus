@@ -96,11 +96,11 @@ function renderWorkshopCard(w) {
     // decide details URL so it works from admin pages and from public pages
     function detailHrefFor(id) {
         const p = window.location.pathname || '';
-        // if we're inside an "admin" path, go up one level to workshops folder
+        // if we're inside an "admin" path, go up one level to the workshops folder
         if (p.includes('/admin/')) {
             return `../workshops/workshop-detail.html?id=${id}`;
         }
-        // if already inside workshops folder
+        // if already inside the workshops folder
         if (p.includes('/workshops/')) {
             return `workshop-detail.html?id=${id}`;
         }

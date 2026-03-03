@@ -41,7 +41,7 @@ function getAuthHeaders() {
  */
 function logout() {
     localStorage.clear();
-    // keep relative path consistent with pages structure
+    // keep the relative path consistent with the pages structure
     location.href = '/pages/login/login.html';
 }
 
