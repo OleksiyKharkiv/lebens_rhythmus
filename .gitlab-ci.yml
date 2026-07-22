@@ -70,9 +70,7 @@ deploy-dev:
         --set backend.image.repository=okh3/lebens_rhythmus/backend \
         --set frontend.image.repository=okh3/lebens_rhythmus/frontend \
         --set global.imageTag=$CI_COMMIT_SHORT_SHA \
-        --set postgres.db=lebens_rhythmus\
-        --set flannel.backend=host-gw\
-        --set backend.env.JWT_SECRET="$JWT_SECRET" \
+        --set postgres.db=lebens_rhythmus \
         --set backend.env.JWT_EXPIRATION="86400000"
 
   tags:

@@ -60,8 +60,6 @@ spec:
           env:
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://lr-postgres:5432/lebens_rhythmus"
-            - name: JWT_SECRET
-              value: "{{ .Values.backend.env.JWT_SECRET }}"
             - name: JWT_EXPIRATION
               value: "{{ .Values.backend.env.JWT_EXPIRATION }}"
             - name: SPRING_DATASOURCE_USERNAME
@@ -74,6 +72,16 @@ spec:
                 secretKeyRef:
                   name: lr-db-credentials
                   key: password
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: lr-backend-secrets
+                  key: jwt-secret
+            - name: FIELD_ENCRYPTION_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: lr-backend-secrets
+                  key: field-encryption-key
           livenessProbe:
             httpGet:
               path: /actuator/health

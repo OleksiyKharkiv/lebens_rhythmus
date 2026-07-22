@@ -14,8 +14,15 @@ backend:
   # Environment variables for backend application
   env:
     SPRING_DATASOURCE_URL: jdbc:postgresql://lr-postgres:5432/lebens_rhythmus
-    JWT_SECRET: ""  # Will be overridden in pipeline
     JWT_EXPIRATION: "86400000"
+  # JWT_SECRET / FIELD_ENCRYPTION_KEY: NOT set via values/--set anymore — read
+  # from Secret `lr-backend-secrets` (keys: jwt-secret, field-encryption-key),
+  # created out-of-band, same convention as `lr-db-credentials`. Must exist in
+  # namespace `lr-dev` BEFORE `helm upgrade --install`, e.g.:
+  #   kubectl -n lr-dev create secret generic lr-backend-secrets \
+  #     --from-literal=jwt-secret=<32+ byte random string> \
+  #     --from-literal=field-encryption-key=<base64, 32 raw bytes>
+  #   openssl rand -base64 32   # generates a valid field-encryption-key
 
 postgres:
   db: lebens_rhythmus  # PostgreSQL database name
