@@ -8,6 +8,12 @@
       "port": 5180
     },
     {
+      "name": "frontend-svelte",
+      "runtimeExecutable": "C:/Program Files/Git/usr/bin/bash.exe",
+      "runtimeArgs": ["-c", "cd frontend-svelte && npm run dev -- --port 5174"],
+      "port": 5174
+    },
+    {
       "name": "backend",
       "runtimeExecutable": "C:/Program Files/Git/usr/bin/bash.exe",
       "runtimeArgs": ["-c", "cd backend && SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5432/lebens_rhythmus' SPRING_DATASOURCE_USERNAME='CHANGE_ME' SPRING_DATASOURCE_PASSWORD='CHANGE_ME' JWT_SECRET='CHANGE_ME_MIN_32_CHARS' SERVER_PORT=8080 ./mvnw spring-boot:run"],
