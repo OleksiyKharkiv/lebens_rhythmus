@@ -22,8 +22,11 @@ public class JwtUtils {
     @Value("${app.jwt.secret}")
     private String secret;
 
-    // 1 day in ms
-    private final long expiration = 86_400_000L;
+    // Default 1 day in ms — overridable via JWT_EXPIRATION (was silently
+    // ignored before: this field used to be a hardcoded constant while
+    // Helm/CI already passed JWT_EXPIRATION as a no-op env var).
+    @Value("${app.jwt.expiration:86400000}")
+    private long expiration;
 
     private Key signingKey;
 

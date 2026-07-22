@@ -65,8 +65,9 @@ public class AuthService {
             throw new IllegalArgumentException("Email already exists");
         }
 
+        // Password hashing is owned by UserService.createUser() (enforces non-null +
+        // encodes once) — do not re-encode here, see KNOWN_ISSUES.md.
         User user = userMapper.toEntity(dto);
-//        user.setPassword(passwordEncoder.encode(dto.getPassword()));
         user.setEnabled(true);
         user.setFailedLoginAttempts(0);
         user.setAcceptedTerms(true);

@@ -1,5 +1,6 @@
 package com.be.domain.entity;
 
+import com.be.config.crypto.EncryptedStringConverter;
 import com.be.domain.entity.enums.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Size;
@@ -79,7 +80,13 @@ public class User {
     // for teachers
     private String title;
     private String bio;
+
+    // GoBD/DSGVO-sensitive — encrypted at rest, see EncryptedStringConverter.
+    // Never query/filter on these columns (GCM ciphertext is non-deterministic).
+    @Convert(converter = EncryptedStringConverter.class)
     private String iban;
+
+    @Convert(converter = EncryptedStringConverter.class)
     private String taxId;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
