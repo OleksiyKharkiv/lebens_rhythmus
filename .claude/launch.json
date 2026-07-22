@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "frontend",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "frontend", "-p", "5180"],
+      "port": 5180
+    },
+    {
+      "name": "backend",
+      "runtimeExecutable": "C:/Program Files/Git/usr/bin/bash.exe",
+      "runtimeArgs": ["-c", "cd backend && SPRING_DATASOURCE_URL='jdbc:postgresql://localhost:5432/lebens_rhythmus' SPRING_DATASOURCE_USERNAME='CHANGE_ME' SPRING_DATASOURCE_PASSWORD='CHANGE_ME' JWT_SECRET='CHANGE_ME_MIN_32_CHARS' SERVER_PORT=8080 ./mvnw spring-boot:run"],
+      "port": 8080
+    }
+  ]
+}

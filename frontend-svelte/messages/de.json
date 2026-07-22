@@ -1,0 +1,40 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"site_name": "Lebens Rhythmus",
+	"nav_home": "Start",
+	"nav_about": "Über uns",
+	"nav_login": "Anmelden",
+
+	"home_hero_title": "Finde deinen Rhythmus.",
+	"home_hero_tagline": "Theater, Tanz und Körperarbeit für Erwachsene, die ihr kreatives Potenzial entdecken wollen.",
+	"home_cta_register": "Jetzt anmelden",
+	"home_directions_title": "Unsere Angebote",
+	"home_direction_theatre": "Theater",
+	"home_direction_theatre_desc": "Bühnenpräsenz, Improvisation, Ausdruck.",
+	"home_direction_dance": "Tanz",
+	"home_direction_dance_desc": "Bewegung, Choreographie, Körpergefühl.",
+	"home_direction_gymnastics": "Gymnastik",
+	"home_direction_gymnastics_desc": "Beweglichkeit, Kraft, Balance.",
+
+	"about_title": "Über TLab29",
+	"about_subtitle": "Theaterlabor 29 und das Projekt Lebens Rhythmus",
+	"about_body_1": "TLab29 ist ein Ort, an dem Erwachsene jeden Alters ihr kreatives Potenzial durch Theater, Tanz und Körperarbeit entdecken.",
+	"about_body_2": "Wir schaffen Raum und Atmosphäre für echten künstlerischen Ausdruck — ohne Vorerfahrung, ohne Bühnenangst, mit viel Neugier.",
+
+	"login_title": "Login",
+	"login_email_label": "Email",
+	"login_password_label": "Passwort",
+	"login_submit": "Login",
+	"login_forgot_password": "Passwort vergessen?",
+
+	"register_title": "Registrieren",
+	"register_firstname_label": "Vorname",
+	"register_lastname_label": "Nachname",
+	"register_email_label": "Email",
+	"register_password_label": "Passwort",
+	"register_confirm_label": "Passwort bestätigen",
+	"register_terms_label": "Ich akzeptiere die Allgemeinen Geschäftsbedingungen",
+	"register_privacy_label": "Ich akzeptiere die Datenschutzbestimmungen",
+	"register_submit": "Registrieren",
+	"required_note": "Pflichtfelder"
+}

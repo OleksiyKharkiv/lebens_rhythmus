@@ -1,0 +1,67 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(**)",
+      "Grep(**)",
+      "Glob(**)",
+      "Bash(ls *)",
+      "Bash(cd *)",
+      "Bash(pwd)",
+      "Bash(find *)",
+      "Bash(grep *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(tree *)",
+      "Bash(git status)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(./mvnw compile*)",
+      "Bash(./mvnw test*)",
+      "Bash(./mvnw verify*)",
+      "Bash(./gradlew build*)",
+      "Bash(./gradlew test*)",
+      "Bash(kubectl get *)",
+      "Bash(kubectl describe *)",
+      "Bash(kubectl logs *)",
+      "WebSearch",
+      "Edit(docs/tickets/tickets.md)",
+      "Edit(docs/tickets/archive.md)",
+      "Write(docs/tickets/tickets.md)",
+      "Write(docs/tickets/archive.md)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(**/secrets/**)",
+      "Read(**/credentials.json)",
+      "Bash(rm -rf*)",
+      "Bash(git push --force*)",
+      "Bash(kubectl delete *)",
+      "Bash(kubectl apply *)"
+    ],
+    "ask": [
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(git reset*)",
+      "Bash(qm *)",
+      "Bash(pvesh *)",
+      "Bash(iptables *)",
+      "Edit",
+      "Write"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/check-forbidden-patterns.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

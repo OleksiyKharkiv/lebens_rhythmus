@@ -1,0 +1,40 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"site_name": "Lebens Rhythmus",
+	"nav_home": "Home",
+	"nav_about": "About",
+	"nav_login": "Log in",
+
+	"home_hero_title": "Find your rhythm.",
+	"home_hero_tagline": "Theatre, dance and movement work for adults ready to discover their creative potential.",
+	"home_cta_register": "Sign up now",
+	"home_directions_title": "Our programs",
+	"home_direction_theatre": "Theatre",
+	"home_direction_theatre_desc": "Stage presence, improvisation, expression.",
+	"home_direction_dance": "Dance",
+	"home_direction_dance_desc": "Movement, choreography, body awareness.",
+	"home_direction_gymnastics": "Gymnastics",
+	"home_direction_gymnastics_desc": "Flexibility, strength, balance.",
+
+	"about_title": "About TLab29",
+	"about_subtitle": "Theaterlabor 29 and the Lebens Rhythmus project",
+	"about_body_1": "TLab29 is a place where adults of any age discover their creative potential through theatre, dance and movement work.",
+	"about_body_2": "We create space and atmosphere for genuine artistic expression — no prior experience needed, no stage fright, just curiosity.",
+
+	"login_title": "Log in",
+	"login_email_label": "Email",
+	"login_password_label": "Password",
+	"login_submit": "Log in",
+	"login_forgot_password": "Forgot your password?",
+
+	"register_title": "Sign up",
+	"register_firstname_label": "First name",
+	"register_lastname_label": "Last name",
+	"register_email_label": "Email",
+	"register_password_label": "Password",
+	"register_confirm_label": "Confirm password",
+	"register_terms_label": "I accept the Terms & Conditions",
+	"register_privacy_label": "I accept the Privacy Policy",
+	"register_submit": "Sign up",
+	"required_note": "Required fields"
+}

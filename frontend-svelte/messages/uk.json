@@ -1,0 +1,40 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"site_name": "Lebens Rhythmus",
+	"nav_home": "Головна",
+	"nav_about": "Про нас",
+	"nav_login": "Увійти",
+
+	"home_hero_title": "Знайди свій ритм.",
+	"home_hero_tagline": "Театр, танець і тілесна практика для дорослих, які хочуть розкрити свій творчий потенціал.",
+	"home_cta_register": "Записатися",
+	"home_directions_title": "Наші напрями",
+	"home_direction_theatre": "Театр",
+	"home_direction_theatre_desc": "Сценічна присутність, імпровізація, вираження.",
+	"home_direction_dance": "Танець",
+	"home_direction_dance_desc": "Рух, хореографія, відчуття тіла.",
+	"home_direction_gymnastics": "Гімнастика",
+	"home_direction_gymnastics_desc": "Гнучкість, сила, баланс.",
+
+	"about_title": "Про TLab29",
+	"about_subtitle": "Theaterlabor 29 та проєкт Lebens Rhythmus",
+	"about_body_1": "TLab29 — це простір, де дорослі будь-якого віку розкривають свій творчий потенціал через театр, танець і тілесну практику.",
+	"about_body_2": "Ми створюємо простір і атмосферу для справжнього творчого вираження — без попереднього досвіду, без страху сцени, лише цікавість.",
+
+	"login_title": "Вхід",
+	"login_email_label": "Email",
+	"login_password_label": "Пароль",
+	"login_submit": "Увійти",
+	"login_forgot_password": "Забули пароль?",
+
+	"register_title": "Реєстрація",
+	"register_firstname_label": "Ім'я",
+	"register_lastname_label": "Прізвище",
+	"register_email_label": "Email",
+	"register_password_label": "Пароль",
+	"register_confirm_label": "Підтвердіть пароль",
+	"register_terms_label": "Я приймаю Умови використання",
+	"register_privacy_label": "Я приймаю Політику конфіденційності",
+	"register_submit": "Зареєструватися",
+	"required_note": "Обов'язкові поля"
+}
