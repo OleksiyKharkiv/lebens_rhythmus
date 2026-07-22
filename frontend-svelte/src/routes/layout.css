@@ -1,0 +1,63 @@
+@import 'tailwindcss';
+
+/* Self-hosted fonts (not Google Fonts CDN — avoids sending visitor IPs to
+   Google without consent, a known DSGVO issue for German sites; see LR-001). */
+@import '@fontsource/quicksand/500.css';
+@import '@fontsource/quicksand/600.css';
+@import '@fontsource/quicksand/700.css';
+@import '@fontsource/nunito-sans/400.css';
+@import '@fontsource/nunito-sans/600.css';
+@import '@fontsource/nunito-sans/800.css';
+
+/*
+  Lebens Rhythmus — design tokens (LR-ADR-014)
+  "elegant, inspiring, high-art" character delivered through a deep, warm
+  ground (not black) + two vivid living accents (gold + teal) — restraint
+  in the ground, vividness spent only on the accents.
+  "soft, kind, rounded, friendly letters" delivered through Quicksand
+  (rounded geometric display) + Nunito Sans (rounded-terminal body).
+  Motion kept to 1/5 per Olena's answer — no scroll choreography, only
+  small hover/focus transitions.
+  Single signature look, no light/dark toggle — a deliberate brand choice,
+  not an omission (this is a marketing/brand site, not a utility tool).
+*/
+@theme {
+	--color-ink: #2b1b29;
+	--color-ink-soft: #3d2a38;
+	--color-ink-line: #4a3644;
+	--color-paper: #f7eedd;
+	--color-paper-dim: #c9b8a8;
+	--color-gold: #f0a93b;
+	--color-gold-deep: #c7841c;
+	--color-teal: #2fbf9e;
+	--color-teal-deep: #1f8f76;
+
+	--font-display: 'Quicksand', sans-serif;
+	--font-body: 'Nunito Sans', sans-serif;
+}
+
+html {
+	background: var(--color-ink);
+	color: var(--color-paper);
+	font-family: var(--font-body);
+	scroll-behavior: smooth;
+}
+
+body {
+	margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	font-family: var(--font-display);
+	text-wrap: balance;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		transition: none !important;
+		scroll-behavior: auto !important;
+	}
+}
