@@ -6,7 +6,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -69,6 +71,26 @@ public class GlobalExceptionHandler {
         log.debug("Constraint violations: {}", violations);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    /**
+     * `@PreAuthorize` denials (authenticated but wrong role) throw
+     * AuthorizationDeniedException (Spring Security 6 method-security) or
+     * the older AccessDeniedException — neither was handled here, so every
+     * such denial across the whole app fell through to handleAll() and
+     * came back as 500 instead of 403 (found while testing the new
+     * /users/{id}/reactivate endpoint, LR-007 — not specific to it).
+     */
+    @ExceptionHandler({AuthorizationDeniedException.class, AccessDeniedException.class})
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(RuntimeException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("message", "You do not have permission to perform this action");
+
+        log.debug("Access denied: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
     /**

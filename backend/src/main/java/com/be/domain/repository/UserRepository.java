@@ -51,4 +51,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Modifying
     @Query("UPDATE User u SET u.enabled = false WHERE u.id = :userId")
     void deactivateUser(@Param("userId") Long userId);
+
+    // Admin panel (LR-006-adjacent) — symmetric counterpart to deactivateUser,
+    // added because none existed: the old admin UI's "reactivate" checkbox
+    // had nothing to call.
+    @Modifying
+    @Query("UPDATE User u SET u.enabled = true WHERE u.id = :userId")
+    void activateUser(@Param("userId") Long userId);
 }

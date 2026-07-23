@@ -50,6 +50,15 @@ public class GroupService {
         existingGroup.setTitleEn(group.getTitleEn());
         existingGroup.setTitleUa(group.getTitleUa());
         existingGroup.setCapacity(group.getCapacity());
+        // startDateTime/endDateTime were missing here entirely — editing a
+        // group's schedule silently had no effect (found while building the
+        // admin Groups page, LR-008). `workshop` reassignment on edit is
+        // deliberately NOT added here — that's a bigger decision (does
+        // moving a group to a different workshop need to touch existing
+        // enrollments?) than a same-shape field copy, left for a separate
+        // ticket rather than decided here.
+        existingGroup.setStartDateTime(group.getStartDateTime());
+        existingGroup.setEndDateTime(group.getEndDateTime());
         existingGroup.setActivity(group.getActivity());
         existingGroup.setAgeGroup(group.getAgeGroup());
         existingGroup.setLanguage(group.getLanguage());

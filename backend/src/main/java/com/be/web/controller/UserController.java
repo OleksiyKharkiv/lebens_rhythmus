@@ -173,6 +173,18 @@ public class UserController {
         return ResponseEntity.ok("User deactivated successfully");
     }
 
+    /**
+     * PUT /api/v1/users/{userId}/reactivate — symmetric counterpart to
+     * DELETE (soft-deactivate). Added for the admin panel (LR-007): no
+     * endpoint to undo a deactivation existed at all before this.
+     */
+    @PutMapping("/{userId}/reactivate")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> reactivateUser(@PathVariable Long userId) {
+        userService.reactivateUser(userId);
+        return ResponseEntity.ok("User reactivated successfully");
+    }
+
     // ========== STATISTICS ENDPOINTS ==========
 
     /**

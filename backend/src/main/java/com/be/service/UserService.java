@@ -84,6 +84,10 @@ public class UserService {
         userRepository.deactivateUser(userId);
     }
 
+    public void reactivateUser(Long userId) {
+        userRepository.activateUser(userId);
+    }
+
     // ========== SECURITY OPERATIONS ==========
 
     public void incrementFailedLoginAttempts(String email) {

@@ -6,6 +6,7 @@ import com.be.web.dto.response.GroupDTO;
 import com.be.web.mapper.GroupMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -40,6 +41,7 @@ public class GroupController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
     public GroupDTO createGroup(@RequestBody Group group) {
         Group created = groupService.save(group);
         return groupMapper.toDto(created);
@@ -47,6 +49,7 @@ public class GroupController {
 
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
     public GroupDTO updateGroup(@PathVariable Long id, @RequestBody Group group) {
         group.setId(id);
         Group updated = groupService.update(group);
@@ -55,6 +58,7 @@ public class GroupController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
     public void deleteGroup(@PathVariable Long id) {
         groupService.deleteById(id);
     }
