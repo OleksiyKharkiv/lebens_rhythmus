@@ -25,6 +25,20 @@ build-backend:
       - backend/build/libs/*.jar
     expire_in: 1 hour
 
+# ---------- Test new SvelteKit frontend ----------
+# Real gate, not just "tests exist" — LR-ADR-020 explicitly called out not
+# repeating the backend's mistake (LR-002 pt.1: tests existed in src/test/
+# but the pipeline never ran them). docker-frontend below depends on this
+# job, so a red check/test run blocks the image build.
+test-frontend:
+  stage: build
+  image: node:22-alpine
+  script:
+    - cd frontend-svelte
+    - npm ci
+    - npm run check
+    - npm run test
+
 # ---------- Make Docker-image ----------
 docker-backend:
   stage: package
@@ -40,13 +54,17 @@ docker-backend:
     - docker tag $BACKEND_IMAGE:$CI_COMMIT_SHORT_SHA $BACKEND_IMAGE:latest
     - docker push $BACKEND_IMAGE:latest
 
+# Builds frontend-svelte (the SvelteKit rebuild, LR-ADR-001/014/015) — the
+# old static frontend/ this job used to build was fully replaced this
+# session (17 pages, admin/teacher panels) and is no longer deployed.
 docker-frontend:
   stage: package
   image: docker:24
   services:
     - docker:24-dind
+  needs: [ test-frontend ]
   script:
-    - cd frontend
+    - cd frontend-svelte
     - docker login -u $REGISTRY_USER -p $REGISTRY_PASS $REGISTRY
     - docker build -t $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA .
     - docker push  $FRONTEND_IMAGE:$CI_COMMIT_SHORT_SHA
