@@ -1,10 +1,398 @@
 # Lebens Rhythmus — CHANGELOG
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
+
+## 2026-07-23 — infra: CI собирает и тестирует `frontend-svelte`, старый статический сайт больше не деплоится (LR-002 пп.4, 4b)
+
+### Область (`.gitlab-ci.yml`, `frontend-svelte/{Dockerfile,nginx.conf,.dockerignore}`)
+
+- **infra** — новый job `test-frontend` (stage `build`, `node:22-alpine`):
+  `npm ci && npm run check && npm run test`, реальный gate через
+  `needs:` у `docker-frontend` (красный check/test — образ не собирается).
+  Закрывает явное требование LR-ADR-020 не повторить ошибку backend'а
+  (тесты существуют, но никогда не выполняются в pipeline).
+- **infra** — `docker-frontend` job переключён с `cd frontend` на
+  `cd frontend-svelte`. Старый статический сайт (`frontend/`, снесён
+  круглым столом ещё 2026-07-20) больше не собирается и не деплоится
+  вообще — единственный frontend-образ теперь `frontend-svelte`.
+  Helm-чарт не тронут — проверено, контракт (image repo/tag через
+  `--set`, `containerPort: 80`) не меняется.
+- **feat** — `frontend-svelte/Dockerfile` (multi-stage: `node:22-alpine`
+  собирает `npm run build`, `nginx:alpine` отдаёт статику),
+  `frontend-svelte/nginx.conf` (`try_files $uri $uri/ /index.html;` —
+  обязателен из-за вчерашнего перехода на SPA fallback mode, без него
+  прямой заход на любой маршрут кроме `/` дал бы 404 у реального nginx),
+  `frontend-svelte/.dockerignore` (`node_modules`/`build`/`.svelte-kit` —
+  контекст сборки иначе тянул бы сотни МБ).
+- **проверено вживую, не только локальным `vite preview` (у него
+  fallback уже встроенный, не показательно для реального nginx)** —
+  `docker build` реального образа, `docker run`, затем **прямой `curl`**
+  (без единой строчки JS/клиентской навигации) на `/`, `/workshops`,
+  `/admin/users`, `/dashboard` — везде 200, содержимое — корректный
+  SPA-shell со ссылками на `_app/immutable/...`-ассеты. Образ и контейнер
+  (`lr-frontend-test`) удалены после проверки, в реестр не пушились.
+- **architect-reviewer: approve with changes** — нашёл ровно то, что
+  локальная проверка не могла показать (тестировался уже "загрязнённый"
+  рабочей сессией checkout, не чистый):
+  1. **Блокирующее** — `src/lib/paraglide` (импортируется в корневом
+     layout, значит бьёт почти каждую страницу) генерируется только
+     Vite-плагином paraglide (`buildStart`), который срабатывает при
+     `vite build`/`vite dev`/Vitest, но **не** при `svelte-kit sync`/
+     `svelte-check`. Директория в `.gitignore`, кэша в `.gitlab-ci.yml`
+     нет — на чистом checkout `npm run check` в новом `test-frontend`
+     job упал бы всегда, блокируя `docker-frontend` навсегда. У меня
+     локально это было не видно, потому что `src/lib/paraglide` уже
+     лежала на диске от более ранних `vite dev`/`build` в этой же сессии.
+     **Исправлено:** `prepare`-скрипт в `package.json` теперь сам
+     компилирует paraglide (`paraglide-js compile ...`), не полагаясь на
+     побочный эффект от другой команды — `npm ci` (первый шаг что в CI,
+     что в Dockerfile) гарантированно генерирует директорию перед чем
+     угодно ещё. **Перепроверено по-настоящему** — скопировал текущее
+     рабочее дерево (`tar` с `--exclude` на `node_modules/.svelte-kit/
+     src/lib/paraglide/build`, не через `git clone`, чтобы попали именно
+     несохранённые правки этой сессии) в чистую директорию, прогнал
+     `npm ci && npm run check && npm run test` — 0 ошибок, 12/12 тестов,
+     без единого файла с диска до этого.
+  2. **Should-fix** — `nginx.conf`'s `/_app/` правило кэша было
+     префиксным и захватывало `_app/version.json` (не хэшированный,
+     меняется на каждый деплой, используется клиентским рантаймом
+     SvelteKit для детекта новой версии) — кэшировать его на год
+     сломало бы механизм обнаружения обновлений. Исправлено:
+     `location ^~ /_app/immutable/` только для реально хэшированных
+     ассетов + явный `Cache-Control: no-cache` на `index.html`
+     (иначе браузер мог бы держать устаревший shell после деплоя).
+     Перепроверено через `docker build`+`curl -I`: hashed-ассет →
+     `public, immutable`, `index.html` → `no-cache`, `version.json` →
+     без агрессивного кэша.
+  3. Non-blocking — старый `frontend/` (мёртвый, никем не
+     референсится в `devops/`) и пара доков (`PROJECT_INDEX.md`,
+     `INFRA-LR.md`) всё ещё описывают фронтенд как статический —
+     не блокирует этот тикет, отдельный follow-up при полном сносе
+     `frontend/`.
+  4. Minor — `.dockerignore` не исключал `.env`/`.env.*` (сейчас
+     файла нет, но на будущее) — добавлено.
+
+## 2026-07-23 — fix: `npm run build` больше не падает — SPA fallback вместо форсированного prerender (LR-002 п.3b)
+
+### Область (`frontend-svelte/vite.config.ts`, `docs/tickets/tickets.md`)
+
+- **fix** — `adapter-static` требовал `prerender=true` на всех 23
+  маршрутах (найдено ещё 2026-07-22, не чинилось до сих пор). Причина:
+  весь фронтенд грузит данные клиентски (`$effect`), никогда через
+  SvelteKit `load()`, и часть страниц (dashboard/admin/teacher) —
+  принципиально динамические (auth-gated), их бессмысленно
+  prerender'ить. Решение — `adapter({ fallback: 'index.html' })` (SPA
+  fallback mode), а не форсировать prerender там, где это противоречит
+  архитектуре страниц. `sveltekit()` в этом проекте конфигурируется
+  инлайн прямо в `vite.config.ts` (`sveltekit({ adapter: ... })`) —
+  отдельного `svelte.config.js` в проекте нет и не было, это
+  поддерживаемый способ конфигурации в SvelteKit 2.70+, не пропавший файл.
+- **проверено вживую** — `npm run build` зелёный ("Wrote site to build"),
+  `svelte-check` 0/1064, Vitest 12/12. `npm run preview` — прямой заход
+  (не клиентская навигация) на `/workshops` корректно отдал fallback +
+  клиентский роутинг подхватил, без ошибок в консоли.
+- **найдено, не исправлено (та же задача, пункт 4b в LR-002)** — реальный
+  nginx в Docker-образе будет НЕ прощать прямые заходы на вложенные
+  маршруты без `try_files $uri /index.html;` — `vite preview` это скрывает
+  (у него fallback уже встроен), нужно явно учесть при написании
+  Dockerfile/nginx-конфига, не отдельным тикетом.
+
+## 2026-07-23 — feat: admin-панель (7 страниц) + teacher-дашборд, портированы с исправлением реальных багов старого сайта
+
+### Область (`frontend-svelte/src/routes/{admin/**,teacher/**,+layout.svelte}`, `frontend-svelte/src/lib/api.ts`, `frontend-svelte/messages/{de,en,uk}.json`)
+
+- **feat** — `admin/+layout.svelte` (guard: ADMIN|BUSINESS_OWNER + общий nav),
+  `admin/` (overview/stats, users, activities, workshops, groups, venues,
+  performances — 7 страниц), `teacher/+layout.svelte` (guard: TEACHER|
+  BUSINESS_OWNER|ADMIN) + `teacher/` (мои воркшопы, мои группы, участники
+  по запросу). Глобальный nav (`+layout.svelte`) теперь ролево-зависим:
+  ADMIN/BUSINESS_OWNER → `/admin`, TEACHER → `/teacher`, остальные →
+  `/dashboard`.
+- **research (перед кодом)** — полное сравнение старого статического
+  admin/teacher UI против реальных backend DTO (не доверяя старому JS)
+  нашло несколько реальных, разных по природе багов, все исправлены при
+  портировании (не унаследованы):
+  1. Group-teacher select старого UI брал User.id из `/users/role/TEACHER`,
+     но `Group.teacher` — FK на отдельную сущность `Teacher`, не `User`.
+     Новый UI берёт `teacherId` из `GET /teachers`.
+  2. Performance `venue` — обычная `String` на бэкенде, не Venue FK; старый
+     JS слал `venueId` (бэкенд его молча игнорировал — venue никогда не
+     применялся) и читал несуществующие `p.date`/`p.venueName` вместо
+     реальных `performanceDate`/`venue`. Новый UI — обычное текстовое поле.
+  3. `WorkshopDetailDTO` не содержит `maxParticipants` вообще (значение
+     есть в БД, но не читается назад через API) — задокументировано в UI
+     явной подсказкой, не задача этой сессии чинить DTO.
+  4. Роль `CONTENT_MANAGER` отсутствовала в select старого UI (реальных
+     5 значений enum `Role`, было только 4) — добавлена.
+  5. Teacher-дашборд в старом статическом сайте был вообще пустым файлом-
+     заглушкой (`<html><body></body></html>`, ни одной строчки JS) — не
+     "портирован", построен с нуля против реальных backend-эндпоинтов.
+- **research** → **фикс в бэкенде** (см. отдельные записи выше в этом же
+  файле от 2026-07-23): LR-006 (`GroupController` auth), LR-007 (reactivate
+  + 500→403), `GroupService.update()` (startDateTime/endDateTime) — все
+  найдены именно при подготовке этих страниц, не отдельно.
+- **teacher-дашборд, известный компромисс** — нет FK между `User` и
+  `Teacher` в данных; залогиненный TEACHER резолвит свою `Teacher.id` через
+  email-match по `GET /teachers` (подтверждено заказчиком как временное
+  решение 2026-07-23). Хрупко, если email когда-либо разойдутся между
+  записями — постоянный FK не в этой сессии.
+- **проверено вживую** (backend не поднят — те же ограничения, что и для
+  личного дашборда): `svelte-check` 0 ошибок на 902 файлах, Vitest 12/12;
+  в браузере — guard-логика всех направлений (unauthenticated→login,
+  wrong-role→dashboard в обе стороны — USER от `/admin`, TEACHER от
+  `/admin`, ADMIN пропускается) подтверждена вручную через подставленную
+  `localStorage`-сессию на все 7 admin-страниц + teacher-дашборд, без
+  ошибок в консоли ни на одной. Реальные CRUD-операции против живого API
+  не проверены (нет локального backend+DB в этой сессии).
+- **architect-reviewer: approve with changes** — независимая проверка
+  нашла именно то, что клиентская проверка без реального backend не могла
+  показать:
+  1. **Блокирующее** — `getVenues()`, `getTeachers()`, `getGroups()` в
+     `api.ts` использовали неавторизованный `request()` вместо
+     `authRequest()` — эти эндпоинты требуют JWT (не в `permitAll`-списке
+     `SecurityConfig`, хотя и без `@PreAuthorize` в контроллере), значит
+     против реального бэкенда список groups и оба select'а (venue/teacher)
+     всегда 401'или бы. Это ломало бы сам teacher-дашборд полностью —
+     ключевую цель этой задачи. Исправлено (3 функции).
+  2. **Should-fix** — редактирование группы позволяло менять workshop в
+     select'е, хотя `GroupService.update()` его молча игнорирует (LR-009)
+     — несогласованно с тем же паттерном, уже применённым для
+     `maxParticipants` на странице Workshops (явная подсказка вместо
+     тихого no-op). Исправлено: select теперь `disabled` при
+     редактировании + explanatory note.
+  Оба фикса применены, `svelte-check` 0/902, Vitest 12/12 повторно
+  зелёные после фиксов.
+
+## 2026-07-23 — fix: `GroupService.update()` не копировал `startDateTime`/`endDateTime`
+
+### Область (`backend/src/main/java/com/be/service/GroupService.java`, `docs/tickets/tickets.md`)
+
+- **fix (найдено при чтении сервиса перед построением admin-страницы
+  Groups, не проактивным поиском)** — `update()` копировал `titleDe/En/Ua,
+  capacity, activity, ageGroup, language, teacher, active`, но **не**
+  `startDateTime`/`endDateTime` — редактирование расписания существующей
+  группы молча ничего не делало. Добавлены оба поля. `workshop`-
+  реассайнмент при редактировании осознанно НЕ добавлен — открытый вопрос
+  про существующие enrollments, заведён `LR-009`, не решать по умолчанию.
+- Ранее найденный при исследовании (research subagent) баг с
+  `capacityLeft` сброшенным на каждый update — **проверено напрямую,
+  оказался ложной тревогой**: `update()` вообще не трогает
+  `capacityLeft`, что бы клиент ни прислал в payload, значение игнорируется
+  сервисом. Не чинить то, чего нет — но полезно, что перепроверил перед
+  тем как "чинить".
+- `./gradlew compileJava` зелёный.
+
+## 2026-07-23 — feat/fix: reactivate-эндпоинт + 500→403 фикс для всех `@PreAuthorize`-отказов (LR-007)
+
+### Область (`backend/src/main/java/com/be/{domain/repository/UserRepository,service/UserService,web/controller/UserController,web/handler/GlobalExceptionHandler}.java`, `backend/src/test/java/com/be/web/controller/UserControllerTest.java`)
+
+- **feat** — `PUT /api/v1/users/{userId}/reactivate` (ADMIN-only), симметрично
+  существующему `DELETE` (soft-deactivate). Подтверждено заказчиком:
+  добавить, не оставлять как read-only статус.
+- **fix (найдено при написании теста на этот эндпоинт, не специфично для
+  него)** — `GlobalExceptionHandler` не имел обработчика для
+  `AuthorizationDeniedException`/`AccessDeniedException` — **любой**
+  `@PreAuthorize`-отказ во всём приложении (аутентифицирован, не та роль)
+  возвращался клиенту как 500 вместо 403. Добавлен явный
+  `@ExceptionHandler`, 403. Это затрагивало все существующие защищённые
+  эндпоинты, не только новый — реальный, довольно серьёзный баг обработки
+  ошибок, обнаруженный случайно при тестировании.
+- **test** — `UserControllerTest` (3 теста: ADMIN→200, USER→403,
+  unauthenticated→401). Грабли по ходу: `jwt().jwt(j -> j.claim("role",
+  "ADMIN"))` не прогоняет claim через `SecurityConfig`'s кастомный
+  `JwtAuthenticationConverter` — тестовый `jwt()` строит `Authentication`
+  напрямую, читает по умолчанию только "scope"/"scp". Нужно
+  `.authorities(new SimpleGrantedAuthority("ROLE_..."))` явно — без этого
+  оба тест-кейса (ADMIN и USER) получали `AuthorizationDeniedException`,
+  что и вскрыло баг выше.
+- Полный `./gradlew test`: 14 тестов, 1 fail (тот же
+  pre-existing `BackendApplicationTests.contextLoads()` env-var-only —
+  не регрессия).
+
+## 2026-07-23 — security: `GroupController` write-методы без `@PreAuthorize` (LR-006)
+
+### Область (`backend/src/main/java/com/be/web/controller/GroupController.java`, `docs/tickets/archive.md`)
+
+- **security (найдено при исследовании перед таском "teacher/admin панели",
+  не проактивным поиском уязвимостей)** — `POST/PUT/DELETE /api/v1/groups`
+  не имели `@PreAuthorize` вообще, в отличие от всех пяти соседних
+  контроллеров одного уровня (Activity/Workshop/Venue/Performance/Teacher).
+  `SecurityConfig`'s `.anyRequest().authenticated()` не давал полностью
+  анонимный доступ, но любой залогиненный обычный клиент мог
+  создавать/менять/удалять группы занятий. Добавлен
+  `@PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")` на все
+  три метода, по образцу большинства соседей. `TEACHER` намеренно не
+  добавлена — write-права преподавателя над своими группами (LR-ADR-004)
+  ещё не спроектированы, это другая задача. `./gradlew compileJava` зелёный,
+  тестов на этот контроллер не было (ничего не сломано).
+
+## 2026-07-23 — feat/test: self-scoped payment history (LR-004, LR-ADR-016)
+
+### Область (`backend/src/main/java/com/be/{web/controller/PaymentController,service/PaymentService,domain/repository/PaymentRepository}.java`, `backend/src/test/java/com/be/web/controller/PaymentControllerTest.java`, `docs/tickets/tickets.md`)
+
+- **feat** — `GET /api/v1/payments/me`, `@PreAuthorize("isAuthenticated()")`,
+  `userId` резолвится из JWT через `JwtAuthUtils.extractUserId()`, не
+  принимается от клиента (нет `userId`-параметра — исключает IDOR по
+  конструкции, не только по проверке). Закрывает требование "история
+  платежей" личного дашборда (LR-ADR-016) — до этого `PaymentController`
+  не имел вообще ни одного маршрута, доступного не-admin пользователю.
+- **test** — `PaymentControllerTest` (`@WebMvcTest` + `spring-security-test`'s
+  `jwt()` mock-принципал): happy path (пользователь получает свои платежи)
+  и unauthenticated → 401. Первый `@WebMvcTest`-контроллер-тест в проекте —
+  прецедентов не было (только `@SpringBootTest`/unit), пришлось решить два
+  новых для этого репо инфраструктурных вопроса по ходу:
+  1. `@MockBean` (`org.springframework.boot.test.mock.mockito.MockBean`)
+     не совместим с AOT test-processing, которое здесь включено проектным
+     `org.graalvm.buildtools.native` Gradle-плагином (`processTestAot`
+     падал на `UnsupportedTypeValueCodeGenerationException` для
+     `MockDefinition` — Spring Framework это в принципе не умеет
+     код-генерировать под AOT). Фикс — новый `@MockitoBean`
+     (`org.springframework.test.context.bean.override.mockito.MockitoBean`,
+     официальная замена `@MockBean` начиная с Spring Boot 3.4+/Spring
+     Framework 6.2), которая AOT поддерживает.
+  2. `@WebMvcTest`-срез не поднимает `@ConfigurationProperties`-бины без
+     явного включения — `WebMvcConfig` требует `CorsProperties`
+     (`@ConfigurationProperties(prefix="cors")`, без `@Component`), что
+     давало `NoSuchBeanDefinitionException` при старте контекста. Фикс —
+     `@EnableConfigurationProperties(CorsProperties.class)` на тестовом
+     классе рядом с `@Import(SecurityConfig.class)`.
+  Оба фикса — только в тестовом классе, продакшн-код не тронут.
+- **тикет** — заведён и сразу закрыт `LR-004` (`docs/tickets/tickets.md`).
+- **продуктовое решение (заказчик, 2026-07-23)** — `note` **скрыт** от
+  self-view: `PaymentMapper.toSelfViewDTO()` обнуляет поле перед отдачей в
+  `/payments/me`, admin-эндпоинты (`toResponseDTO()`) не тронуты. Проверено
+  по ERM — customer-facing заметки об оплате нигде не спроектированы,
+  значит поле по умолчанию — admin/accounting reference. Покрыто
+  `PaymentMapperTest` (2 теста: self-view без `note`, admin-view с `note`).
+
+## 2026-07-23 — feat: личный дашборд (расписание + медиа + оплаты, LR-ADR-016)
+
+### Область (`frontend-svelte/src/routes/dashboard/+page.svelte`, `frontend-svelte/src/routes/+layout.svelte`, `frontend-svelte/src/lib/api.ts`, `frontend-svelte/messages/{de,en,uk}.json`)
+
+- **feat** — `/dashboard`: три секции (расписание — `GET /users/me/enrollments`,
+  уже существовавший эндпоинт, ранее не использованный ни одной страницей;
+  медиа — платежи — `GET /payments/me`, LR-004). Первая по-настоящему
+  auth-gated страница проекта — клиентский guard (`isAuthenticated()` в
+  `$effect`, редирект на `/login`, если нет сессии); `adapter-static` не
+  даёт сделать это на сервере, только в браузере после mount (тот же
+  паттерн, что уже был в `authRequest()`).
+- **feat** — медиа-секция не имеет отдельного бэкенд-эндпоинта (не
+  заводился — не нужен): собирается на клиенте из `WorkshopDetail.files`
+  по уникальным `workshopId` из расписания пользователя, переиспользуя уже
+  существующий `getWorkshop()`. Осознанный выбор — не расширять бэкенд
+  ради страницы, которая и так уже получает нужные данные другим путём.
+- **feat** — `+layout.svelte` стал auth-aware: `nav_login` заменяется на
+  `nav_dashboard` + `nav_logout` (кнопка, вызывает `clearSession()`), когда
+  `isAuthenticated()` истинен. До этого изменения залогиненный пользователь
+  не имел в навигации пути к `/dashboard`, кроме редиректа сразу после
+  логина (`login/+page.svelte`'s `redirectForRole`).
+- **проверено вживую** (backend не поднят локально в этой сессии —
+  проверка ограничена тем, что не требует реального API): `svelte-check`
+  0 ошибок, 12/12 Vitest тестов; в браузере — неавторизованный `/dashboard`
+  редиректит на `/login`; с подставленной в `localStorage` сессией guard
+  пропускает, страница показывает корректный error-state (нет реального
+  бэкенда — fetch падает, поймано `.catch()`, без необработанных ошибок в
+  консоли); nav верно переключается Login ⇄ Mein Bereich/Abmelden; logout
+  корректно чистит сессию и возвращает на главную. Полная проверка с
+  реальными данными (расписание/медиа/оплаты) ждёт поднятого backend+DB —
+  не входит в объём этой сессии.
+- **architect-reviewer (2026-07-23): approve as-is**, весь батч (payments/me
+  + дашборд) проверен независимо — реально прогнаны тесты и `svelte-check`,
+  не просто поверено на слово. Единственное non-blocking замечание:
+  `PaymentMapper.toSelfViewDTO()` — блок-лист (строит полный admin DTO и
+  обнуляет `note`), не allow-лист; безопасно сегодня для одного поля, но
+  любое новое admin-only поле в `Payment`/`PaymentResponseDTO` в будущем
+  утечёт в `/payments/me`, если про него забудут здесь же обнулить. Не
+  блокирует этот тикет, зафиксировано на будущее — см. `LR-005` ниже.
+
+## 2026-07-22 — feat/security: 11 новых страниц frontend-svelte, найден и закрыт реальный 401-баг
+
+### Область (`frontend-svelte/src/routes/{impressum,datenschutz,agb,widerruf,activities,workshops,workshops/[id],performances,contact,corporate,feedback}/`, `frontend-svelte/src/lib/{api.ts,components/{Textarea,Select}.svelte}`, `backend/.../config/SecurityConfig.java`)
+
+- **feat** — 11 страниц (юр-страницы с реальными данными Olena; каталог
+  Activities/Workshops/Workshop-detail/Performances с реальной интеграцией
+  под `api.ts`; Contact/Corporate/Feedback). Все проверены: `svelte-check`
+  0 ошибок, 12/12 Vitest тестов, живой рендер в браузере без console-ошибок.
+- **fix (найден при портировании, не выдуман)** — старый `feedback.js` слал
+  `{feedbackType, subject, message, email}`, реальный
+  `FeedbackRequestDTO.java` принимает только `{content, rating}` — форма
+  фидбека была рассинхронизирована с бэкендом уже в старом фронтенде.
+  Новая форма шлёт правильный контракт.
+- **security (найдено architect-reviewer, не мной)** — `SecurityConfig.java`
+  разрешал `GET` без авторизации только для `/api/v1/workshops/**` — для
+  `/api/v1/activities/**` и `/api/v1/performances/**` такого правила не
+  было, хотя оба контроллера рассчитаны на публичный доступ. Значит
+  страницы Activities и Performances **всегда** получали бы 401 для любого
+  анонимного посетителя — то есть были нефункциональны для всей своей
+  целевой аудитории. Добавлены оба `permitAll()`-матчера рядом с
+  workshops, бэкенд пересобран (`compileJava` зелёный).
+- **refactor** — вынесены `Textarea`/`Select` в `src/lib/components/` (было
+  начавшееся дублирование стилей `Input.svelte` в `feedback`-форме — по
+  находке ревью, до третьей копипасты, не после).
+- **note** — `api.ts`: `WorkshopDetail` дополнен полем `files` (было
+  упущено, реальный `WorkshopDetailDTO` его содержит) — не используется
+  пока нигде, добавлено заранее для личного кабинета (LR-ADR-016).
+- **найдено, не исправлено (отдельный ticket needed)** — `npm run build`
+  у `frontend-svelte` не проходит: `adapter-static` требует `prerender`
+  на каждый роут, ни один (включая уже одобренные Home/About/Login) этого
+  не объявляет — существовало и до сегодняшних 11 страниц, не регрессия
+  этой сессии, но раз обнаружено — фиксирую здесь, привязать к LR-002
+  (CI всё равно ещё не собирает `frontend-svelte`, тот же блокер).
+
 > Вставляй последние 10 записей в контекст AI при работе с затронутыми областями.
 > Это файл генезиса проекта — фактические изменения и "грабли" (ошибочные
 > предположения + их фикс), чтобы не наступать повторно. Не дублировать
 > сюда обычные тикеты — им место в `docs/tickets/tickets.md`.
+
+## 2026-07-22 — feat/refactor: инженерный каркас frontend-svelte (LR-ADR-020)
+
+### Область (`frontend-svelte/{src/routes/layout.css,src/lib/components/,src/lib/api.ts,src/routes/login/+page.svelte,vite.config.ts,package.json,tsconfig.json}`, `docs/architecture/decisions.md`, `docs/tickets/tickets.md`)
+
+- **refactor** — `architect-reviewer` поймал, что 2 из 5 пунктов
+  предложенного плана уже были сделаны (дизайн-токены в `layout.css`
+  `@theme`, API-слой в `api.ts`) — не стал молча соглашаться с
+  переформулировкой, скорректировал план перед тем, как писать код.
+- **fix** — реальный баг из ревью: `login`-форма использовала
+  `--color-gold` и для CTA-кнопки, и для текста ошибки. Добавлены
+  семантические `--color-error`/`--color-success`, отдельные от
+  брендовых акцентов.
+- **refactor** — извлечены `Button`/`Input`/`Card`/`ErrorText` в
+  `src/lib/components/` — устранило 8-кратное дублирование `<label>`/
+  `<input>` разметки в `login/+page.svelte`.
+- **feat** — Vitest + `@testing-library/svelte` + `@testing-library/
+  jest-dom` подключены, 12 тестов на новые примитивы — **реально
+  прогнаны** (`npm run test`), не просто написаны. Playwright сознательно
+  НЕ установлен — нет CI-стадии, которая бы его запускала, и нет
+  реального бэкенда рядом для e2e (см. LR-002).
+- **feat** — `api.ts`: `authRequest`/`getCurrentUser` — Bearer-токен +
+  401-обработка (clearSession + редирект на `/login`), паттерн для
+  Волны 2 (личный кабинет, роль "Преподаватель"), решён один раз заранее.
+- **compliance** — цель доступности WCAG 2.1 AA зафиксирована явно
+  (`ErrorText` уже несёт `role="alert"`).
+
+### Грабли (три отдельных, все настоящие, не выдуманные)
+
+1. **Vitest резолвил Svelte-компоненты в SSR/server-режиме** —
+   `mount(...) is not available on the server`. Фикс — `resolve:
+   {conditions: ['browser']}`, **строго только под `process.env.VITEST`**
+   (глобально сломало бы реальный `vite build`, которому нужна server-
+   сборка для prerendering).
+2. **`defineConfig` из `vitest/config` конфликтовал по типам** с версией
+   `vite`, которую использует этот проект (несовпадение internal Plugin
+   type между `vitest`'ным `vite` и установленным) — `svelte-check` падал
+   с гигантской ошибкой типов, при этом тесты рантаймово работали
+   нормально. Фикс — официально рекомендованный Vitest-паттерн:
+   `defineConfig` из `vite` и из `vitest/config` раздельно + `mergeConfig`,
+   вместо одного `defineConfig` из `vitest/config`.
+3. **`@testing-library/svelte` не делает auto-cleanup между тестами** (в
+   отличие от React-версии) — без explicit `afterEach(() => cleanup())` в
+   `vitest-setup.ts` рендеры из разных тестов накапливались в одном
+   `document.body`, ловилось как "Found multiple elements with role
+   X" — не баг компонентов, баг отсутствующей настройки тестового
+   окружения.
+- **verified live** — визуально подтверждено в браузере: `getComputedStyle`
+  на реальном alert-сообщении вернул `rgb(226, 87, 76)` — ровно
+  `--color-error`, не `--color-gold`.
 
 ## 2026-07-22 — compliance: срочный фикс живых юр-страниц (Impressum/Datenschutz/AGB/Widerruf)
 
