@@ -67,3 +67,511 @@ export function persistSession(data: LoginResponse) {
 	localStorage.setItem('tokenExpiry', String(Date.now() + data.expiresIn * 1000));
 	localStorage.setItem('userData', JSON.stringify({ id: data.id, email: data.email, role: data.role }));
 }
+
+export function isAuthenticated(): boolean {
+	if (typeof window === 'undefined') return false;
+	const token = localStorage.getItem('authToken');
+	const expiry = localStorage.getItem('tokenExpiry');
+	return !!(token && expiry && Date.now() < Number(expiry));
+}
+
+export function clearSession() {
+	if (typeof window === 'undefined') return;
+	localStorage.removeItem('authToken');
+	localStorage.removeItem('tokenExpiry');
+	localStorage.removeItem('userData');
+}
+
+/**
+ * Role cached at login time (persistSession) — lets role-gated layouts
+ * (admin/teacher) guard client-side without an extra /users/me round trip.
+ * Still only a UX guard, same caveat as authRequest below.
+ */
+export function getStoredRole(): string | null {
+	if (typeof window === 'undefined') return null;
+	const raw = localStorage.getItem('userData');
+	if (!raw) return null;
+	try {
+		return JSON.parse(raw).role ?? null;
+	} catch {
+		return null;
+	}
+}
+
+/**
+ * Pattern for endpoints under `/users/me`, `/workshops/{id}/enroll`, etc.
+ * (LR-ADR-016 personal cabinet, LR-ADR-004 teacher role) — none of the 3
+ * pages built so far need this, added ahead of Wave 2 per architect-reviewer
+ * (decide the Bearer/401 pattern once, not three times per role area).
+ * `adapter-static` means there's no server here — this is the client-side
+ * UX guard only; the backend's own @PreAuthorize is the real boundary.
+ */
+async function authRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
+	if (typeof window === 'undefined') {
+		throw new ApiError('authRequest called outside the browser', 0);
+	}
+	const token = localStorage.getItem('authToken');
+	try {
+		return await request<T>(path, {
+			...options,
+			headers: {
+				...(options.headers ?? {}),
+				...(token ? { Authorization: `Bearer ${token}` } : {})
+			}
+		});
+	} catch (err) {
+		if (err instanceof ApiError && err.status === 401) {
+			clearSession();
+			window.location.href = '/login';
+		}
+		throw err;
+	}
+}
+
+export function getCurrentUser() {
+	return authRequest<{
+		id: number;
+		email: string;
+		firstName: string;
+		lastName: string;
+		role: string;
+	}>('/users/me');
+}
+
+// ---------- Public catalog (Wave 1 entities) ----------
+// Mirrors backend/src/main/java/com/be/web/dto/response/*ResponseDTO.java —
+// keep these in sync if the backend DTOs change shape.
+
+export interface ActivityDTO {
+	id: number;
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	descriptionDe: string;
+	descriptionEn: string;
+	descriptionUa: string;
+	price: number;
+	durationMinutes: number;
+	active: boolean;
+}
+
+export interface WorkshopListItem {
+	id: number;
+	title: string;
+	shortDescription: string;
+	teacher: { id: number; firstName: string; lastName: string } | null;
+	startDate: string | null;
+	endDate: string | null;
+	venueName: string | null;
+	price: number | null;
+	status: string;
+}
+
+// Full real shape (backend GroupDTO.java) — activityId/teacherId/ageGroupId/
+// languageId added for the admin Groups page (LR-ADR-004), the
+// workshop-detail page only ever needed the first-half subset.
+export interface GroupDTO {
+	id: number;
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	startDateTime: string;
+	endDateTime: string | null;
+	capacity: number;
+	enrolledCount: number;
+	workshopId: number | null;
+	workshopTitle: string | null;
+	activityId: number | null;
+	teacherId: number | null;
+	ageGroupId: number | null;
+	languageId: number | null;
+	active: boolean;
+}
+
+export interface WorkshopFileDTO {
+	id: number;
+	filename: string;
+	url: string;
+	contentType: string;
+	fileSize: number;
+}
+
+export interface WorkshopDetail {
+	id: number;
+	title: string;
+	description: string;
+	teacher: { id: number; firstName: string; lastName: string } | null;
+	startDate: string | null;
+	endDate: string | null;
+	venueName: string | null;
+	venueId: number | null;
+	price: number | null;
+	status: string;
+	groups: GroupDTO[];
+	// Not consumed by any page yet — added so its shape is right when
+	// workshop media surfaces in the personal dashboard (LR-ADR-016).
+	files: WorkshopFileDTO[];
+	totalEnrollments: number | null;
+}
+
+export interface PerformanceDTO {
+	id: number;
+	workshopId: number | null;
+	workshopTitle: string | null;
+	title: string;
+	description: string;
+	performanceDate: string;
+	venue: string | null;
+	maxAttendees: number | null;
+	status: string;
+}
+
+export function getActivities() {
+	return request<ActivityDTO[]>('/activities');
+}
+
+export function getWorkshops(upcoming = true) {
+	return request<WorkshopListItem[]>(`/workshops${upcoming ? '?upcoming=true' : ''}`);
+}
+
+export function getWorkshop(id: string | number) {
+	return request<WorkshopDetail>(`/workshops/${id}`);
+}
+
+export function getPerformances() {
+	return request<PerformanceDTO[]>('/performances');
+}
+
+export function enrollInWorkshop(workshopId: string | number, groupId?: number) {
+	return authRequest<{ status: string }>(`/workshops/${workshopId}/enroll`, {
+		method: 'POST',
+		body: JSON.stringify(groupId ? { groupId } : {})
+	});
+}
+
+// Real contract per backend/.../web/dto/request/FeedbackRequestDTO.java:
+// just `content` + `rating` — the OLD frontend's feedback.js sent
+// feedbackType/subject/message/email, which never matched this DTO at all
+// (found while porting this page, not previously documented).
+export function submitFeedback(input: { content: string; rating?: number }) {
+	return authRequest<{ id: number }>('/feedbacks', {
+		method: 'POST',
+		body: JSON.stringify(input)
+	});
+}
+
+// ---------- Personal dashboard (LR-ADR-016: schedule + media + payments) ----------
+
+export interface EnrollmentDTO {
+	id: number;
+	workshopId: number;
+	workshopTitle: string;
+	groupId: number | null;
+	groupTitle: string | null;
+	status: string;
+	createdAt: string;
+}
+
+export function getMyEnrollments() {
+	return authRequest<EnrollmentDTO[]>('/users/me/enrollments');
+}
+
+// Mirrors PaymentResponseDTO.java minus `note` — the backend's /payments/me
+// (PaymentMapper.toSelfViewDTO, LR-004) never sends it to this endpoint, by
+// deliberate decision: it's an admin/accounting reference field, not
+// customer-facing (confirmed 2026-07-23, no ERM design ever specced a
+// customer-visible payment note).
+export interface PaymentDTO {
+	id: number;
+	orderId: number | null;
+	orderNumber: string | null;
+	amount: number;
+	currency: string;
+	provider: string | null;
+	methodName: string | null;
+	status: string;
+	paidAt: string | null;
+	createdAt: string;
+}
+
+export function getMyPayments() {
+	return authRequest<PaymentDTO[]>('/payments/me');
+}
+
+// ---------- Admin panel + teacher dashboard (LR-ADR-004) ----------
+// Mirrors real backend DTOs (verified against source, not the old static
+// site's JS — that JS had several stale/wrong payload shapes, see
+// CHANGELOG.md 2026-07-23 for the specifics fixed here).
+
+export type Role = 'ADMIN' | 'BUSINESS_OWNER' | 'USER' | 'TEACHER' | 'CONTENT_MANAGER';
+
+export interface UserBasicDTO {
+	id: number;
+	email: string;
+	firstName: string;
+	lastName: string;
+	role: Role;
+	enabled: boolean;
+}
+
+export function getAllUsers() {
+	return authRequest<UserBasicDTO[]>('/users');
+}
+
+export function searchUsers(query: string) {
+	return authRequest<UserBasicDTO[]>(`/users/search?query=${encodeURIComponent(query)}`);
+}
+
+export function updateUserRole(userId: number, role: Role) {
+	return authRequest<UserBasicDTO>(`/users/${userId}/role?role=${role}`, { method: 'PUT' });
+}
+
+export function deactivateUser(userId: number) {
+	return authRequest<string>(`/users/${userId}`, { method: 'DELETE' });
+}
+
+// Added this session (LR-007) — no counterpart to deactivate existed before.
+export function reactivateUser(userId: number) {
+	return authRequest<string>(`/users/${userId}/reactivate`, { method: 'PUT' });
+}
+
+export interface UserStatistics {
+	totalUsers: number;
+	activeUsers: number;
+	userCount: number;
+	teacherCount: number;
+	adminCount: number;
+}
+
+export function getUserStatistics() {
+	return authRequest<UserStatistics>('/users/stats/count');
+}
+
+// ----- Activities -----
+
+export interface ActivityRequestDTO {
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	descriptionDe: string;
+	descriptionEn: string;
+	descriptionUa: string;
+	price: number;
+	durationMinutes: number;
+	active: boolean;
+}
+
+export function createActivity(input: ActivityRequestDTO) {
+	return authRequest<ActivityDTO>('/activities', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateActivity(id: number, input: ActivityRequestDTO) {
+	return authRequest<ActivityDTO>(`/activities/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+}
+
+export function deleteActivity(id: number) {
+	return authRequest<void>(`/activities/${id}`, { method: 'DELETE' });
+}
+
+// ----- Venues -----
+
+// Real backend response shape — Java String fields can genuinely be null.
+export interface VenueDTO {
+	id: number;
+	name: string;
+	address: string;
+	city: string;
+	postalCode: string | null;
+	country: string | null;
+	capacity: number | null;
+	description: string | null;
+	contactPhone: string | null;
+	contactEmail: string | null;
+}
+
+// Form/request shape — always plain strings ('' instead of null for an
+// empty optional field), since the Input component binds a non-nullable
+// string. The backend accepts '' the same way it accepts null here.
+export interface VenueRequestDTO {
+	name: string;
+	address: string;
+	city: string;
+	postalCode: string;
+	country: string;
+	capacity: number | null;
+	description: string;
+	contactPhone: string;
+	contactEmail: string;
+}
+
+// GET /venues has no @PreAuthorize (open to any authenticated user, not
+// admin-restricted) but SecurityConfig's permitAll list only covers
+// workshops/activities/performances — this still needs a Bearer token,
+// found by architect-reviewer (was wrongly using the unauthenticated
+// request() here, which would 401 against a real backend).
+export function getVenues() {
+	return authRequest<VenueDTO[]>('/venues');
+}
+
+export function createVenue(input: VenueRequestDTO) {
+	return authRequest<VenueDTO>('/venues', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateVenue(id: number, input: VenueRequestDTO) {
+	return authRequest<VenueDTO>(`/venues/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+}
+
+export function deleteVenue(id: number) {
+	return authRequest<void>(`/venues/${id}`, { method: 'DELETE' });
+}
+
+// ----- Workshops (admin) -----
+
+export type WorkshopStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'CANCELLED';
+
+export interface WorkshopCreateDTO {
+	title: string;
+	description: string;
+	teacherId: number | null;
+	startDate: string | null;
+	endDate: string | null;
+	venueId: number | null;
+	maxParticipants: number | null;
+	price: number | null;
+	status: WorkshopStatus;
+}
+
+export function createWorkshop(input: WorkshopCreateDTO) {
+	return authRequest<WorkshopDetail>('/workshops', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateWorkshop(id: number, input: WorkshopCreateDTO) {
+	return authRequest<WorkshopDetail>(`/workshops/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+}
+
+export function deleteWorkshop(id: number) {
+	return authRequest<void>(`/workshops/${id}`, { method: 'DELETE' });
+}
+
+// teacherId here = User.id — Workshop.teacher is a User, unlike Group.teacher
+// below (Teacher entity). Two different ID spaces, do not mix them up.
+export function getWorkshopsByTeacherUserId(teacherUserId: number) {
+	return authRequest<WorkshopListItem[]>(`/workshops/teacher/${teacherUserId}`);
+}
+
+// ----- Teachers (Teacher entity, NOT User) -----
+
+export interface TeacherInfoDTO {
+	id: number;
+	firstName: string;
+	lastName: string;
+	email: string;
+	phone: string | null;
+	title: string | null;
+	approved: boolean;
+	bioDe: string | null;
+	bioEn: string | null;
+	bioUa: string | null;
+	active: boolean;
+}
+
+// Same authRequest correction as getVenues() above — GET /teachers requires
+// a valid JWT under the current SecurityConfig even though it has no
+// @PreAuthorize of its own.
+export function getTeachers() {
+	return authRequest<TeacherInfoDTO[]>('/teachers');
+}
+
+// ----- Groups -----
+// GroupController takes the raw JPA entity as @RequestBody (no DTO) — this
+// shape matches Group.java's writable fields exactly. `teacher` here MUST be
+// a Teacher.id (from getTeachers() above), NOT a User.id — the old static
+// site's admin-groups.js populated this select from /users/role/TEACHER and
+// sent User.id, silently linking groups to the wrong teacher row or none at
+// all. Fixed here, see CHANGELOG.md 2026-07-23.
+// (GroupDTO itself is defined earlier, in the public-catalog section.)
+
+export interface GroupWriteDTO {
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	capacity: number;
+	startDateTime: string;
+	endDateTime: string | null;
+	workshop: { id: number } | null;
+	teacher: { id: number } | null;
+	activity: { id: number } | null;
+	active: boolean;
+}
+
+// Same authRequest correction as getVenues() above — GET /groups requires
+// a valid JWT under the current SecurityConfig even though it has no
+// @PreAuthorize of its own.
+export function getGroups(workshopId?: number) {
+	return authRequest<GroupDTO[]>(`/groups${workshopId ? `?workshopId=${workshopId}` : ''}`);
+}
+
+export function createGroup(input: GroupWriteDTO) {
+	return authRequest<GroupDTO>('/groups', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateGroup(id: number, input: GroupWriteDTO) {
+	return authRequest<GroupDTO>(`/groups/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+}
+
+export function deleteGroup(id: number) {
+	return authRequest<void>(`/groups/${id}`, { method: 'DELETE' });
+}
+
+// teacherId here = Teacher.id (see note above) — do not pass a User.id.
+export function getGroupsByTeacherId(teacherId: number) {
+	return authRequest<GroupDTO[]>(`/groups/teacher/${teacherId}`);
+}
+
+// ----- Performances (admin) -----
+// `venue` is a plain free-text string on the real backend DTO, not a Venue
+// FK — the old static site's admin-performances.js sent `venueId` (a field
+// the backend silently ignores, ID never actually applied) and read
+// `p.date`/`p.venueName` on responses (neither field exists — real names
+// are `performanceDate`/`venue`). Fixed here, see CHANGELOG.md 2026-07-23.
+
+export type PerformanceStatus = 'PLANNED' | 'CONFIRMED' | 'COMPLETED' | 'CANCELLED';
+
+export interface PerformanceWriteDTO {
+	workshopId: number | null;
+	title: string;
+	description: string;
+	performanceDate: string;
+	venue: string;
+	maxAttendees: number | null;
+	status: PerformanceStatus;
+}
+
+export function createPerformance(input: PerformanceWriteDTO) {
+	return authRequest<PerformanceDTO>('/performances', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updatePerformance(id: number, input: PerformanceWriteDTO) {
+	return authRequest<PerformanceDTO>(`/performances/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+}
+
+export function deletePerformance(id: number) {
+	return authRequest<void>(`/performances/${id}`, { method: 'DELETE' });
+}
+
+// ----- Teacher-scoped reads (teacher dashboard) -----
+
+export interface EnrollmentAdminDTO {
+	id: number;
+	workshopId: number;
+	workshopTitle: string;
+	groupId: number;
+	groupTitle: string;
+	status: string;
+	createdAt: string;
+	user: UserBasicDTO;
+}
+
+export function getGroupParticipants(groupId: number) {
+	return authRequest<EnrollmentAdminDTO[]>(`/teacher/groups/${groupId}/participants`);
+}
