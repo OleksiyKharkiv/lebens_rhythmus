@@ -32,6 +32,14 @@
 	--color-teal: #2fbf9e;
 	--color-teal-deep: #1f8f76;
 
+	/* Semantic tokens — kept distinct from the gold/teal brand accents so
+	   validation state never collides with a CTA color (gold is also the
+	   login-button color; reusing it for error text was a real bug found
+	   in review, see LR-ADR-020). */
+	--color-error: #e2574c;
+	--color-error-deep: #b23b32;
+	--color-success: var(--color-teal);
+
 	--font-display: 'Quicksand', sans-serif;
 	--font-body: 'Nunito Sans', sans-serif;
 }

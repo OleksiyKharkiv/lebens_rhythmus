@@ -3,6 +3,10 @@
 	import { resolve } from '$app/paths';
 	import * as m from '$lib/paraglide/messages.js';
 	import { login, register, persistSession, ApiError } from '$lib/api';
+	import Card from '$lib/components/Card.svelte';
+	import Input from '$lib/components/Input.svelte';
+	import Button from '$lib/components/Button.svelte';
+	import ErrorText from '$lib/components/ErrorText.svelte';
 
 	let loginEmail = $state('');
 	let loginPassword = $state('');
@@ -77,117 +81,94 @@
 
 <section class="mx-auto grid max-w-4xl gap-10 px-6 py-16 sm:py-24 md:grid-cols-2 md:gap-14">
 	<!-- Login -->
-	<form onsubmit={handleLogin} class="rounded-2xl border border-ink-line bg-ink-soft/40 p-8">
-		<h1 class="font-display text-2xl font-semibold text-paper">{m.login_title()}</h1>
+	<Card>
+		<form onsubmit={handleLogin}>
+			<h1 class="font-display text-2xl font-semibold text-paper">{m.login_title()}</h1>
 
-		<label class="mt-6 block text-sm text-paper-dim" for="loginEmail">{m.login_email_label()}</label>
-		<input
-			id="loginEmail"
-			type="email"
-			required
-			bind:value={loginEmail}
-			class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
-		/>
+			<Input id="loginEmail" label={m.login_email_label()} type="email" required bind:value={loginEmail} />
+			<Input
+				id="loginPassword"
+				label={m.login_password_label()}
+				type="password"
+				required
+				bind:value={loginPassword}
+			/>
 
-		<label class="mt-4 block text-sm text-paper-dim" for="loginPassword">{m.login_password_label()}</label>
-		<input
-			id="loginPassword"
-			type="password"
-			required
-			bind:value={loginPassword}
-			class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
-		/>
+			<ErrorText message={loginError} />
 
-		{#if loginError}
-			<p class="mt-3 text-sm text-gold">{loginError}</p>
-		{/if}
+			<div class="mt-6">
+				<Button type="submit" busy={loginBusy}>{m.login_submit()}</Button>
+			</div>
 
-		<button
-			type="submit"
-			disabled={loginBusy}
-			class="mt-6 w-full rounded-full bg-gold py-3 font-display font-semibold text-ink transition-colors hover:bg-gold-deep disabled:opacity-60"
-		>
-			{loginBusy ? '…' : m.login_submit()}
-		</button>
-
-		<!-- Password-reset flow doesn't exist on the backend yet (ARCHITECTURE_OLD.md
-		     finding) — link stays a placeholder until that ticket lands. -->
-		<p class="mt-4 text-center text-sm text-paper-dim">{m.login_forgot_password()}</p>
-	</form>
+			<!-- Password-reset flow doesn't exist on the backend yet (ARCHITECTURE_OLD.md
+			     finding) — link stays a placeholder until that ticket lands. -->
+			<p class="mt-4 text-center text-sm text-paper-dim">{m.login_forgot_password()}</p>
+		</form>
+	</Card>
 
 	<!-- Register -->
-	<form onsubmit={handleRegister} class="rounded-2xl border border-ink-line bg-ink-soft/40 p-8">
-		<h2 class="font-display text-2xl font-semibold text-paper">{m.register_title()}</h2>
+	<Card>
+		<form onsubmit={handleRegister}>
+			<h2 class="font-display text-2xl font-semibold text-paper">{m.register_title()}</h2>
 
-		<div class="mt-6 grid grid-cols-2 gap-4">
-			<div>
-				<label class="block text-sm text-paper-dim" for="regFirstName">{m.register_firstname_label()}</label>
-				<input
+			<div class="mt-6 grid grid-cols-2 gap-4">
+				<Input
 					id="regFirstName"
+					label={m.register_firstname_label()}
+					accent="teal"
 					required
 					bind:value={regFirstName}
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-teal"
 				/>
-			</div>
-			<div>
-				<label class="block text-sm text-paper-dim" for="regLastName">{m.register_lastname_label()}</label>
-				<input
+				<Input
 					id="regLastName"
+					label={m.register_lastname_label()}
+					accent="teal"
 					required
 					bind:value={regLastName}
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-teal"
 				/>
 			</div>
-		</div>
 
-		<label class="mt-4 block text-sm text-paper-dim" for="regEmail">{m.register_email_label()}</label>
-		<input
-			id="regEmail"
-			type="email"
-			required
-			bind:value={regEmail}
-			class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-teal"
-		/>
+			<Input
+				id="regEmail"
+				label={m.register_email_label()}
+				type="email"
+				accent="teal"
+				required
+				bind:value={regEmail}
+			/>
+			<Input
+				id="regPassword"
+				label={m.register_password_label()}
+				type="password"
+				accent="teal"
+				required
+				minlength={6}
+				bind:value={regPassword}
+			/>
+			<Input
+				id="regConfirm"
+				label={m.register_confirm_label()}
+				type="password"
+				accent="teal"
+				required
+				bind:value={regConfirm}
+			/>
 
-		<label class="mt-4 block text-sm text-paper-dim" for="regPassword">{m.register_password_label()}</label>
-		<input
-			id="regPassword"
-			type="password"
-			required
-			minlength="6"
-			bind:value={regPassword}
-			class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-teal"
-		/>
+			<label class="mt-4 flex items-start gap-2 text-sm text-paper-dim">
+				<input type="checkbox" required bind:checked={acceptTerms} class="mt-1 accent-teal" />
+				{m.register_terms_label()}
+			</label>
+			<label class="mt-2 flex items-start gap-2 text-sm text-paper-dim">
+				<input type="checkbox" required bind:checked={acceptPrivacy} class="mt-1 accent-teal" />
+				{m.register_privacy_label()}
+			</label>
 
-		<label class="mt-4 block text-sm text-paper-dim" for="regConfirm">{m.register_confirm_label()}</label>
-		<input
-			id="regConfirm"
-			type="password"
-			required
-			bind:value={regConfirm}
-			class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-teal"
-		/>
+			<ErrorText message={regError} />
 
-		<label class="mt-4 flex items-start gap-2 text-sm text-paper-dim">
-			<input type="checkbox" required bind:checked={acceptTerms} class="mt-1 accent-teal" />
-			{m.register_terms_label()}
-		</label>
-		<label class="mt-2 flex items-start gap-2 text-sm text-paper-dim">
-			<input type="checkbox" required bind:checked={acceptPrivacy} class="mt-1 accent-teal" />
-			{m.register_privacy_label()}
-		</label>
-
-		{#if regError}
-			<p class="mt-3 text-sm text-gold">{regError}</p>
-		{/if}
-
-		<button
-			type="submit"
-			disabled={regBusy}
-			class="mt-6 w-full rounded-full bg-teal py-3 font-display font-semibold text-ink transition-colors hover:bg-teal-deep disabled:opacity-60"
-		>
-			{regBusy ? '…' : m.register_submit()}
-		</button>
-		<p class="mt-3 text-center text-xs text-paper-dim">{m.required_note()}</p>
-	</form>
+			<div class="mt-6">
+				<Button type="submit" variant="teal" busy={regBusy}>{m.register_submit()}</Button>
+			</div>
+			<p class="mt-3 text-center text-xs text-paper-dim">{m.required_note()}</p>
+		</form>
+	</Card>
 </section>
