@@ -131,7 +131,15 @@ public class SecurityConfig {
                         ).permitAll()
 
                         // ===== PUBLIC READ =====
-                        .requestMatchers(HttpMethod.GET, "/api/v1/workshops/**").permitAll()
+                        // Public catalog pages (frontend-svelte activities/workshops/performances,
+                        // LR-ADR-010/015) — found missing for activities/performances during
+                        // architect-reviewer check on 2026-07-22: only workshops was whitelisted,
+                        // so the two other public catalog pages 401'd for every anonymous visitor.
+                        .requestMatchers(HttpMethod.GET,
+                                "/api/v1/workshops/**",
+                                "/api/v1/activities/**",
+                                "/api/v1/performances/**"
+                        ).permitAll()
 
                         // ===== ACTUATOR =====
                         .requestMatchers("/actuator/health").permitAll()
