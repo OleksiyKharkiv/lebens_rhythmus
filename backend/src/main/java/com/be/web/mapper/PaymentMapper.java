@@ -29,6 +29,19 @@ public class PaymentMapper {
                 .build();
     }
 
+    /**
+     * Self-view mapping for GET /api/v1/payments/me (LR-ADR-016, LR-004) —
+     * omits `note`, since it's documented as an admin/accounting reference
+     * (may hold internal context not meant for the customer) and this is
+     * the only endpoint a non-admin can reach directly.
+     */
+    public PaymentResponseDTO toSelfViewDTO(Payment payment) {
+        if (payment == null) return null;
+        PaymentResponseDTO dto = toResponseDTO(payment);
+        dto.setNote(null);
+        return dto;
+    }
+
     public Payment fromRequestDTO(PaymentRequestDTO dto) {
         if (dto == null) return null;
         return Payment.builder()

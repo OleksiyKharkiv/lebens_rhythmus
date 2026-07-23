@@ -43,6 +43,17 @@ public class PaymentService {
                 .orElseThrow(() -> new RuntimeException("Payment not found with id: " + id));
     }
 
+    /**
+     * Self-scoped payment history — added because no endpoint let a regular
+     * user see their own payments at all (every PaymentController method
+     * required ADMIN/BUSINESS_OWNER), which directly blocked the personal
+     * dashboard's payment-history requirement (LR-ADR-016).
+     */
+    @Transactional(readOnly = true)
+    public List<Payment> getMyPayments(Long userId) {
+        return paymentRepository.findByUserIdOrderByCreatedAtDesc(userId);
+    }
+
     @Transactional
     public Payment create(PaymentRequestDTO dto) {
         Payment payment = paymentMapper.fromRequestDTO(dto);

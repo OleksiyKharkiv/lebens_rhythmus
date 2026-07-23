@@ -1,5 +1,6 @@
 package com.be.web.controller;
 
+import com.be.config.JwtAuthUtils;
 import com.be.domain.entity.Payment;
 import com.be.service.PaymentService;
 import com.be.web.dto.request.PaymentRequestDTO;
@@ -8,6 +9,8 @@ import com.be.web.mapper.PaymentMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +34,25 @@ public class PaymentController {
         List<Payment> payments = paymentService.getAll();
         return ResponseEntity.ok(payments.stream()
                 .map(paymentMapper::toResponseDTO)
+                .collect(Collectors.toList()));
+    }
+
+    /**
+     * GET /api/v1/payments/me — self-scoped payment history (LR-ADR-016).
+     * Matched before /{id} by Spring's own literal-over-variable path
+     * precedence (same pattern already relied on by UserController's
+     * /users/me vs /users/{userId}).
+     */
+    @GetMapping("/me")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<List<PaymentResponseDTO>> getMyPayments(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = JwtAuthUtils.extractUserId(jwt);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        List<Payment> payments = paymentService.getMyPayments(userId);
+        return ResponseEntity.ok(payments.stream()
+                .map(paymentMapper::toSelfViewDTO)
                 .collect(Collectors.toList()));
     }
 
