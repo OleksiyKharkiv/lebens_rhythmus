@@ -2,6 +2,78 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-07-24 — infra: интерим-бэкапы PostgreSQL — CronJob + restic + IDrive e2 (LR-003)
+
+### Область (`devops/helm/lr-app/{templates/postgres-backup-{cronjob,configmap}.yaml,values.yaml}`, `docs/runbooks/infra-fix-shutdown.md`, `docs/tickets/tickets.md`)
+
+- **infra** — `lr-postgres` не имел вообще никакого бэкапа. Добавлен
+  Kubernetes CronJob `lr-postgres-backup` (`postgres:16-alpine` + `restic`
+  через `apk` на лету, не отдельный кастомный образ): `pg_dump` →
+  `restic backup` → `restic forget --prune` (retention 14 daily / 8
+  weekly), по расписанию 03:00 UTC ежедневно. Назначение — IDrive e2
+  (тот же провайдер, что numi Litestream, отдельный bucket/credentials),
+  механизм — Kubernetes CronJob (не systemd на VM200, как изначально
+  предполагал тикет) — оба решения подтверждены заказчиком.
+- **проверено локально** (не на проде) — `postgres:16-alpine` реально
+  содержит `pg_dump`, `restic` ставится и работает через `apk`; полный
+  прогон script'а (`pg_dump`/`restic init`/`restic backup`/`restic
+  forget --prune`) против тестовой Postgres — все шаги отработали,
+  снапшот создан. `helm template` — 0 ошибок; `postgresBackup.enabled:
+  false` корректно убирает CronJob и ConfigMap из рендера.
+- **docs** — процедура восстановления добавлена в
+  `infra-fix-shutdown.md` (новый раздел) — явно помечена как ни разу не
+  проверенная на реальном кластере (тот же класс риска, что уже
+  случался с numi/Litestream: непроверенный бэкап не доказан рабочим).
+- **не может быть сделано мной** — создание IDrive e2 bucket, реальный
+  `kubectl create secret lr-backup-secrets`, деплой через `helm upgrade`,
+  и хотя бы один реальный прогон restore — всё требует доступа к живой
+  прод-инфраструктуре, см. чек-лист "Осталось сделать" в `tickets.md`
+  LR-003.
+- **architect-reviewer: approve with changes** — нашёл реальный,
+  довольно серьёзный rollout-баг:
+  1. **Блокирующее** — `postgresBackup.enabled: true` по умолчанию + то,
+     что `deploy-dev` в `.gitlab-ci.yml` делает `helm upgrade --install`
+     безусловно на КАЖДЫЙ пуш без `--set postgresBackup.*` — означало,
+     что самый обычный следующий пуш (по любому другому тикету) молча
+     создал бы CronJob со ссылкой на несуществующий Secret и пустым
+     `repository`, который падал бы каждую ночь незамеченным. Исправлено:
+     `enabled: false` по умолчанию, включать явно (`--set` или прямое
+     значение в `values.yaml`) только когда `lr-backup-secrets` и
+     `repository` реально существуют.
+  2. **Should-fix** — добавлен `backoffLimit: 1` (был бы default 6 —
+     6 попыток `apk add`+`pg_dump`+`restic` подряд за одну ночь при
+     постоянной ошибке, лучше дождаться завтрашнего расписания).
+  3. **Некритично, зафиксировано на будущее (не решено сейчас)** —
+     backup-job переиспользует ту же учётку `lr-db-credentials`, что и
+     сам StatefulSet (полные права владельца БД, хотя для `pg_dump`
+     достаточно read-only) — отдельной read-only роли в проекте вообще
+     нет нигде, создание такой роли требует ручной `psql`-сессии против
+     прод-БД, не делается этим диффом. Нет алертинга при падении job'а
+     (узнать можно только `kubectl get cronjob`). Оба пункта — реальные,
+     стоит явно занести в LR-003 как follow-up, не считать закрытыми
+     молча.
+  `helm template` перепроверен после фиксов — 0 ошибок, `enabled` по
+  умолчанию корректно убирает оба ресурса, `--set enabled=true`
+  корректно их включает с `backoffLimit` на месте.
+
+## 2026-07-24 — fix: мобильное меню не закрывалось после выбора пункта
+
+### Область (`frontend-svelte/src/routes/+layout.svelte`)
+
+- **fix (найдено заказчиком в проде, iPhone 14 portrait, сразу после
+  деплоя)** — мобильный `<nav>` (`{#if mobileOpen}`) не сбрасывал
+  `mobileOpen` при клике на ссылку/кнопку внутри — SvelteKit's client
+  router не перемонтирует layout при навигации между страницами одного
+  layout, так что состояние просто оставалось `true`, меню "зависало",
+  занимая ~60% высоты экрана. Добавлен `closeMobileMenu()`, повешен на
+  все ссылки и на кнопку logout (`+ handleLogout()` в одном обработчике)
+  внутри мобильного nav.
+- **проверено вживую** — `svelte-check` 0/1064, Vitest 12/12; в браузере
+  на вьюпорте 390×844 (iPhone 14): открыл меню, кликнул "Über uns" —
+  переход произошёл И меню закрылось (`mobileNavCount` вернулся к 1,
+  блок `{#if mobileOpen}` пропал из DOM); отдельно проверил кнопку
+  logout — сессия очистилась, редирект на `/`, меню тоже закрылось.
+
 ## 2026-07-23 — infra: CI собирает и тестирует `frontend-svelte`, старый статический сайт больше не деплоится (LR-002 пп.4, 4b)
 
 ### Область (`.gitlab-ci.yml`, `frontend-svelte/{Dockerfile,nginx.conf,.dockerignore}`)

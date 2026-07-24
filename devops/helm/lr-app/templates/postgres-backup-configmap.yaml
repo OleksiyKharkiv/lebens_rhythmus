@@ -1,0 +1,38 @@
+{{- if .Values.postgresBackup.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lr-postgres-backup-script
+data:
+  backup.sh: |
+    #!/bin/sh
+    # Interim minimum backup solution (LR-003) — pg_dump + restic to an
+    # S3-compatible bucket (IDrive e2, same provider as numi's Litestream,
+    # separate bucket/credentials per project). Not the final answer:
+    # tracked as temporary until the autumn hardware upgrade brings a
+    # dedicated backup controller (see tickets.md LR-003).
+    set -eu
+
+    # postgres:16-alpine has pg_dump but not restic — installed on the fly
+    # rather than maintaining a separate custom image for a solution
+    # explicitly framed as temporary (LR-003).
+    echo "==> installing restic"
+    apk add --no-cache restic >/dev/null
+
+    DUMP_FILE="/tmp/lr-postgres-$(date +%Y%m%d-%H%M%S).dump"
+
+    echo "==> pg_dump ${POSTGRES_DB} from ${PGHOST}"
+    pg_dump -h "$PGHOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -F c -f "$DUMP_FILE"
+
+    echo "==> restic init (no-op if repository already exists)"
+    restic snapshots >/dev/null 2>&1 || restic init
+
+    echo "==> restic backup"
+    restic backup "$DUMP_FILE" --host lr-postgres --tag daily
+
+    echo "==> restic forget --prune (retention: ${RESTIC_KEEP_DAILY} daily / ${RESTIC_KEEP_WEEKLY} weekly)"
+    restic forget --keep-daily "$RESTIC_KEEP_DAILY" --keep-weekly "$RESTIC_KEEP_WEEKLY" --prune
+
+    rm -f "$DUMP_FILE"
+    echo "==> done"
+{{- end }}

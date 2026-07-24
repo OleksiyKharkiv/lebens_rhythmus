@@ -28,6 +28,39 @@ postgres:
   db: lebens_rhythmus  # PostgreSQL database name
   storage: 10Gi        # Storage size for PostgreSQL persistence
 
+# Interim minimum backup solution (LR-003) — lr-postgres had NO backup at
+# all before this. Temporary until the autumn hardware upgrade brings a
+# dedicated backup controller; not the final answer, see tickets.md LR-003.
+postgresBackup:
+  # Defaults to false on purpose (architect-reviewer finding, 2026-07-24):
+  # .gitlab-ci.yml's deploy-dev runs `helm upgrade --install` unconditionally
+  # on every push with no postgresBackup.* overrides — if this defaulted to
+  # true, the very next ordinary push (for any unrelated ticket) would
+  # silently create a CronJob referencing a Secret that doesn't exist yet
+  # and an empty repository, failing nightly with nobody noticing. Flip to
+  # true (via --set, or here once real) only after lr-backup-secrets exists
+  # and repository below is set to the real bucket URL — see tickets.md LR-003
+  # "Осталось сделать".
+  enabled: false
+  schedule: "0 3 * * *"       # 03:00 UTC daily — off-peak for a single-timezone EU user base
+  image: postgres:16-alpine   # has pg_dump; restic installed on the fly via apk (see ConfigMap)
+  # S3-compatible repository URL (IDrive e2, same provider as numi's
+  # Litestream — separate bucket/credentials, not shared with numi).
+  # Format: s3:https://<endpoint>/<bucket-name>
+  repository: ""              # e.g. s3:https://s3.eu-central-1.idrivee2.com/lr-backup
+  retention:
+    daily: 14
+    weekly: 8
+  # restic-password / access-key-id / secret-access-key: read from Secret
+  # `lr-backup-secrets`, created out-of-band, same convention as
+  # `lr-backend-secrets`. Must exist in namespace `lr-dev` BEFORE
+  # `helm upgrade --install`, e.g.:
+  #   kubectl -n lr-dev create secret generic lr-backup-secrets \
+  #     --from-literal=restic-password=<new random string, NOT reused from anywhere else> \
+  #     --from-literal=access-key-id=<IDrive e2 access key, this project's own bucket> \
+  #     --from-literal=secret-access-key=<IDrive e2 secret key>
+  #   openssl rand -base64 32   # generates a valid restic-password
+
 frontend:
   replicaCount: 1
   image:

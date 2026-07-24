@@ -1,0 +1,74 @@
+{{- if .Values.postgresBackup.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: lr-postgres-backup
+spec:
+  schedule: "{{ .Values.postgresBackup.schedule }}"
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # A stuck/hung backup run shouldn't block every subsequent scheduled
+      # run forever (concurrencyPolicy: Forbid) — give it a hard ceiling.
+      activeDeadlineSeconds: 1800
+      # Default backoffLimit (6) would retry a permanent failure (e.g. a
+      # missing/misconfigured Secret) up to 6 times same-night before
+      # giving up — a transient blip is better handled by tomorrow's
+      # scheduled run than by same-night retries.
+      backoffLimit: 1
+      template:
+        spec:
+          nodeSelector:
+            project: lr
+          restartPolicy: Never
+          containers:
+            - name: backup
+              image: "{{ .Values.postgresBackup.image }}"
+              command: ["/bin/sh", "/scripts/backup.sh"]
+              env:
+                - name: PGHOST
+                  value: lr-postgres
+                - name: POSTGRES_DB
+                  value: "{{ .Values.postgres.db }}"
+                - name: POSTGRES_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: lr-db-credentials
+                      key: username
+                - name: PGPASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: lr-db-credentials
+                      key: password
+                - name: RESTIC_REPOSITORY
+                  value: "{{ .Values.postgresBackup.repository }}"
+                - name: RESTIC_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: lr-backup-secrets
+                      key: restic-password
+                - name: AWS_ACCESS_KEY_ID
+                  valueFrom:
+                    secretKeyRef:
+                      name: lr-backup-secrets
+                      key: access-key-id
+                - name: AWS_SECRET_ACCESS_KEY
+                  valueFrom:
+                    secretKeyRef:
+                      name: lr-backup-secrets
+                      key: secret-access-key
+                - name: RESTIC_KEEP_DAILY
+                  value: "{{ .Values.postgresBackup.retention.daily }}"
+                - name: RESTIC_KEEP_WEEKLY
+                  value: "{{ .Values.postgresBackup.retention.weekly }}"
+              volumeMounts:
+                - name: backup-script
+                  mountPath: /scripts
+          volumes:
+            - name: backup-script
+              configMap:
+                name: lr-postgres-backup-script
+                defaultMode: 0755
+{{- end }}

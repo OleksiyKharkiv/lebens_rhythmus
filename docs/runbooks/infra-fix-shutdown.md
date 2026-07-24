@@ -145,6 +145,64 @@ restore на хосте: под пересоздаёт файлы с владе�
 
 ---
 
+## Восстановление PostgreSQL из бэкапа (LR-003)
+
+> Добавлено 2026-07-24 вместе с самим бэкапом. **Ни разу не проверялось
+> восстановлением на реальном кластере** — то же самое, что случилось с
+> numi/Litestream (см. `numi` `KNOWN_ISSUES.md`): бэкап, который никто не
+> пробовал восстановить, не доказан рабочим. Первый реальный прогон этой
+> процедуры (даже в тестовом namespace, не поверх прод-БД) должен
+> случиться при первой же возможности, не откладывать до реального
+> инцидента.
+
+CronJob `lr-postgres-backup` (namespace `lr-dev`) гонит `pg_dump` +
+`restic backup` в IDrive e2 по расписанию (`postgresBackup.schedule` в
+`values.yaml`, по умолчанию 03:00 UTC ежедневно). Ежедневная копия
+хранится 14 дней, еженедельная — 8 недель (`postgresBackup.retention`).
+
+**Проверить, что бэкапы вообще происходят:**
+```bash
+kubectl get cronjob -n lr-dev lr-postgres-backup
+kubectl get jobs -n lr-dev -l job-name=lr-postgres-backup  # или по времени последнего запуска CronJob'а
+kubectl logs -n lr-dev <под последнего job'а>
+```
+
+**Посмотреть, какие снапшоты реально есть в IDrive e2** (запустить
+разово, эфемерным подом с теми же credentials, что и CronJob):
+```bash
+kubectl run -n lr-dev restic-check --rm -it --restart=Never \
+  --image=postgres:16-alpine \
+  --overrides='{"spec":{"nodeSelector":{"project":"lr"}}}' \
+  --env="RESTIC_REPOSITORY=<из values.yaml postgresBackup.repository>" \
+  --env="RESTIC_PASSWORD=<из Secret lr-backup-secrets, restic-password>" \
+  --env="AWS_ACCESS_KEY_ID=<из Secret lr-backup-secrets>" \
+  --env="AWS_SECRET_ACCESS_KEY=<из Secret lr-backup-secrets>" \
+  -- sh -c "apk add --no-cache restic >/dev/null && restic snapshots"
+```
+
+**Восстановление (полная процедура, disaster recovery):**
+1. Скачать нужный снапшот в дамп-файл (тот же эфемерный под, что выше,
+   но `restic restore <snapshot-id> --target /tmp/restore` вместо
+   `snapshots`, затем `kubectl cp` файл наружу или сразу пайпить в шаге 2).
+2. Восстановить в `lr-postgres`:
+   ```bash
+   kubectl exec -n lr-dev -it <под lr-postgres> -- \
+     pg_restore -U <POSTGRES_USER> -d <POSTGRES_DB> --clean --if-exists /path/to/dump
+   ```
+3. **Перед восстановлением поверх реальной БД** — предупредить
+   заказчика, это разрушительная операция (`--clean` дропает существующие
+   объекты перед восстановлением). Не выполнять без явного подтверждения,
+   как и любую другую destructive-операцию в проде.
+
+**Известный класс ошибок, на который стоит проверить в первую очередь**
+(тот же паттерн, что дважды ловил numi): права на state/данные при смене
+`User=`/`Group=` в systemd-юните — здесь неприменимо напрямую (весь бэкап
+живёт как под в кластере, не systemd-сервис на голой VM), но при
+пересмотре решения на осеннем апгрейде железа (см. `INFRA-LR.md` §9) —
+проверить этот класс багов заново, если появится systemd-компонент.
+
+---
+
 ## Доступ — шпаргалка
 
 ```bash
