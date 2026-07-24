@@ -39,6 +39,14 @@
 		loggedIn = false;
 		window.location.href = '/';
 	}
+
+	// The mobile nav stayed open after picking a link — SvelteKit's client
+	// router doesn't remount this layout on navigation, so mobileOpen just
+	// kept sitting at true (found in production, iPhone 14 portrait: menu
+	// stuck open eating ~60% of the viewport after tapping "About").
+	function closeMobileMenu() {
+		mobileOpen = false;
+	}
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
@@ -113,20 +121,32 @@
 
 		{#if mobileOpen}
 			<nav class="flex flex-col gap-4 border-t border-ink-line px-6 py-4 sm:hidden">
-				<a href={resolve('/')} class="text-paper-dim">{m.nav_home()}</a>
-				<a href={resolve('/about')} class="text-paper-dim">{m.nav_about()}</a>
-				<a href="/activities" class="text-paper-dim">{m.nav_activities()}</a>
-				<a href="/workshops" class="text-paper-dim">{m.nav_workshops()}</a>
-				<a href="/performances" class="text-paper-dim">{m.nav_performances()}</a>
+				<a href={resolve('/')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_home()}</a>
+				<a href={resolve('/about')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_about()}</a>
+				<a href="/activities" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_activities()}</a>
+				<a href="/workshops" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_workshops()}</a>
+				<a href="/performances" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_performances()}</a>
 				{#if loggedIn}
-					<a href={roleAreaHref} class="text-paper-dim">{roleAreaLabel}</a>
-					<button onclick={handleLogout} class="text-left text-gold">{m.nav_logout()}</button>
+					<a href={roleAreaHref} onclick={closeMobileMenu} class="text-paper-dim">{roleAreaLabel}</a>
+					<button
+						onclick={() => {
+							closeMobileMenu();
+							handleLogout();
+						}}
+						class="text-left text-gold"
+					>
+						{m.nav_logout()}
+					</button>
 				{:else}
-					<a href={resolve('/login')} class="text-gold">{m.nav_login()}</a>
+					<a href={resolve('/login')} onclick={closeMobileMenu} class="text-gold">{m.nav_login()}</a>
 				{/if}
 				<div class="flex gap-4 pt-2 text-sm">
 					{#each locales as locale (locale)}
-						<a href={resolve(localizeHref(page.url.pathname, { locale }) as Pathname)} class="text-paper-dim">
+						<a
+							href={resolve(localizeHref(page.url.pathname, { locale }) as Pathname)}
+							onclick={closeMobileMenu}
+							class="text-paper-dim"
+						>
 							{localeLabels[locale] ?? locale}
 						</a>
 					{/each}
