@@ -2,6 +2,109 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-04 — feat: email-верификация при регистрации (Brevo SMTP) + фикс двух фронтенд-багов
+
+### Область (backend: `service/{AuthService,EmailVerificationService,MailService}.java`, `domain/exception/{EmailNotVerified,InvalidVerificationToken}Exception.java`, `web/{controller/AuthController,handler/GlobalExceptionHandler}.java`, `web/dto/**`, `domain/entity/User.java`, `domain/repository/UserRepository.java`, `db/migration/V3__add_email_verification.sql`, `build.gradle`, `application.properties`; frontend: `src/lib/api.ts`, `src/routes/{login/+page.svelte,verify-email/+page.svelte,+layout.svelte}`, `messages/{de,en,uk}.json`)
+
+- **найдено заказчиком** — `User.emailVerified` существовал с V1, но нигде не
+  устанавливался в `true`, никакого письма не отправлялось вообще, логин
+  не проверял поле — любой email (даже несуществующий/чужой) фактически
+  принимался при регистрации без единого подтверждения.
+- **feat** — при регистрации теперь генерируется одноразовый токен (SHA-256
+  хеш в БД, plaintext только в письме — та же логика, что для паролей),
+  письмо со ссылкой уходит через Brevo SMTP (`spring-boot-starter-mail`,
+  тот же провайдер, что у numi, отдельный sender). Логин теперь **блокирует**
+  неподтверждённые аккаунты (`EmailNotVerifiedException` → 403, code
+  `EMAIL_NOT_VERIFIED`) — по решению заказчика 2026-08-04.
+- **security** — проверка `emailVerified` идёт **после** сверки пароля, не
+  до: иначе кто угодно мог бы узнать "существует ли и подтверждён ли этот
+  email" без единой попытки подобрать пароль. Токен подтверждения хранится
+  только как хеш (не plaintext) — компрометация БД/бэкапа не выдаёт рабочих
+  ссылок. `resendVerification` не палит существование/статус аккаунта —
+  всегда одинаковый ответ вызывающему, реально отправляет письмо только
+  если аккаунт есть и ещё не подтверждён.
+- **⚠️ критический риск деплоя, исправлено в той же миграции** —
+  `email_verified` был `false` у **вообще всех** существующих пользователей
+  (фичи не было — некому было его выставлять). Без бэкфилла деплой этой
+  миграции мгновенно заблокировал бы логин всем текущим пользователям,
+  включая рабочий аккаунт заказчика — им бы неоткуда было взять письмо для
+  подтверждения (зарегистрировались до появления фичи). `V3` теперь
+  включает `UPDATE users SET email_verified = true WHERE email_verified =
+  false` — корректно только потому, что Flyway гарантирует однократное
+  применение строго до первой новой регистрации по новому коду.
+- **fix (не фатально для регистрации)** — реальных Brevo-кредов пока нет
+  (`SMTP_USERNAME`/`SMTP_PASSWORD` — пустые дефолты), значит отправка
+  письма будет падать прямо сейчас. Ошибка отправки **перехватывается и
+  логируется на ERROR** (не проглатывается тихо — тот самый урок про
+  "SMTP молча замокан" на numi, только наоборот: здесь цель не молчать, а
+  не 500'ить всю регистрацию из-за недоступной почты), аккаунт создаётся,
+  токен сохраняется — повторная отправка через `resendVerification` после
+  реальной настройки Brevo сработает с тем же (новым) токеном.
+- **fix (баг фронтенда, найден заказчиком)** — после успешного логина кнопка
+  в меню продолжала показывать "Anmelden" вместо "Abmelden". Причина:
+  `isAuthenticated()`/`getStoredRole()` читают `localStorage`, не реактивный
+  Svelte-state — `$effect()` без реактивных зависимостей внутри выполнялся
+  ровно один раз при монтировании layout'а и не перезапускался при
+  client-side навигации `/login` → `/dashboard` после логина. Исправлено
+  через `afterNavigate` (`$app/navigation`) — реально реагирует на
+  логин/логаут, не только на первую загрузку.
+- **лицензия** — `spring-boot-starter-mail` тянет Angus Mail
+  (`jakarta.mail`), лицензия **EPL-2.0 OR GPL-2.0-WITH-Classpath-Exception-2.0**
+  — тот же паттерн, что уже явно принят в `CODING_PROTOCOL.md` для
+  OpenJDK/Temurin, проверено явно (не по умолчанию популярности пакета).
+- **test** — `AuthServiceTest` (7): порядок проверок пароль→verified (не
+  наоборот), register больше не возвращает токен, `resendVerification` не
+  палит существование аккаунта. `EmailVerificationServiceTest` (5): реальный
+  round-trip токена, хеш ≠ plaintext, expired-токен отклоняется, ошибка
+  почты не прокидывается наружу. Итого бэкенд — 32 теста, 0 ошибок.
+- **не проверено в этой сессии** — реальная доставка письма через Brevo
+  (нет живых кредов), и сам бэкфилл на **реальном** `lr-dev` (проверено
+  только через reasoning + то, что миграция синтаксически валидна и
+  применяется в тестах на чистом Postgres — там просто нет "старых" строк
+  до неё).
+- **architect-reviewer: approve with changes** — независимо перезапустил
+  тесты (32/32), нашёл 2 находки:
+  1. **Исправлено** — `backend-deployment.yaml` не задавал `strategy`,
+     значит наследовал k8s-дефолт `RollingUpdate` (`maxSurge` округляется
+     до 1 пода даже при `replicas: 1`) — узкое окно, где новый под мог бы
+     начать обслуживать трафик до завершения старого, и регистрация,
+     попавшая на СТАРЫЙ под именно в этот момент, теоретически могла бы
+     попасть под бэкфилл нового пода как "существующий" аккаунт, минуя
+     верификацию. Добавлен `strategy: {type: Recreate}` — ничего не
+     стоит, реплика и так одна.
+  2. **Зафиксировано на будущее, не блокирует** — `resendVerification`
+     не палит существование аккаунта по содержимому ответа, но реальное
+     **время ответа** отличается (синхронный SMTP-коннект только для
+     реального неподтверждённого аккаунта) — timing side-channel, заведён
+     LR-014, низкий приоритет (не платёжные/детские данные за этим
+     логином).
+
+## 2026-08-03 — fix: фавикон показывал лого SvelteKit вместо Lebens Rhythmus
+
+### Область (`frontend-svelte/{static/,src/app.html,src/routes/+layout.svelte,src/lib/assets/favicon.svg (удалён)}`)
+
+- **fix (найдено заказчиком, реальный прод-баг)** — `src/lib/assets/
+  favicon.svg` с самого создания SvelteKit-приложения (`npm create svelte`,
+  задача №17 этой сессии) буквально содержал стоковое SVG-лого SvelteKit
+  (`<title>svelte-logo</title>` внутри самого файла) — никогда не был
+  заменён на реальный. Подтверждено напрямую на проде: `<link rel="icon">`
+  отдавал data-URI именно этого SVG.
+- **fix** — перенесены реальные иконки студии (набор favicon.io, уже
+  использовавшийся живым старым статическим сайтом —
+  `frontend/assets/favicon_io/`) в `frontend-svelte/static/`:
+  `favicon.ico`, `favicon-{16x16,32x32}.png`, `apple-touch-icon.png`,
+  `android-chrome-{192x192,512x512}.png`, `site.webmanifest` (заодно
+  заполнены `name`/`short_name` — в оригинальном файле были пустые
+  строки). Ссылки на них — явными `<link>` в `src/app.html` (стандартно,
+  без Vite-обработки ассетов), а не через Svelte-компонент — старый
+  `<svelte:head><link rel="icon" href={favicon} /></svelte:head>` в
+  `+layout.svelte` и сам плейсхолдер `favicon.svg` удалены.
+- **проверено вживую** — прод-сборка (`npm run build` + `npm run
+  preview`): все 5 файлов (`favicon.ico`, оба PNG, `apple-touch-icon.png`,
+  `site.webmanifest`) отдаются реальным сервером с кодом 200, `<head>`
+  содержит правильные `<link>`-теги без единого следа SvelteKit-лого.
+  `svelte-check` 0 ошибок, Vitest 12/12.
+
 ## 2026-08-03 — feat: инструмент ре-шифрования legacy-PII, LR-011 почти закрыт
 
 ### Область (`backend/src/main/java/com/be/tools/PiiReencryptionRunner.java`, `backend/src/test/java/com/be/PiiReencryptionRunnerTest.java`, `docs/tickets/tickets.md`)

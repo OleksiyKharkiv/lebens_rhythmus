@@ -52,6 +52,12 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
     // https://mvnrepository.com/artifact/org.springframework.security/spring-security-core
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+    // Email verification (LR): pulls in Angus Mail (jakarta.mail impl),
+    // dual-licensed EPL-2.0 OR GPL-2.0-with-Classpath-Exception-2.0 — same
+    // license pattern already accepted for OpenJDK/Temurin in
+    // CODING_PROTOCOL.md's license policy, checked explicitly (2026-08-04),
+    // not assumed safe by popularity.
+    implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {

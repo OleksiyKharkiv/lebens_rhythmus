@@ -2,7 +2,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import * as m from '$lib/paraglide/messages.js';
-	import { login, register, persistSession, ApiError } from '$lib/api';
+	import { login, register, resendVerification, persistSession, ApiError } from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
 	import Button from '$lib/components/Button.svelte';
@@ -12,6 +12,11 @@
 	let loginPassword = $state('');
 	let loginBusy = $state(false);
 	let loginError = $state('');
+	// Set only for the specific "correct password, unverified email" case —
+	// distinct from loginError so the template can also offer a resend button.
+	let loginUnverified = $state(false);
+	let resendBusy = $state(false);
+	let resendSent = $state(false);
 
 	let regFirstName = $state('');
 	let regLastName = $state('');
@@ -22,6 +27,9 @@
 	let acceptPrivacy = $state(false);
 	let regBusy = $state(false);
 	let regError = $state('');
+	// Registration no longer logs the user in (email verification is
+	// mandatory first) — set once registration succeeds, replaces the form.
+	let regSuccessEmail = $state('');
 
 	function redirectForRole(role: string) {
 		const target = role === 'ADMIN' ? '/admin' : role === 'TEACHER' ? '/teacher' : '/dashboard';
@@ -31,18 +39,35 @@
 	async function handleLogin(e: SubmitEvent) {
 		e.preventDefault();
 		loginError = '';
+		loginUnverified = false;
+		resendSent = false;
 		loginBusy = true;
 		try {
 			const data = await login(loginEmail, loginPassword);
 			persistSession(data);
 			redirectForRole(data.role);
 		} catch (err) {
-			loginError =
-				err instanceof ApiError && err.status === 401
-					? 'E-Mail oder Passwort falsch.'
-					: (err as Error).message;
+			if (err instanceof ApiError && err.code === 'EMAIL_NOT_VERIFIED') {
+				loginUnverified = true;
+				loginError = m.login_email_not_verified();
+			} else {
+				loginError =
+					err instanceof ApiError && err.status === 401
+						? 'E-Mail oder Passwort falsch.'
+						: (err as Error).message;
+			}
 		} finally {
 			loginBusy = false;
+		}
+	}
+
+	async function handleResendVerification() {
+		resendBusy = true;
+		try {
+			await resendVerification(loginEmail);
+			resendSent = true;
+		} finally {
+			resendBusy = false;
 		}
 	}
 
@@ -65,8 +90,7 @@
 				email: regEmail,
 				password: regPassword
 			});
-			persistSession(data);
-			redirectForRole(data.role);
+			regSuccessEmail = data.email;
 		} catch (err) {
 			regError = (err as Error).message;
 		} finally {
@@ -96,6 +120,23 @@
 
 			<ErrorText message={loginError} />
 
+			{#if loginUnverified}
+				<div class="mt-2">
+					{#if resendSent}
+						<p class="text-sm text-success">{m.login_resend_sent()}</p>
+					{:else}
+						<button
+							type="button"
+							onclick={handleResendVerification}
+							disabled={resendBusy}
+							class="text-sm text-teal underline hover:no-underline disabled:opacity-50"
+						>
+							{m.login_resend_verification()}
+						</button>
+					{/if}
+				</div>
+			{/if}
+
 			<div class="mt-6">
 				<Button type="submit" busy={loginBusy}>{m.login_submit()}</Button>
 			</div>
@@ -108,6 +149,10 @@
 
 	<!-- Register -->
 	<Card>
+		{#if regSuccessEmail}
+			<h2 class="font-display text-2xl font-semibold text-paper">{m.register_success_title()}</h2>
+			<p class="mt-4 text-paper-dim">{m.register_success_body({ email: regSuccessEmail })}</p>
+		{:else}
 		<form onsubmit={handleRegister}>
 			<h2 class="font-display text-2xl font-semibold text-paper">{m.register_title()}</h2>
 
@@ -170,5 +215,6 @@
 			</div>
 			<p class="mt-3 text-center text-xs text-paper-dim">{m.required_note()}</p>
 		</form>
+		{/if}
 	</Card>
 </section>

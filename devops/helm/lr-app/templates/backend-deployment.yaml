@@ -4,6 +4,18 @@ metadata:
   name: lr-backend
 spec:
   replicas: {{ .Values.backend.replicaCount }}
+  # Default RollingUpdate rounds maxSurge up to 1 pod even at replicas: 1,
+  # meaning a new pod can start (and serve traffic) before the old one
+  # terminates — a real overlap window for any change that pairs a schema
+  # migration with new application behavior (found reviewing the
+  # email-verification backfill migration, 2026-08-04: a registration
+  # landing on the outgoing old-code pod during that overlap could get
+  # swept into the new pod's "grandfather existing users" backfill and end
+  # up verified without ever verifying). Recreate costs nothing extra —
+  # already single-replica, so there's no availability benefit from the
+  # rolling surge to give up.
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: lr-backend

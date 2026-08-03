@@ -1,5 +1,7 @@
 package com.be.web.handler;
 
+import com.be.domain.exception.EmailNotVerifiedException;
+import com.be.domain.exception.InvalidVerificationTokenException;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -121,5 +123,41 @@ public class GlobalExceptionHandler {
         log.debug("Bad credentials exception: {}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body);
+    }
+
+    /**
+     * Correct password, but the account's email was never confirmed. A
+     * distinct "code" field (not just the message string) lets the
+     * frontend reliably show an actionable "verify your email" prompt
+     * instead of a generic invalid-credentials error.
+     */
+    @ExceptionHandler(EmailNotVerifiedException.class)
+    public ResponseEntity<Map<String, Object>> handleEmailNotVerified(EmailNotVerifiedException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put("error", "Forbidden");
+        body.put("code", "EMAIL_NOT_VERIFIED");
+        body.put("message", ex.getMessage());
+
+        log.debug("Login blocked, email not verified: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    /**
+     * /verify-email's token didn't match any stored hash, or matched but
+     * has expired.
+     */
+    @ExceptionHandler(InvalidVerificationTokenException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidVerificationToken(InvalidVerificationTokenException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Bad Request");
+        body.put("code", "INVALID_VERIFICATION_TOKEN");
+        body.put("message", ex.getMessage());
+
+        log.debug("Invalid verification token: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }
 }

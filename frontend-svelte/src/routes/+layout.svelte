@@ -2,6 +2,7 @@
 	import type { Pathname } from '$app/types';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import { afterNavigate } from '$app/navigation';
 	import { locales, localizeHref, getLocale } from '$lib/paraglide/runtime';
 	import * as m from '$lib/paraglide/messages.js';
 	import { isAuthenticated, clearSession, getStoredRole } from '$lib/api';
@@ -13,12 +14,13 @@
 
 	let mobileOpen = $state(false);
 	// isAuthenticated() reads localStorage — only known once mounted in the
-	// browser, hence the effect rather than an initializer (adapter-static
-	// prerenders this layout with no window at all).
+	// browser, hence checking it explicitly rather than at initializer time
+	// (adapter-static prerenders this layout with no window at all).
 	let loggedIn = $state(false);
 	let roleAreaHref = $state('/dashboard');
 	let roleAreaLabel = $state('');
-	$effect(() => {
+
+	function refreshAuthState() {
 		loggedIn = isAuthenticated();
 		const role = getStoredRole();
 		if (role === 'ADMIN' || role === 'BUSINESS_OWNER') {
@@ -31,6 +33,20 @@
 			roleAreaHref = '/dashboard';
 			roleAreaLabel = m.nav_dashboard();
 		}
+	}
+
+	// Nav kept showing "Anmelden" after a successful login — isAuthenticated()/
+	// getStoredRole() read localStorage, which isn't reactive Svelte state, so
+	// a plain $effect() here only ever ran once on mount and never again.
+	// SvelteKit's client router doesn't remount this root layout on the
+	// goto('/dashboard') that follows login, so nothing re-checked
+	// localStorage after persistSession() wrote the new session. afterNavigate
+	// fires after every client-side navigation completes (including that
+	// post-login redirect) as well as on first load, so this actually reacts
+	// to login/logout instead of only ever reflecting whatever was true at
+	// the moment this layout first mounted.
+	afterNavigate(() => {
+		refreshAuthState();
 	});
 
 	function handleLogout() {

@@ -23,9 +23,14 @@ export interface LoginResponse {
 
 export class ApiError extends Error {
 	status: number;
-	constructor(message: string, status: number) {
+	// Stable machine-readable discriminator from GlobalExceptionHandler.java
+	// (e.g. "EMAIL_NOT_VERIFIED") — for anything the UI needs to branch on,
+	// don't parse the human message string, that's for display only.
+	code?: string;
+	constructor(message: string, status: number, code?: string) {
 		super(message);
 		this.status = status;
+		this.code = code;
 	}
 }
 
@@ -37,7 +42,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 	const text = await res.text();
 	const data = text ? JSON.parse(text) : null;
 	if (!res.ok) {
-		throw new ApiError(data?.message ?? data?.error ?? `HTTP ${res.status}`, res.status);
+		throw new ApiError(data?.message ?? data?.error ?? `HTTP ${res.status}`, res.status, data?.code);
 	}
 	return data as T;
 }
@@ -49,15 +54,40 @@ export function login(email: string, password: string) {
 	});
 }
 
+export interface RegistrationResponse {
+	message: string;
+	email: string;
+}
+
+// Registering no longer logs the user in (LR: email verification is now
+// mandatory before login) — the response is just a "check your email"
+// confirmation, not a session.
 export function register(input: {
 	firstName: string;
 	lastName: string;
 	email: string;
 	password: string;
 }) {
-	return request<LoginResponse>('/auth/register', {
+	return request<RegistrationResponse>('/auth/register', {
 		method: 'POST',
 		body: JSON.stringify(input)
+	});
+}
+
+export function verifyEmail(token: string) {
+	return request<void>('/auth/verify-email', {
+		method: 'POST',
+		body: JSON.stringify({ token })
+	});
+}
+
+// Always resolves regardless of whether the email exists or is already
+// verified — the backend deliberately never reveals which, to avoid
+// account enumeration (see AuthService.resendVerification).
+export function resendVerification(email: string) {
+	return request<void>('/auth/resend-verification', {
+		method: 'POST',
+		body: JSON.stringify({ email })
 	});
 }
 

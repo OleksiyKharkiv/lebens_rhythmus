@@ -30,6 +30,9 @@
 	"login_password_label": "Passwort",
 	"login_submit": "Login",
 	"login_forgot_password": "Passwort vergessen?",
+	"login_email_not_verified": "Bitte bestätige zuerst deine E-Mail-Adresse.",
+	"login_resend_verification": "Bestätigungs-E-Mail erneut senden",
+	"login_resend_sent": "E-Mail wurde erneut gesendet — bitte Posteingang prüfen.",
 
 	"register_title": "Registrieren",
 	"register_firstname_label": "Vorname",
@@ -40,7 +43,15 @@
 	"register_terms_label": "Ich akzeptiere die Allgemeinen Geschäftsbedingungen",
 	"register_privacy_label": "Ich akzeptiere die Datenschutzbestimmungen",
 	"register_submit": "Registrieren",
+	"register_success_title": "Fast geschafft!",
+	"register_success_body": "Wir haben eine Bestätigungs-E-Mail an {email} gesendet. Bitte klicke auf den Link darin, um dein Konto zu aktivieren.",
 	"required_note": "Pflichtfelder",
+
+	"verify_email_title": "E-Mail-Bestätigung",
+	"verify_email_loading": "Wird bestätigt…",
+	"verify_email_success": "Deine E-Mail-Adresse wurde bestätigt! Du kannst dich jetzt anmelden.",
+	"verify_email_error": "Der Bestätigungslink ist ungültig oder abgelaufen.",
+	"verify_email_go_to_login": "Zum Login",
 
 	"footer_impressum": "Impressum",
 	"footer_datenschutz": "Datenschutz",

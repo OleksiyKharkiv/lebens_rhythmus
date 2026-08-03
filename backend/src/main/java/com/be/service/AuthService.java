@@ -2,8 +2,10 @@ package com.be.service;
 
 import com.be.config.JwtUtils;
 import com.be.domain.entity.User;
+import com.be.domain.exception.EmailNotVerifiedException;
 import com.be.web.dto.request.UserLoginRequestDTO;
 import com.be.web.dto.request.UserRegistrationDTO;
+import com.be.web.dto.response.RegistrationResponseDTO;
 import com.be.web.dto.response.UserLoginResponseDTO;
 import com.be.web.mapper.UserMapper;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +28,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
     private final JwtUtils jwtUtils;
+    private final EmailVerificationService emailVerificationService;
 
     /**
      * Authenticates user; returns token on valid credentials
@@ -47,6 +50,14 @@ public class AuthService {
             throw new BadCredentialsException("Invalid credentials");
         }
 
+        // Checked AFTER the password match, deliberately — revealing
+        // "unverified" before the password is confirmed would let anyone
+        // probe whether an email is registered/verified without knowing
+        // the password at all.
+        if (!user.isEmailVerified()) {
+            throw new EmailNotVerifiedException("Please verify your email before logging in");
+        }
+
         userService.resetFailedLoginAttempts(user.getEmail());
 
         String token = jwtUtils.generateToken(user);
@@ -57,10 +68,11 @@ public class AuthService {
     }
 
     /**
-     * Registers user; returns token for a new account
+     * Registers user and emails a verification link — no longer logs the
+     * user in immediately, since login now requires a verified email.
      */
     @Transactional
-    public UserLoginResponseDTO register(UserRegistrationDTO dto) {
+    public RegistrationResponseDTO register(UserRegistrationDTO dto) {
         if (userService.existsByEmail(dto.getEmail())) {
             throw new IllegalArgumentException("Email already exists");
         }
@@ -75,10 +87,30 @@ public class AuthService {
 
         User saved = userService.createUser(user);
 
-        String token = jwtUtils.generateToken(saved);
-        long expiresInSec = jwtUtils.getExpirationTime();
+        emailVerificationService.sendVerificationEmail(saved);
 
-        return userMapper.toLoginResponseDTO(saved, token, expiresInSec,
-                Collections.emptyList(), Collections.emptyList());
+        return RegistrationResponseDTO.builder()
+                .message("Please check your email to confirm your account.")
+                .email(saved.getEmail())
+                .build();
+    }
+
+    /**
+     * Confirms the link clicked from the verification email.
+     */
+    public void verifyEmail(String token) {
+        emailVerificationService.verifyToken(token);
+    }
+
+    /**
+     * Re-sends the verification email. Always succeeds from the caller's
+     * point of view regardless of whether the email exists or is already
+     * verified — revealing that would let anyone enumerate registered
+     * accounts by probing this endpoint.
+     */
+    public void resendVerification(String email) {
+        userService.findByEmail(email)
+                .filter(user -> !user.isEmailVerified())
+                .ifPresent(emailVerificationService::sendVerificationEmail);
     }
 }

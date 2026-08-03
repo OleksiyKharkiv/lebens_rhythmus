@@ -26,6 +26,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByEmailVerifiedTrue();
 
+    Optional<User> findByVerificationTokenHash(String verificationTokenHash);
+
     // Security related
     @Modifying
     @Query("UPDATE User u SET u.failedLoginAttempts = u.failedLoginAttempts + 1 WHERE u.email = :email")

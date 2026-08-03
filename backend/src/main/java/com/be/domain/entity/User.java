@@ -63,6 +63,12 @@ public class User {
     @Builder.Default
     private boolean emailVerified = false;
 
+    // Verification token — only the SHA-256 hash is stored, never the
+    // plaintext token (same reasoning as password hashing: a DB/backup leak
+    // must not hand out working verification links). Cleared once verified.
+    private String verificationTokenHash;
+    private LocalDateTime verificationTokenExpiresAt;
+
     // GDPR
     @Builder.Default
     private boolean acceptedTerms = false;

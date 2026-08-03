@@ -30,6 +30,9 @@
 	"login_password_label": "Password",
 	"login_submit": "Log in",
 	"login_forgot_password": "Forgot your password?",
+	"login_email_not_verified": "Please confirm your email address first.",
+	"login_resend_verification": "Resend confirmation email",
+	"login_resend_sent": "Email sent again — please check your inbox.",
 
 	"register_title": "Sign up",
 	"register_firstname_label": "First name",
@@ -40,7 +43,15 @@
 	"register_terms_label": "I accept the Terms & Conditions",
 	"register_privacy_label": "I accept the Privacy Policy",
 	"register_submit": "Sign up",
+	"register_success_title": "Almost there!",
+	"register_success_body": "We've sent a confirmation email to {email}. Please click the link inside it to activate your account.",
 	"required_note": "Required fields",
+
+	"verify_email_title": "Email confirmation",
+	"verify_email_loading": "Confirming…",
+	"verify_email_success": "Your email address has been confirmed! You can log in now.",
+	"verify_email_error": "This confirmation link is invalid or has expired.",
+	"verify_email_go_to_login": "Go to login",
 
 	"footer_impressum": "Legal notice",
 	"footer_datenschutz": "Privacy",

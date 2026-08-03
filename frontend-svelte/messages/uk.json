@@ -30,6 +30,9 @@
 	"login_password_label": "Пароль",
 	"login_submit": "Увійти",
 	"login_forgot_password": "Забули пароль?",
+	"login_email_not_verified": "Будь ласка, спочатку підтвердьте свою електронну адресу.",
+	"login_resend_verification": "Надіслати лист підтвердження ще раз",
+	"login_resend_sent": "Лист надіслано повторно — перевірте пошту.",
 
 	"register_title": "Реєстрація",
 	"register_firstname_label": "Ім'я",
@@ -40,7 +43,15 @@
 	"register_terms_label": "Я приймаю Умови використання",
 	"register_privacy_label": "Я приймаю Політику конфіденційності",
 	"register_submit": "Зареєструватися",
+	"register_success_title": "Ще трохи!",
+	"register_success_body": "Ми надіслали лист підтвердження на {email}. Перейдіть за посиланням у листі, щоб активувати акаунт.",
 	"required_note": "Обов'язкові поля",
+
+	"verify_email_title": "Підтвердження email",
+	"verify_email_loading": "Підтверджуємо…",
+	"verify_email_success": "Вашу email-адресу підтверджено! Тепер можна увійти.",
+	"verify_email_error": "Посилання для підтвердження недійсне або застаріле.",
+	"verify_email_go_to_login": "До входу",
 
 	"footer_impressum": "Правова інформація",
 	"footer_datenschutz": "Конфіденційність",

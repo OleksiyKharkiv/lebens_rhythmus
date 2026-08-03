@@ -125,9 +125,14 @@ public class SecurityConfig {
 
                 .authorizeHttpRequests(a -> a
                         // ===== PUBLIC AUTH =====
+                        // verify-email/resend-verification added alongside the new email
+                        // verification flow — both are hit by an unauthenticated visitor
+                        // (link in an email, or the "resend" button on the login page).
                         .requestMatchers(HttpMethod.POST,
                                 "/api/v1/auth/login",
-                                "/api/v1/auth/register"
+                                "/api/v1/auth/register",
+                                "/api/v1/auth/verify-email",
+                                "/api/v1/auth/resend-verification"
                         ).permitAll()
 
                         // ===== PUBLIC READ =====
