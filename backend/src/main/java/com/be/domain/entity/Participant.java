@@ -1,5 +1,6 @@
 package com.be.domain.entity;
 
+import com.be.config.crypto.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,15 +19,24 @@ public class Participant {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // DSGVO-sensitive PII — encrypted at rest, see EncryptedStringConverter.
+    // email is deliberately NOT encrypted (UNIQUE constraint — AES-GCM's
+    // random IV would break real duplicate detection). birthDate is
+    // deliberately NOT encrypted either — it's a native DATE column and the
+    // current converter is String-only; a LocalDate-specific converter is
+    // tracked as separate follow-up work, not solved here.
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(nullable = false)
     private String firstName;
 
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(nullable = false)
     private String lastName;
 
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(nullable = false)
     private String phone;
 

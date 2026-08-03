@@ -39,9 +39,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("UPDATE User u SET u.lockUntil = :lockUntil WHERE u.email = :email")
     void lockUserAccount(@Param("email") String email, @Param("lockUntil") LocalDateTime lockUntil);
 
-    // Search operations
-    List<User> findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(String firstName, String lastName);
-
     // Statistics
     long countByRole(Role role);
 

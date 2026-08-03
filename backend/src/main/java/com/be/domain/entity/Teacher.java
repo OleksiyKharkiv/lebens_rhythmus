@@ -1,5 +1,6 @@
 package com.be.domain.entity;
 
+import com.be.config.crypto.EncryptedStringConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -18,15 +19,25 @@ public class Teacher {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // DSGVO-sensitive PII — encrypted at rest, see EncryptedStringConverter.
+    // Decryption is transparent at the JPA layer, so GET /teachers still
+    // returns the real name — this only protects the raw DB/backup contents.
+    // email is deliberately NOT encrypted: it has a UNIQUE constraint, and
+    // AES-GCM's random IV makes the same plaintext produce different
+    // ciphertext every time, which would make the constraint stop catching
+    // real duplicates (see EncryptedStringConverter's own class javadoc).
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(nullable = false)
     private String firstName;
 
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(nullable = false)
     private String lastName;
 
     @Column(nullable = false, unique = true)
     private String email;
 
+    @Convert(converter = EncryptedStringConverter.class)
     @Column(nullable = false)
     private String phone;
 

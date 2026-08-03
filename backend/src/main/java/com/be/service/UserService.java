@@ -163,8 +163,24 @@ public class UserService {
         return userRepository.findByRole(role);
     }
 
+    /**
+     * firstName/lastName are encrypted at rest (EncryptedStringConverter,
+     * AES-GCM random IV) — a SQL LIKE derived query against those columns
+     * would silently match nothing, since the DB never sees the plaintext.
+     * Interim fix: decrypt-and-filter in memory. Fine at this admin's
+     * expected user-base scale; a blind-index column is the real fix if
+     * this ever needs to scale past a full-table scan, tracked separately.
+     */
     public List<User> searchUsers(String searchTerm) {
-        return userRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(searchTerm, searchTerm);
+        if (searchTerm == null) return List.of();
+        String needle = searchTerm.toLowerCase();
+        return userRepository.findAll().stream()
+                .filter(u -> containsIgnoreCase(u.getFirstName(), needle) || containsIgnoreCase(u.getLastName(), needle))
+                .toList();
+    }
+
+    private boolean containsIgnoreCase(String value, String lowerCaseNeedle) {
+        return value != null && value.toLowerCase().contains(lowerCaseNeedle);
     }
 
     public User updateUserRole(Long userId, Role newRole) {

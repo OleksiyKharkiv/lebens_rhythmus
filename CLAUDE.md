@@ -9,7 +9,8 @@ human-facing index of the folder structure below.
 > директории, см. её собственный CLAUDE.md.
 
 ## Language conventions
-- **Chat/session dialogue:** Russian.
+- **Chat/session dialogue:** Russian, informal address ("ты", not "вы") —
+  explicit instruction 2026-07-24, applies across sessions.
 - **Code comments** (backend `.java`, frontend `.js`/`.html`/`.css` — актуальный
   исходный код, не доки): English only, always, даже в русскоязычной сессии.
   Если в файле, который редактируешь, остался русскоязычный комментарий —

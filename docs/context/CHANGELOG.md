@@ -2,6 +2,119 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-03 — feat: инструмент ре-шифрования legacy-PII, LR-011 почти закрыт
+
+### Область (`backend/src/main/java/com/be/tools/PiiReencryptionRunner.java`, `backend/src/test/java/com/be/PiiReencryptionRunnerTest.java`, `docs/tickets/tickets.md`)
+
+- **feat** — `PiiReencryptionRunner` (`@Profile("reencrypt-pii")`, полностью
+  инертен при обычном запуске приложения) — одноразовый инструмент для
+  безопасной миграции legacy plaintext в зашифрованных PII-колонках
+  (`users`/`teachers`/`participants`). Dry-run по умолчанию, `--apply`
+  для реальной записи. Работает через raw `JdbcTemplate`, не через
+  JPA/`@Convert` — иначе чтение legacy-строки уронило бы сам процесс
+  миграции раньше, чем инструмент успел бы её обработать (та же причина,
+  по которой обычный деплой против непроверенной БД тоже упал бы).
+  Идемпотентен: уже зашифрованные строки определяются реальной попыткой
+  расшифровки (GCM auth tag делает "случайное" совпадение
+  вычислительно неосуществимым), не эвристикой по длине.
+- **test** — `PiiReencryptionRunnerTest`: сеет смесь legacy-plaintext
+  (вставлен напрямую через JDBC, в обход конвертера — как выглядела бы
+  настоящая до-миграционная строка) и уже-зашифрованных строк, проверяет
+  dry-run (ничего не пишет), `--apply` (шифрует только plaintext, не
+  трогает уже зашифрованное), и — главное доказательство — что обычное
+  чтение через `UserRepository` после этого больше не падает (именно тот
+  сценарий отказа, который описывает LR-011).
+- **проверено на реальном `lr-dev`** (2026-08-03, запрос заказчика на
+  кластере): `teachers`/`participants` пусты, в `users` — один тестовый
+  аккаунт заказчика с непустым `first_name`. Реальных клиентских данных
+  нет — по решению заказчика этот один тестовый аккаунт будет удалён
+  вручную перед деплоем, инструмент ре-шифрования не понадобился для
+  этого конкретного случая, но остаётся в репозитории на будущее (если
+  реальные данные накопятся до следующего похожего изменения схемы).
+- **LR-011 почти закрыт** — остаётся: удалить один тестовый аккаунт
+  перед деплоем (команды даны в чате), и помнить, что LR-003 (бэкап)
+  всё ещё не активен на кластере — деплоить с осторожностью.
+- Полный тест-сьют бэкенда — 20 тестов, 0 ошибок.
+
+## 2026-08-03 — fix: два реальных бага, найденных architect-reviewer при шифровании PII (продолжение 2026-07-24)
+
+### Область (`backend/src/main/java/com/be/{service/UserService,domain/repository/UserRepository}.java`, `backend/src/main/resources/db/migration/V2__widen_encrypted_pii_columns.sql`, `backend/src/test/java/com/be/service/UserServiceTest.java`)
+
+- **fix (сломанный поиск)** — `UserService.searchUsers()` использовал
+  Spring Data derived query
+  `findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase`
+  (SQL `LIKE`) — после шифрования `firstName`/`lastName` это тихо всегда
+  возвращало бы пустой список (шифротекст никогда не матчится по `LIKE`).
+  Исправлено: `findAll()` + фильтрация в памяти (decrypt-and-filter) —
+  расшифровка прозрачна на уровне JPA, приемлемо для ожидаемого масштаба
+  одной студии. Blind-index колонка — правильное решение, если это
+  когда-нибудь придётся масштабировать, отдельным follow-up, не сейчас.
+  Мёртвый derived-query метод удалён из `UserRepository` (не было других
+  вызывающих — проверено `grep`).
+- **fix (риск переполнения VARCHAR(255))** — шифротекст всегда длиннее
+  исходного текста (12-байт IV + 16-байт GCM tag, затем base64 ×4/3);
+  `address` не имеет вообще никакого ограничения длины на уровне
+  приложения. Новая миграция `V2__widen_encrypted_pii_columns.sql`
+  расширяет `users.{first_name,last_name,phone,address,city,zip_code}`,
+  `teachers.{first_name,last_name,phone}`,
+  `participants.{first_name,last_name,phone}` до `TEXT` (в Postgres
+  функционально идентично неограниченному `VARCHAR`, без риска
+  когда-либо упереться в лимит снова). `iban`/`tax_id` не тронуты —
+  формат IBAN ограничен 34 символами, реального риска там нет.
+- **test** — новый `UserServiceTest` (2 теста: case-insensitive матч по
+  имени/фамилии; null-поля не роняют поиск с NPE).
+- **проверено** — полный набор бэкенд-тестов (19 тестов, включая
+  `SensitiveFieldEncryptionIntegrationTest` с применённой V2-миграцией) —
+  0 ошибок.
+
+## 2026-07-24 — security: инвентаризация шифрования чувствительных полей (DSGVO/GoBD) — Participant/User/Teacher
+
+### Область (`backend/src/main/java/com/be/domain/entity/{User,Teacher,Participant}.java`, `backend/src/test/java/com/be/SensitiveFieldEncryptionIntegrationTest.java`)
+
+- **аудит** — до этой сессии полем на шифрование были только `User.iban`/
+  `User.taxId` (подтверждено новым интеграционным тестом — см. ниже).
+  Полная инвентаризация всех сущностей нашла: `Participant` (ФИО+email+
+  телефон+дата рождения участника воркшопа — отдельная от `User` сущность,
+  без привязки к аккаунту-опекуну) не имел вообще никакой защиты;
+  `Teacher` (ФИО/телефон, частично публичный профиль через `GET /teachers`)
+  и сам `User` (ФИО/телефон/адрес/город/индекс) — тоже нет.
+- **security** — по решению заказчика 2026-07-24 добавлено
+  `@Convert(EncryptedStringConverter.class)` на:
+  `User.{firstName,lastName,phone,address,city,zipCode}`,
+  `Teacher.{firstName,lastName,phone}`,
+  `Participant.{firstName,lastName,phone}`.
+  Расшифровка прозрачна на уровне JPA — публичные ответы API (например,
+  `GET /teachers`) продолжают отдавать настоящее имя, шифруется только то,
+  что реально лежит в БД/бэкапе.
+- **сознательно НЕ зашифровано** — `email` везде (`User`/`Teacher`/
+  `Participant`): `UNIQUE`-constraint в БД, а AES-GCM даёт разный
+  шифротекст на каждый вызов для одного и того же значения — шифрование
+  сломало бы реальную проверку дублей молча (не ошибкой, а тихой потерей
+  функциональности). `birthDate`/`Participant`: нативная колонка `DATE`,
+  текущий конвертер — только `String→String`; отдельный `LocalDate`-конвертер
+  — separate follow-up, не в этой сессии. `Venue` (адрес/контакты арендованного
+  зала) — организационные данные, не персональные, DSGVO не касается.
+- **проверено вживую, не только юнит-тестом конвертера** — новый
+  `SensitiveFieldEncryptionIntegrationTest` (Testcontainers + реальный
+  Postgres): для `User`, `Teacher`, `Participant` — реальный
+  `save()` → `entityManager.flush()+clear()` → `findById()` (не
+  закэшированный Java-объект) → значения корректно расшифровались;
+  **отдельно** прочитано сырое значение колонки напрямую через JDBC, в
+  обход Hibernate — подтверждено, что в реальной БД лежит шифротекст
+  (не содержит исходное значение даже подстрокой), а `email` — как есть,
+  не тронут конвертером.
+- **⚠️ операционный риск, требующий внимания перед деплоем** — если в
+  живой `lr-dev` БД уже есть реальные строки `users`/`teachers`/
+  `participants` с открытым (не зашифрованным) `firstName`/`lastName`/
+  `phone`/`address`/`city`/`zipCode`, то после деплоя этого изменения
+  Hibernate попытается расшифровать эти старые plaintext-значения как
+  если бы это был base64(IV+ciphertext) — и упадёт с ошибкой при первом
+  же чтении такой строки. **Нужно явно подтвердить перед деплоем**: либо
+  таблицы пока пустые/тестовые, либо нужен одноразовый скрипт
+  ре-шифрования существующих данных. Резервная копия (LR-003) для отката
+  в случае проблемы **тоже ещё не активна на кластере** — дополнительная
+  причина не деплоить это без явного решения.
+
 ## 2026-07-24 — infra: интерим-бэкапы PostgreSQL — CronJob + restic + IDrive e2 (LR-003)
 
 ### Область (`devops/helm/lr-app/{templates/postgres-backup-{cronjob,configmap}.yaml,values.yaml}`, `docs/runbooks/infra-fix-shutdown.md`, `docs/tickets/tickets.md`)

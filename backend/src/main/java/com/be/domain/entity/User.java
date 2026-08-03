@@ -34,14 +34,22 @@ public class User {
     @Column(nullable = false)
     private String password;
 
-    // Profile
+    // Profile — DSGVO-sensitive PII, encrypted at rest (see
+    // EncryptedStringConverter). email stays plaintext (UNIQUE constraint,
+    // used for login lookups — GCM's random IV would break both).
+    // birthDate stays plaintext too: native DATE column, current converter
+    // is String-only, a LocalDate-specific one is separate follow-up work.
+    @Convert(converter = EncryptedStringConverter.class)
     @Size(min = 2, max = 50)
     private String firstName;
 
+    @Convert(converter = EncryptedStringConverter.class)
     @Size(min = 2, max = 50)
     private String lastName;
 
+    @Convert(converter = EncryptedStringConverter.class)
     private String phone;
+
     private LocalDate birthDate;
 
     // Security
@@ -69,9 +77,15 @@ public class User {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    // Account address
+    // Account address — encrypted at rest (see note above); country stays
+    // plaintext (single low-cardinality value, not identifying by itself).
+    @Convert(converter = EncryptedStringConverter.class)
     private String address;
+
+    @Convert(converter = EncryptedStringConverter.class)
     private String city;
+
+    @Convert(converter = EncryptedStringConverter.class)
     private String zipCode;
 
     @Builder.Default
