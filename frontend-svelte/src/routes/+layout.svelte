@@ -6,7 +6,6 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { isAuthenticated, clearSession, getStoredRole } from '$lib/api';
 	import './layout.css';
-	import favicon from '$lib/assets/favicon.svg';
 
 	let { children } = $props();
 
@@ -48,8 +47,6 @@
 		mobileOpen = false;
 	}
 </script>
-
-<svelte:head><link rel="icon" href={favicon} /></svelte:head>
 
 <div class="flex min-h-screen flex-col bg-ink text-paper">
 	<header
