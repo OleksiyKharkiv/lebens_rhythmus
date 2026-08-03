@@ -1,0 +1,18 @@
+package com.be.web.dto.request;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ResendVerificationRequestDTO {
+    @NotBlank(message = "Email is mandatory")
+    @Email(message = "Email should be valid")
+    private String email;
+}
