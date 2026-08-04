@@ -2,6 +2,29 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-04 — fix: `/actuator/health` 503 в проде из-за MailHealthIndicator (нашли по упавшему smoke-test)
+
+### Область (`backend/src/main/resources/application.properties`)
+
+- **fix (прод-инцидент, найден по failed smoke-test job в GitLab CI)** —
+  после деплоя email-верификации (коммиты `56d1f87`/`229830b7`)
+  `curl https://api.tlab29.com/actuator/health` стал отдавать 503. Причина:
+  `spring-boot-starter-mail` автоматически регистрирует
+  `MailHealthIndicator` (Spring Boot actuator,
+  `MailHealthContributorAutoConfiguration` — срабатывает на любой bean
+  `MailSender`) — он реально пробует SMTP-коннект как часть
+  `/actuator/health`. Без настоящих Brevo-кредов (LR-013 всё ещё open)
+  этот пробник падает, тащит агрегированный статус health в `DOWN` →
+  Spring Boot по умолчанию маппит `DOWN` в HTTP 503. Хуже того:
+  readiness/liveness пробы пода в `backend-deployment.yaml` смотрят на тот
+  же `/actuator/health` — то есть под мог реально стать `NotReady` или
+  начать рестартовать, не только упасть CI-шаг.
+- **fix** — `management.health.mail.enabled=false`. Отключает только
+  почтовый health-индикатор, не весь `/actuator/health` — реальная логика
+  приложения (логин, регистрация и т.д.) это не проверяет и не должна
+  зависеть от того, настроен ли SMTP.
+- Полный бэкенд-сьют перепрогнан после фикса — 32/32, 0 ошибок.
+
 ## 2026-08-04 — feat: email-верификация при регистрации (Brevo SMTP) + фикс двух фронтенд-багов
 
 ### Область (backend: `service/{AuthService,EmailVerificationService,MailService}.java`, `domain/exception/{EmailNotVerified,InvalidVerificationToken}Exception.java`, `web/{controller/AuthController,handler/GlobalExceptionHandler}.java`, `web/dto/**`, `domain/entity/User.java`, `domain/repository/UserRepository.java`, `db/migration/V3__add_email_verification.sql`, `build.gradle`, `application.properties`; frontend: `src/lib/api.ts`, `src/routes/{login/+page.svelte,verify-email/+page.svelte,+layout.svelte}`, `messages/{de,en,uk}.json`)
