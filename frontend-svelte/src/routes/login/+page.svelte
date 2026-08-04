@@ -30,6 +30,8 @@
 	// Registration no longer logs the user in (email verification is
 	// mandatory first) — set once registration succeeds, replaces the form.
 	let regSuccessEmail = $state('');
+	let regResendBusy = $state(false);
+	let regResendSent = $state(false);
 
 	function redirectForRole(role: string) {
 		const target = role === 'ADMIN' ? '/admin' : role === 'TEACHER' ? '/teacher' : '/dashboard';
@@ -68,6 +70,19 @@
 			resendSent = true;
 		} finally {
 			resendBusy = false;
+		}
+	}
+
+	// Separate busy/sent state from the login-failure resend above — same
+	// backend call, different screen (straight after registering, not after
+	// a failed login attempt), so they shouldn't share one flag.
+	async function handleRegResendVerification() {
+		regResendBusy = true;
+		try {
+			await resendVerification(regSuccessEmail);
+			regResendSent = true;
+		} finally {
+			regResendBusy = false;
 		}
 	}
 
@@ -152,6 +167,20 @@
 		{#if regSuccessEmail}
 			<h2 class="font-display text-2xl font-semibold text-paper">{m.register_success_title()}</h2>
 			<p class="mt-4 text-paper-dim">{m.register_success_body({ email: regSuccessEmail })}</p>
+			<div class="mt-4">
+				{#if regResendSent}
+					<p class="text-sm text-success">{m.login_resend_sent()}</p>
+				{:else}
+					<button
+						type="button"
+						onclick={handleRegResendVerification}
+						disabled={regResendBusy}
+						class="text-sm text-teal underline hover:no-underline disabled:opacity-50"
+					>
+						{m.login_resend_verification()}
+					</button>
+				{/if}
+			</div>
 		{:else}
 		<form onsubmit={handleRegister}>
 			<h2 class="font-display text-2xl font-semibold text-paper">{m.register_title()}</h2>
