@@ -94,6 +94,23 @@ spec:
                 secretKeyRef:
                   name: lr-backend-secrets
                   key: field-encryption-key
+            # Brevo SMTP relay (email verification, LR-013) — until these
+            # keys actually exist on lr-backend-secrets, application.
+            # properties' ${SMTP_USERNAME:}/${SMTP_PASSWORD:} defaults keep
+            # them empty and registration emails silently fail to send
+            # (caught, logged, doesn't 500 — see EmailVerificationService).
+            - name: SMTP_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: lr-backend-secrets
+                  key: smtp-username
+                  optional: true
+            - name: SMTP_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: lr-backend-secrets
+                  key: smtp-password
+                  optional: true
           livenessProbe:
             httpGet:
               path: /actuator/health

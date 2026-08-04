@@ -15,14 +15,21 @@ backend:
   env:
     SPRING_DATASOURCE_URL: jdbc:postgresql://lr-postgres:5432/lebens_rhythmus
     JWT_EXPIRATION: "86400000"
-  # JWT_SECRET / FIELD_ENCRYPTION_KEY: NOT set via values/--set anymore — read
-  # from Secret `lr-backend-secrets` (keys: jwt-secret, field-encryption-key),
-  # created out-of-band, same convention as `lr-db-credentials`. Must exist in
-  # namespace `lr-dev` BEFORE `helm upgrade --install`, e.g.:
+  # JWT_SECRET / FIELD_ENCRYPTION_KEY / SMTP_USERNAME / SMTP_PASSWORD: NOT set
+  # via values/--set — read from Secret `lr-backend-secrets`, created
+  # out-of-band, same convention as `lr-db-credentials`. jwt-secret/
+  # field-encryption-key must exist BEFORE `helm upgrade --install` (pod
+  # won't start without them). smtp-username/smtp-password are `optional:
+  # true` in backend-deployment.yaml (LR-013) — safe to add later without
+  # touching this file again, just patch the existing secret:
   #   kubectl -n lr-dev create secret generic lr-backend-secrets \
   #     --from-literal=jwt-secret=<32+ byte random string> \
   #     --from-literal=field-encryption-key=<base64, 32 raw bytes>
   #   openssl rand -base64 32   # generates a valid field-encryption-key
+  #
+  #   # Adding SMTP creds later, without touching the two keys above:
+  #   kubectl -n lr-dev patch secret lr-backend-secrets -p \
+  #     '{"stringData":{"smtp-username":"<brevo smtp login>","smtp-password":"<brevo smtp key>"}}'
 
 postgres:
   db: lebens_rhythmus  # PostgreSQL database name
