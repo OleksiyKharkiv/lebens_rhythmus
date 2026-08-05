@@ -2,6 +2,145 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-05 — closed: LR-015 — дашборд-метрики M1/M4/M5/M6 (M2/M3 отложены на LR-017)
+
+### Область (backend: `web/dto/response/{GroupFillRateDTO,RegistrationTrendPointDTO,WorkshopAlertDTO,RetentionDTO,AdminMetricsDTO}.java`, `service/MetricsService.java`, `web/controller/MetricsController.java`, `domain/repository/{UserRepository,EnrollmentRepository}.java`, `test/.../MetricsServiceTest.java`; frontend: `lib/api.ts`, `routes/admin/+page.svelte`, `messages/*.json`)
+
+- **feat** — новый `GET /api/v1/admin/metrics` (`ADMIN`/`BUSINESS_OWNER`),
+  реализует М1 (заполненность по группам, считает только `PENDING`+
+  `CONFIRMED`, не `CANCELLED` — сознательное расхождение с `Group.
+  getEnrolledCount()`, который всё ещё считает любой статус на публичной
+  странице воркшопа, отдельный, не исправленный здесь пробел), М4 (тренд
+  новых регистраций за 30 дней, только `Role.USER`), М5 (алерты по
+  многоступенчатым порогам — 7д/<30% инфо, 5д/<50% предупреждение,
+  3д/<70% срочно, 1д/<90% критично — финально подтверждены заказчиком),
+  М6 (retention — пользователь с `CONFIRMED`-записью в ≥2 разных
+  воркшопах, только `Role.USER`).
+- **feat** — `admin/+page.svelte` дополнен четырьмя секциями метрик рядом
+  с уже существующей статистикой пользователей/ближайшими воркшопами.
+- **test** — `MetricsServiceTest` (параметризованный, Mockito, без
+  Spring-контекста) — 13 граничных кейсов для порогов М5, включая "ровно
+  на границе" (строгое "<": попадание точно в порог его НЕ пробивает).
+- **review** — `architect-reviewer` пройден, один must-fix найден и
+  исправлен: `EnrollmentRepository.countDistinctWorkshopsPerUserWithStatus`
+  изначально не фильтровал по роли — `EnrollmentController.enroll`
+  разрешает создавать enrollment-записи не только `USER`, но и `TEACHER`/
+  `ADMIN`/`BUSINESS_OWNER`, то есть тестовые/служебные записи могли раздуть
+  М6. Добавлен параметр `role` в JPQL-запрос, вызов ограничен `Role.USER`
+  (симметрично М4).
+- **verify** — `./gradlew test` зелёный (полный сьют, включая новый
+  `MetricsServiceTest`), `npm run check` — 0 ошибок.
+- LR-015 закрыт полностью в рамках согласованного MVP-скоупа, перенесён
+  в `docs/tickets/archive.md`. М2/М3 остаются в `docs/tickets/tickets.md`
+  как заблокированные на LR-017 (механизм подтверждения регистрации/оплаты).
+
+## 2026-08-05 — feat: LR-015 Б.4/Б.5 — venue переехал на Group, добавлен room + UI для возрастных групп
+
+### Область (backend: `db/migration/V4__*.sql`, `domain/entity/{Group,Venue,Workshop}.java`, `service/{GroupService,VenueService,WorkshopService}.java`, `web/mapper/{GroupMapper,VenueMapper,WorkshopMapper}.java`, `web/dto/**`; frontend: `lib/api.ts`, `routes/admin/{groups,venues,workshops,age-groups}/+page.svelte`, `routes/admin/+layout.svelte`, `routes/workshops/**`, `messages/*.json`)
+
+- **feat/migration** — `V4__venue_to_group_level_plus_room.sql`: `venue_id`
+  перенесён с `workshops` на `workshop_groups` (архитектурное решение
+  заказчика, Круглый стол #3 — локация принципиально привязана к
+  конкретной сессии/группе, не к воркшопу целиком), `venues` получил поле
+  `room` (одно физическое место может иметь несколько независимо
+  бронируемых залов). Данные существующих воркшопов скопированы на все их
+  группы перед дропом старой колонки — не потеряны. По ходу пойман и
+  исправлен баг миграции: join использовал несуществующую колонку `w.id`
+  вместо реальной `w.workshop_id` (`Workshop.java`'s `@Column(name =
+  "workshop_id")`) — упало на `./gradlew test` (Flyway против реального
+  Postgres через Testcontainers), не в проде.
+- **feat** — возрастные группы для `Group`: схема уже поддерживала
+  (`Group.ageGroup`), добавлен UI-флоу — новая admin-страница
+  `admin/age-groups` (CRUD, зеркало `admin/venues`) + select в форме
+  `admin/groups`. `GroupDTO.ageGroupName` composed server-side
+  ("titleDe (min–max)"). Дефолтную "все возрасты" сознательно не завели
+  (заказчик подтвердил, Круглый стол #3, п. 2.3).
+- **fix** — `GroupMapper.toDto()` (маппер, который реально используется
+  `GroupController`'ом на `/api/v1/groups`, в отличие от `WorkshopMapper.
+  toGroupDTO()` для публичной страницы воркшопа) не отдавал `venueId`/
+  `venueName` вообще — секция "Место/зал" в самой админке всегда была
+  пустой. Исправлено.
+- **fix** — `GroupService.update()` (ручное копирование полей на managed
+  entity, установленный паттерн из-за raw-entity binding в
+  `GroupController`) не копировал `venue` — редактирование зала у
+  существующей группы тихо не сохранялось. Исправлено (та же строка
+  рядом с уже существующими `setActivity`/`setAgeGroup`/`setTeacher`).
+- **review** — `architect-reviewer` пройден, approve as-is. Один
+  follow-up без блокировки: `workshop_groups.venue_id` FK без `ON
+  DELETE` — не регрессия (тот же пробел уже был у старой
+  `workshops.venue_id` в V1__baseline.sql), тикет по необходимости.
+- **verify** — `./gradlew test` зелёный (полный сьют), `npm run check`
+  (svelte-check) — 0 ошибок, 1084 файла.
+
+## 2026-08-05 — docs: Круглый стол #3 — скоуп admin/owner-дашборда согласован (LR-015/016/017)
+
+### Область (`docs/tickets/tickets.md`, `.claude/settings.local.json`, `CLAUDE.md`)
+
+- **docs** — заказчик подтвердил весь скоуп admin-дашборда: `venue`
+  переносится с `Workshop` на `Group` (не просто новое поле), `Venue`
+  получает поле `room`, авторство воркшопов и дефолтная возрастная
+  группа сознательно не делаются для MVP, роли `TEACHER`/`BUSINESS_OWNER`
+  архитектурно предусмотрены, но не реализуются отдельно в MVP (весь
+  функционал — под `ADMIN`). Метрики М1/М3/М4/М5/М6 — строим; М2
+  (реальная выручка) — MVP-прокси через цену×регистрации, настоящая
+  оплата (Stripe/Numi) — отдельная задача. Заведены `LR-015` (основной
+  скоуп), `LR-016` (авто-проверка конфликтов зала, сознательно low
+  priority/не MVP), `LR-017` (механизм подтверждения участия — блокирует
+  точность М2/М3, начинать реализацию рано).
+- **infra** — `docs/context/CHANGELOG.md` добавлен в allow-list
+  `.claude/settings.local.json` (по аналогии с `docs/tickets/*.md`) —
+  обновление CHANGELOG после закрытия работы больше не требует
+  permission prompt. `CLAUDE.md` обновлён — явно зафиксировано, что
+  заведение нового тикета "в моменте" без повторного спроса допустимо
+  только если пользователь реально подтвердил его создание в диалоге,
+  не как самостоятельное решение без вопроса в первый раз.
+
+## 2026-08-04 — closed: Brevo SMTP настроен вживую, email-верификация подтверждена рабочей в проде (LR-013)
+
+### Область (`devops/helm/lr-app/{templates/backend-deployment.yaml,values.yaml}`, `frontend-svelte/src/routes/login/+page.svelte`, прод-БД — ручная очистка)
+
+- **infra** — `SMTP_USERNAME`/`SMTP_PASSWORD` подключены в
+  `backend-deployment.yaml` (`secretKeyRef` на `lr-backend-secrets`,
+  `optional: true` — под продолжает стартовать и без этих ключей, подхватит
+  их на следующий рестарт после появления). `values.yaml` — обновлена
+  документация `kubectl patch secret` для добавления SMTP-ключей без
+  трогания существующих `jwt-secret`/`field-encryption-key`.
+- **готово вручную заказчиком** — домен `tlab29.com` аутентифицирован в
+  Brevo (TXT-верификация + SPF + DKIM CNAME `brevo1._domainkey`, все —
+  DNS only в Cloudflare, без прокси — обязательно для email-аутентификации,
+  прокси сломал бы DNS-lookup для принимающих серверов), добавлен sender
+  `noreply@tlab29.com` / "Lebens Rhythmus", SMTP-креды (Brevo выдаёт
+  логин вида `bNNN***@smtp-brevo.com`, не email аккаунта — отличается от
+  более старых Brevo-аккаунтов) внесены в `lr-backend-secrets` через
+  `kubectl patch`, под перезапущен.
+- **найден и исправлен реальный прод-баг (не новый код, старые данные)**
+  — при логине `hudoshin7605@gmail.com` (id=1) — 500,
+  `ArrayIndexOutOfBoundsException: last source index 12 out of bounds for
+  byte[5]` в `EncryptedStringConverter.convertToEntityAttribute`.
+  Подтверждено живым логом: это ровно тот сценарий, что был описан в
+  LR-011 как известный риск — `first_name` этого аккаунта остался
+  plaintext с домиграционных времён, `PiiReencryptionRunner` для него не
+  запускался. Данные были не нужны — решение: удалить аккаунт, не чинить.
+- **прод-данные, ручная очистка** — три тестовых аккаунта (`hudoshin7605@
+  gmail.com` id=1 — сломанный legacy plaintext, `klanov0705@gmail.com`
+  id=2, `claude-debug-test-1@example.com` id=3 — созданы этой сессией при
+  диагностике/тестах) удалены из `lr-dev` вместе с зависимыми строками
+  (`feedbacks`/`user_notifications`/`enrollments`/`payments`/`orders` по
+  `user_id`, `workshops.teacher_id` обнулён, не удалялся). Промежуточный
+  шаг — `email_verified = false` вместо `DELETE` (см. LR-011/LR-013
+  историю) — использовался для проверки, что логин реально блокирует
+  неподтверждённые аккаунты, прежде чем данные снесли целиком.
+- **feat** — кнопка "отправить письмо повторно" добавлена и на экран
+  успешной регистрации ("проверьте почту"), не только на экран неудачного
+  логина (там уже была) — раньше при "письмо не пришло" сразу после
+  регистрации восстановиться было нечем. Отдельное `busy`/`sent`-состояние
+  от login-варианта (тот же API-вызов, разные экраны). Проверено вживую:
+  реальная форма регистрации → успех → resend → "письмо отправлено
+  повторно", без ошибок в консоли.
+- **подтверждено заказчиком** — фича работает в проде end-to-end:
+  регистрация → письмо реально приходит → подтверждение по ссылке →
+  логин.
+
 ## 2026-08-04 — fix: `/actuator/health` 503 в проде из-за MailHealthIndicator (нашли по упавшему smoke-test)
 
 ### Область (`backend/src/main/resources/application.properties`)

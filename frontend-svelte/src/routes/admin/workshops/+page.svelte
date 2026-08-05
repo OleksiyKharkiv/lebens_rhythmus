@@ -7,12 +7,10 @@
 		updateWorkshop,
 		deleteWorkshop,
 		getAllUsers,
-		getVenues,
 		type WorkshopListItem,
 		type WorkshopCreateDTO,
 		type WorkshopStatus,
-		type UserBasicDTO,
-		type VenueDTO
+		type UserBasicDTO
 	} from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
@@ -23,7 +21,6 @@
 
 	let workshops = $state<WorkshopListItem[] | null>(null);
 	let teachers = $state<UserBasicDTO[]>([]);
-	let venues = $state<VenueDTO[]>([]);
 	let error = $state(false);
 	let editingId = $state<number | null>(null);
 	let saving = $state(false);
@@ -34,7 +31,6 @@
 		teacherId: null,
 		startDate: null,
 		endDate: null,
-		venueId: null,
 		maxParticipants: null,
 		price: null,
 		status: 'DRAFT'
@@ -51,9 +47,6 @@
 		getAllUsers()
 			.then((users) => (teachers = users.filter((u) => u.role === 'TEACHER')))
 			.catch(() => {});
-		getVenues()
-			.then((data) => (venues = data))
-			.catch(() => {});
 	});
 
 	async function startEdit(w: WorkshopListItem) {
@@ -65,7 +58,6 @@
 			teacherId: detail.teacher?.id ?? null,
 			startDate: detail.startDate,
 			endDate: detail.endDate,
-			venueId: detail.venueId,
 			maxParticipants: null, // WorkshopDetailDTO doesn't expose this — see KNOWN_ISSUES.md
 			price: detail.price,
 			status: (detail.status as WorkshopStatus) ?? 'DRAFT'
@@ -113,6 +105,10 @@
 			     read back here, so this field always starts empty on edit. -->
 			<p class="mt-2 text-xs text-paper-dim">{m.admin_workshop_max_participants_note()}</p>
 		{/if}
+		<!-- venue moved to Group (LR-015) — a workshop's groups can each run
+		     at a different place/time now, so there's no single workshop-wide
+		     venue field to set here anymore; pick it per group instead. -->
+		<p class="mt-2 text-xs text-paper-dim">{m.admin_workshop_venue_moved_note()}</p>
 		<Input id="wTitle" label={m.admin_workshop_title()} required bind:value={form.title} />
 		<Textarea id="wDesc" label={m.admin_workshop_description()} bind:value={form.description} />
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -127,20 +123,6 @@
 					<option value="">—</option>
 					{#each teachers as t (t.id)}
 						<option value={t.id}>{t.firstName} {t.lastName}</option>
-					{/each}
-				</select>
-			</div>
-			<div>
-				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="wVenue">{m.admin_workshop_venue()}</label>
-				<select
-					id="wVenue"
-					value={form.venueId ?? ''}
-					onchange={(e) => (form.venueId = e.currentTarget.value ? Number(e.currentTarget.value) : null)}
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
-				>
-					<option value="">—</option>
-					{#each venues as v (v.id)}
-						<option value={v.id}>{v.name}</option>
 					{/each}
 				</select>
 			</div>

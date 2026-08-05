@@ -14,6 +14,7 @@ import java.time.LocalDateTime;
 public class VenueResponseDTO {
     private Long id;
     private String name;
+    private String room;
     private String address;
     private String city;
     private String postalCode;

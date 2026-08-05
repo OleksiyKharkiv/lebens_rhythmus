@@ -58,10 +58,10 @@ public class Workshop {
     @Column(name = "status", length = 50)
     private WorkshopStatus status;
 
-    // Reference to venue (location)
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "venue_id")
-    private Venue venue;
+    // venue moved to Group (LR-015, 2026-08-05) — a workshop's groups can
+    // run at different times, each needing its own place; venue is a
+    // property of the scheduled session, not the workshop as a whole.
+    // See V4__venue_to_group_level_plus_room.sql.
 
     // Main teacher (for multiple teachers use ManyToMany or separate TeacherWorkshop entity)
     @ManyToOne(fetch = FetchType.LAZY)

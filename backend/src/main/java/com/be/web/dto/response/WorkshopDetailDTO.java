@@ -20,8 +20,8 @@ public class WorkshopDetailDTO {
     private UserBasicDTO teacher;
     private LocalDate startDate;
     private LocalDate endDate;
-    private String venueName;
-    private Long venueId;
+    // venueName/venueId removed (LR-015) — venue is per-Group now, see
+    // GroupDTO.venueName within `groups` below, not a single workshop-wide value.
     private BigDecimal price;
     private String status;
     private List<GroupDTO> groups;

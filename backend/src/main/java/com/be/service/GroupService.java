@@ -63,6 +63,10 @@ public class GroupService {
         existingGroup.setAgeGroup(group.getAgeGroup());
         existingGroup.setLanguage(group.getLanguage());
         existingGroup.setTeacher(group.getTeacher());
+        // LR-015 — was missing entirely, unlike the other relations right
+        // above it: editing an existing group's venue silently no-op'd on
+        // save (found while wiring the admin Groups venue select).
+        existingGroup.setVenue(group.getVenue());
         existingGroup.setActive(group.isActive());
 
         return groupRepository.save(existingGroup);

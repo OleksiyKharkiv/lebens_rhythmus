@@ -41,9 +41,6 @@
 						{#if w.startDate}
 							<div><dt class="inline font-semibold text-paper">Start:</dt> <dd class="inline">{formatDate(w.startDate)}</dd></div>
 						{/if}
-						{#if w.venueName}
-							<div><dt class="inline font-semibold text-paper">Ort:</dt> <dd class="inline">{w.venueName}</dd></div>
-						{/if}
 					</dl>
 					<p class="mt-2 font-display text-teal">
 						{w.price ? `${w.price} €` : m.activities_price_on_request()}

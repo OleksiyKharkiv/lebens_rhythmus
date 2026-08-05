@@ -192,7 +192,8 @@ export interface WorkshopListItem {
 	teacher: { id: number; firstName: string; lastName: string } | null;
 	startDate: string | null;
 	endDate: string | null;
-	venueName: string | null;
+	// venueName removed (LR-015) — venue moved to Group/GroupDTO, a
+	// workshop's groups can each run at a different place now.
 	price: number | null;
 	status: string;
 }
@@ -214,7 +215,13 @@ export interface GroupDTO {
 	activityId: number | null;
 	teacherId: number | null;
 	ageGroupId: number | null;
+	// LR-015 — "titleDe (min–max)", composed server-side (GroupMapper).
+	ageGroupName: string | null;
 	languageId: number | null;
+	// LR-015 — venueName already includes the room (backend composes
+	// "name — room"), one venues row is one physical room.
+	venueId: number | null;
+	venueName: string | null;
 	active: boolean;
 }
 
@@ -233,8 +240,7 @@ export interface WorkshopDetail {
 	teacher: { id: number; firstName: string; lastName: string } | null;
 	startDate: string | null;
 	endDate: string | null;
-	venueName: string | null;
-	venueId: number | null;
+	// venueName/venueId removed (LR-015) — see each group in `groups` below.
 	price: number | null;
 	status: string;
 	groups: GroupDTO[];
@@ -377,6 +383,54 @@ export function getUserStatistics() {
 	return authRequest<UserStatistics>('/users/stats/count');
 }
 
+// ----- Admin dashboard metrics (LR-015, M1/M4/M5/M6) -----
+// M2/M3 intentionally absent — blocked on the registration/payment
+// confirmation mechanism (LR-017), not built yet.
+
+export interface GroupFillRateDTO {
+	groupId: number;
+	workshopTitle: string | null;
+	groupTitle: string;
+	startDateTime: string;
+	capacity: number;
+	enrolledCount: number;
+	fillRatio: number;
+}
+
+export interface RegistrationTrendPointDTO {
+	date: string;
+	newUsers: number;
+}
+
+export type AlertLevel = 'info' | 'warning' | 'urgent' | 'critical';
+
+export interface WorkshopAlertDTO {
+	groupId: number;
+	workshopTitle: string | null;
+	groupTitle: string;
+	startDateTime: string;
+	daysUntilStart: number;
+	fillRatio: number;
+	level: AlertLevel;
+}
+
+export interface RetentionDTO {
+	totalCustomers: number;
+	repeatCustomers: number;
+	retentionRate: number;
+}
+
+export interface AdminMetricsDTO {
+	fillRates: GroupFillRateDTO[];
+	registrationTrend: RegistrationTrendPointDTO[];
+	attentionAlerts: WorkshopAlertDTO[];
+	retention: RetentionDTO;
+}
+
+export function getAdminMetrics() {
+	return authRequest<AdminMetricsDTO>('/admin/metrics');
+}
+
 // ----- Activities -----
 
 export interface ActivityRequestDTO {
@@ -409,6 +463,9 @@ export function deleteActivity(id: number) {
 export interface VenueDTO {
 	id: number;
 	name: string;
+	// LR-015 — one physical room = one venues row (two rooms in the same
+	// building are two rows sharing name/address, distinguished by this).
+	room: string | null;
 	address: string;
 	city: string;
 	postalCode: string | null;
@@ -424,6 +481,7 @@ export interface VenueDTO {
 // string. The backend accepts '' the same way it accepts null here.
 export interface VenueRequestDTO {
 	name: string;
+	room: string;
 	address: string;
 	city: string;
 	postalCode: string;
@@ -455,6 +513,44 @@ export function deleteVenue(id: number) {
 	return authRequest<void>(`/venues/${id}`, { method: 'DELETE' });
 }
 
+// ----- Age groups -----
+
+export interface AgeGroupDTO {
+	id: number;
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	minAge: number;
+	maxAge: number;
+}
+
+export interface AgeGroupRequestDTO {
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	minAge: number;
+	maxAge: number;
+}
+
+// Same authRequest correction as getVenues() above — GET /age-groups
+// requires a valid JWT under the current SecurityConfig (not in the
+// permitAll list) even though it has no @PreAuthorize of its own.
+export function getAgeGroups() {
+	return authRequest<AgeGroupDTO[]>('/age-groups');
+}
+
+export function createAgeGroup(input: AgeGroupRequestDTO) {
+	return authRequest<AgeGroupDTO>('/age-groups', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateAgeGroup(id: number, input: AgeGroupRequestDTO) {
+	return authRequest<AgeGroupDTO>(`/age-groups/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+}
+
+export function deleteAgeGroup(id: number) {
+	return authRequest<void>(`/age-groups/${id}`, { method: 'DELETE' });
+}
+
 // ----- Workshops (admin) -----
 
 export type WorkshopStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'CANCELLED';
@@ -465,7 +561,7 @@ export interface WorkshopCreateDTO {
 	teacherId: number | null;
 	startDate: string | null;
 	endDate: string | null;
-	venueId: number | null;
+	// venueId removed (LR-015) — venue is set per-Group now, see GroupWriteDTO.venue.
 	maxParticipants: number | null;
 	price: number | null;
 	status: WorkshopStatus;
@@ -531,6 +627,9 @@ export interface GroupWriteDTO {
 	workshop: { id: number } | null;
 	teacher: { id: number } | null;
 	activity: { id: number } | null;
+	// LR-015 — where this session happens; venue moved here from Workshop.
+	venue: { id: number } | null;
+	ageGroup: { id: number } | null;
 	active: boolean;
 }
 

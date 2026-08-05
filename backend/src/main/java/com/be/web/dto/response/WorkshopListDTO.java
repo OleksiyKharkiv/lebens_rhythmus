@@ -19,7 +19,6 @@ public class WorkshopListDTO {
     private UserBasicDTO teacher;
     private LocalDate startDate;
     private LocalDate endDate;
-    private String venueName;
     private BigDecimal price;
     private String status;
 }

@@ -1,6 +1,7 @@
 package com.be.web.mapper;
 
 import com.be.domain.entity.Group;
+import com.be.domain.entity.Venue;
 import com.be.domain.entity.Workshop;
 import com.be.domain.entity.WorkshopFile;
 import com.be.domain.entity.enums.WorkshopStatus;
@@ -36,7 +37,6 @@ public class WorkshopMapper {
                 .teacher(teacher)
                 .startDate(w.getStartDate())
                 .endDate(w.getEndDate())
-                .venueName(w.getVenue() != null ? w.getVenue().getName() : null)
                 .price(w.getPrice())
                 .status(String.valueOf(w.getStatus()))
                 .build();
@@ -64,8 +64,6 @@ public class WorkshopMapper {
                 .teacher(teacher)
                 .startDate(w.getStartDate())
                 .endDate(w.getEndDate())
-                .venueName(w.getVenue() != null ? w.getVenue().getName() : null)
-                .venueId(w.getVenue() != null ? w.getVenue().getId() : null)
                 .price(w.getPrice())
                 .status(String.valueOf(w.getStatus()))
                 .groups(groups)
@@ -102,8 +100,19 @@ public class WorkshopMapper {
                 .ageGroupId(g.getAgeGroup() != null ? g.getAgeGroup().getId() : null)
                 .languageId(g.getLanguage() != null ? g.getLanguage().getId() : null)
 
+                .venueId(g.getVenue() != null ? g.getVenue().getId() : null)
+                .venueName(g.getVenue() != null ? formatVenueName(g.getVenue()) : null)
+
                 .active(g.isActive())
                 .build();
+    }
+
+    // "TLab29 — Blauer Saal" — one venues row is one physical room
+    // (LR-015), so name + room together are the human-readable place.
+    private String formatVenueName(Venue v) {
+        return (v.getRoom() == null || v.getRoom().isBlank())
+                ? v.getName()
+                : v.getName() + " — " + v.getRoom();
     }
 
     private WorkshopFileDTO toFileDTO(WorkshopFile f) {

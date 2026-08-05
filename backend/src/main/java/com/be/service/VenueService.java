@@ -43,6 +43,7 @@ public class VenueService {
         Venue existing = getById(id);
 
         if (dto.getName() != null) existing.setName(dto.getName());
+        if (dto.getRoom() != null) existing.setRoom(dto.getRoom());
         if (dto.getAddress() != null) existing.setAddress(dto.getAddress());
         if (dto.getCity() != null) existing.setCity(dto.getCity());
         if (dto.getPostalCode() != null) existing.setPostalCode(dto.getPostalCode());

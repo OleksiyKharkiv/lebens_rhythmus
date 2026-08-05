@@ -13,6 +13,7 @@
 
 	const blank: VenueRequestDTO = {
 		name: '',
+		room: '',
 		address: '',
 		city: '',
 		postalCode: '',
@@ -37,6 +38,7 @@
 		editingId = v.id;
 		form = {
 			name: v.name,
+			room: v.room ?? '',
 			address: v.address,
 			city: v.city,
 			postalCode: v.postalCode ?? '',
@@ -85,6 +87,7 @@
 		</h2>
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
 			<Input id="vName" label={m.admin_venue_name()} required bind:value={form.name} />
+			<Input id="vRoom" label={m.admin_venue_room()} bind:value={form.room} />
 			<Input id="vAddress" label={m.admin_venue_address()} required bind:value={form.address} />
 			<Input id="vCity" label={m.admin_venue_city()} required bind:value={form.city} />
 			<Input id="vPostal" label={m.admin_venue_postal()} bind:value={form.postalCode} />
@@ -127,7 +130,9 @@
 	<div class="mt-8 grid gap-4 sm:grid-cols-2">
 		{#each venues as v (v.id)}
 			<Card>
-				<h3 class="font-display text-lg font-semibold text-paper">{v.name}</h3>
+				<h3 class="font-display text-lg font-semibold text-paper">
+					{v.name}{#if v.room} — {v.room}{/if}
+				</h3>
 				<p class="mt-1 text-sm text-paper-dim">{v.address}, {v.city}</p>
 				{#if v.capacity}<p class="mt-1 text-sm text-paper-dim">{m.admin_venue_capacity()}: {v.capacity}</p>{/if}
 				<div class="mt-4 flex gap-3 text-sm">

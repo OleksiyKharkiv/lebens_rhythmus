@@ -22,6 +22,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     List<User> findByRole(Role role);
 
+    // M4 (registration trend, LR-015) — customers only, not admin/teacher accounts.
+    List<User> findByRoleAndCreatedAtAfter(Role role, LocalDateTime after);
+
     List<User> findByEnabledTrue();
 
     List<User> findByEmailVerifiedTrue();

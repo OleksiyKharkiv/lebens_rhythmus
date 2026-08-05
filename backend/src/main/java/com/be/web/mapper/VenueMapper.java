@@ -13,6 +13,7 @@ public class VenueMapper {
         return VenueResponseDTO.builder()
                 .id(venue.getId())
                 .name(venue.getName())
+                .room(venue.getRoom())
                 .address(venue.getAddress())
                 .city(venue.getCity())
                 .postalCode(venue.getPostalCode())
@@ -30,6 +31,7 @@ public class VenueMapper {
         if (dto == null) return null;
         return Venue.builder()
                 .name(dto.getName())
+                .room(dto.getRoom())
                 .address(dto.getAddress())
                 .city(dto.getCity())
                 .postalCode(dto.getPostalCode())

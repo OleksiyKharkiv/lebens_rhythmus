@@ -37,7 +37,9 @@
       "Edit(docs/tickets/tickets.md)",
       "Edit(docs/tickets/archive.md)",
       "Write(docs/tickets/tickets.md)",
-      "Write(docs/tickets/archive.md)"
+      "Write(docs/tickets/archive.md)",
+      "Edit(docs/context/CHANGELOG.md)",
+      "Write(docs/context/CHANGELOG.md)"
     ],
     "deny": [
       "Read(./.env)",

@@ -8,11 +8,15 @@
 		getWorkshops,
 		getTeachers,
 		getActivities,
+		getVenues,
+		getAgeGroups,
 		type GroupDTO,
 		type GroupWriteDTO,
 		type WorkshopListItem,
 		type TeacherInfoDTO,
-		type ActivityDTO
+		type ActivityDTO,
+		type VenueDTO,
+		type AgeGroupDTO
 	} from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
@@ -22,6 +26,8 @@
 	let workshops = $state<WorkshopListItem[]>([]);
 	let teachers = $state<TeacherInfoDTO[]>([]);
 	let activities = $state<ActivityDTO[]>([]);
+	let venues = $state<VenueDTO[]>([]);
+	let ageGroups = $state<AgeGroupDTO[]>([]);
 	let error = $state(false);
 	let editingId = $state<number | null>(null);
 	let saving = $state(false);
@@ -36,6 +42,8 @@
 		workshop: null,
 		teacher: null,
 		activity: null,
+		venue: null,
+		ageGroup: null,
 		active: true
 	};
 	let form = $state<GroupWriteDTO>({ ...blank });
@@ -57,6 +65,12 @@
 		getActivities()
 			.then((data) => (activities = data))
 			.catch(() => {});
+		getVenues()
+			.then((data) => (venues = data))
+			.catch(() => {});
+		getAgeGroups()
+			.then((data) => (ageGroups = data))
+			.catch(() => {});
 	});
 
 	function startEdit(g: GroupDTO) {
@@ -71,6 +85,8 @@
 			workshop: g.workshopId ? { id: g.workshopId } : null,
 			teacher: g.teacherId ? { id: g.teacherId } : null,
 			activity: g.activityId ? { id: g.activityId } : null,
+			venue: g.venueId ? { id: g.venueId } : null,
+			ageGroup: g.ageGroupId ? { id: g.ageGroupId } : null,
 			active: g.active
 		};
 	}
@@ -166,6 +182,34 @@
 				</select>
 			</div>
 			<div>
+				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gVenue">{m.admin_group_venue()}</label>
+				<select
+					id="gVenue"
+					value={form.venue?.id ?? ''}
+					onchange={(e) => (form.venue = e.currentTarget.value ? { id: Number(e.currentTarget.value) } : null)}
+					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+				>
+					<option value="">—</option>
+					{#each venues as v (v.id)}
+						<option value={v.id}>{v.name}{v.room ? ` — ${v.room}` : ''}</option>
+					{/each}
+				</select>
+			</div>
+			<div>
+				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gAgeGroup">{m.admin_group_age_group()}</label>
+				<select
+					id="gAgeGroup"
+					value={form.ageGroup?.id ?? ''}
+					onchange={(e) => (form.ageGroup = e.currentTarget.value ? { id: Number(e.currentTarget.value) } : null)}
+					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+				>
+					<option value="">—</option>
+					{#each ageGroups as a (a.id)}
+						<option value={a.id}>{a.titleDe} ({a.minAge}–{a.maxAge})</option>
+					{/each}
+				</select>
+			</div>
+			<div>
 				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gCapacity">{m.admin_group_capacity()}</label>
 				<input
 					id="gCapacity"
@@ -222,6 +266,8 @@
 			<Card>
 				<h3 class="font-display text-lg font-semibold text-paper">{g.titleDe}</h3>
 				<p class="mt-1 text-sm text-paper-dim">{g.workshopTitle ?? '—'}</p>
+				{#if g.venueName}<p class="mt-1 text-sm text-paper-dim">{g.venueName}</p>{/if}
+				{#if g.ageGroupName}<p class="mt-1 text-sm text-paper-dim">{g.ageGroupName}</p>{/if}
 				<p class="mt-1 text-sm text-paper-dim">{g.enrolledCount}/{g.capacity}</p>
 				<div class="mt-4 flex gap-3 text-sm">
 					<button onclick={() => startEdit(g)} class="text-gold hover:underline">{m.admin_edit()}</button>

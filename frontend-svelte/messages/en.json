@@ -134,6 +134,7 @@
 	"admin_nav_workshops": "Workshops",
 	"admin_nav_groups": "Groups",
 	"admin_nav_venues": "Venues",
+	"admin_nav_age_groups": "Age groups",
 	"admin_nav_performances": "Performances",
 
 	"admin_overview_title": "Admin overview",
@@ -144,6 +145,20 @@
 	"admin_stats_teachers": "Teachers",
 	"admin_stats_admins": "Admins",
 	"admin_manage": "Manage",
+
+	"admin_metrics_alerts_title": "Needs attention",
+	"admin_metrics_alerts_empty": "No alerts right now.",
+	"admin_metrics_alert_info": "Info",
+	"admin_metrics_alert_warning": "Warning",
+	"admin_metrics_alert_urgent": "Urgent",
+	"admin_metrics_alert_critical": "Critical",
+	"admin_metrics_fill_ratio_suffix": "filled",
+	"admin_metrics_fill_rate_title": "Fill rate by group",
+	"admin_metrics_trend_title": "New registrations (30 days)",
+	"admin_metrics_trend_note": "One bar per day, last 30 days.",
+	"admin_metrics_retention_title": "Repeat customers",
+	"admin_metrics_retention_rate": "Retention rate",
+	"admin_metrics_retention_note": "customers with ≥2 different workshops",
 
 	"admin_users_search_placeholder": "Search name or email…",
 	"admin_users_search": "Search",
@@ -165,6 +180,7 @@
 	"admin_active": "Active",
 
 	"admin_venue_name": "Name",
+	"admin_venue_room": "Room/hall",
 	"admin_venue_address": "Address",
 	"admin_venue_city": "City",
 	"admin_venue_postal": "Postal code",
@@ -177,7 +193,7 @@
 	"admin_workshop_title": "Title",
 	"admin_workshop_description": "Description",
 	"admin_workshop_teacher": "Teacher",
-	"admin_workshop_venue": "Venue",
+	"admin_workshop_venue_moved_note": "The venue is now set per session, not for the whole workshop — see \"Groups\".",
 	"admin_workshop_start": "Start",
 	"admin_workshop_end": "End",
 	"admin_workshop_max_participants": "Max participants",
@@ -185,11 +201,16 @@
 	"admin_workshop_status": "Status",
 
 	"admin_group_workshop": "Workshop",
+	"admin_group_venue": "Venue/room",
+	"admin_group_age_group": "Age group",
 	"admin_group_activity": "Program",
 	"admin_group_capacity": "Capacity",
 	"admin_group_start": "Start",
 	"admin_group_end": "End",
 	"admin_group_workshop_locked_note": "An existing group's workshop can't be changed here.",
+
+	"admin_age_group_min_age": "Minimum age",
+	"admin_age_group_max_age": "Maximum age",
 
 	"admin_performance_title": "Title",
 	"admin_performance_venue": "Venue",

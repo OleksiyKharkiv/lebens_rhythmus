@@ -63,7 +63,14 @@ public class Group {
     @JoinColumn(name = "language_id", nullable = true)
     private Language language;
 
-    // relationship to workshop 
+    // where this specific session happens — moved here from Workshop
+    // (LR-015, 2026-08-05): a workshop's groups can run at different
+    // times, each needing its own place.
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "venue_id", nullable = true)
+    private Venue venue;
+
+    // relationship to workshop
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "workshop_id")
     private Workshop workshop;

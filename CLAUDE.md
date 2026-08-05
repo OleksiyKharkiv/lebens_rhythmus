@@ -115,10 +115,21 @@ Read, Grep, Glob и Bash(ls/cd/cat/find/grep/head/tail/pwd) где угодно 
 спрашивать разрешение на исследование кода/docs/. Спрашивать только перед
 Write, Edit, либо git-командой, мутирующей историю (commit/push).
 
-**Ticket bookkeeping тоже pre-approved:** Edit/Write на `docs/tickets/tickets.md`
-и `docs/tickets/archive.md` — allow-listed, создание follow-up тикетов и
-перенос закрытых в архив (шаги 7-8 workflow) не требуют permission prompt.
-`git commit`/`git push` этим не затронуты — всегда требуют явной инструкции.
+**Ticket bookkeeping и CHANGELOG тоже pre-approved (расширено 2026-08-04):**
+Edit/Write на `docs/tickets/tickets.md`, `docs/tickets/archive.md` и
+`docs/context/CHANGELOG.md` — allow-listed в `settings.local.json`, не
+требуют permission prompt. Конкретно значит:
+- Обновление `CHANGELOG.md` после успешного закрытия работы (шаг 7 workflow)
+  — без спроса.
+- Перенос закрытых тикетов в `archive.md` (шаг 8) — без спроса.
+- Заведение нового тикета в `tickets.md` **в моменте по ходу работы, если
+  я явно подтвердил его создание в диалоге** (как было 2026-08-04 с
+  LR-013, email-верификацией) — тоже без повторного спроса. Подтверждение
+  должно быть реальным (я сказал "да, заводи тикет" / согласился на
+  предложенный тикет), не самостоятельным решением Claude завести тикет
+  без вопроса в первый раз.
+`git commit`/`git push` этим не затронуты — всегда требуют явной инструкции
+каждый раз, это отдельное правило и `ask`-запись в `settings.local.json`.
 
 ## Workflow contract
 1. Озвучить risk tier тикета (LOW/MED/HIGH/INFRA) в начале.

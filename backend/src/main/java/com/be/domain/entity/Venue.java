@@ -25,6 +25,13 @@ public class Venue {
     @Column(nullable = false, length = 100)
     private String name;
 
+    // One physical room = one Venue row (LR-015) — e.g. "TLab29 — Blauer
+    // Saal" and "TLab29 — Roter Saal" as two rows sharing the same
+    // address, rather than a separate room table. Keeps the existing
+    // venue_id-select pattern used everywhere else in the schema.
+    @Column(length = 100)
+    private String room;
+
     @Column()
     private String address;
 

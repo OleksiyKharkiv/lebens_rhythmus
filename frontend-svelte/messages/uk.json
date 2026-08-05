@@ -134,6 +134,7 @@
 	"admin_nav_workshops": "Воркшопи",
 	"admin_nav_groups": "Групи",
 	"admin_nav_venues": "Локації",
+	"admin_nav_age_groups": "Вікові групи",
 	"admin_nav_performances": "Виступи",
 
 	"admin_overview_title": "Огляд адмінки",
@@ -144,6 +145,20 @@
 	"admin_stats_teachers": "Викладачі",
 	"admin_stats_admins": "Адміни",
 	"admin_manage": "Керувати",
+
+	"admin_metrics_alerts_title": "Потребує уваги",
+	"admin_metrics_alerts_empty": "Наразі попереджень немає.",
+	"admin_metrics_alert_info": "Інфо",
+	"admin_metrics_alert_warning": "Попередження",
+	"admin_metrics_alert_urgent": "Терміново",
+	"admin_metrics_alert_critical": "Критично",
+	"admin_metrics_fill_ratio_suffix": "заповнено",
+	"admin_metrics_fill_rate_title": "Заповненість за групами",
+	"admin_metrics_trend_title": "Нові реєстрації (30 днів)",
+	"admin_metrics_trend_note": "Один стовпчик на день, останні 30 днів.",
+	"admin_metrics_retention_title": "Постійні клієнти",
+	"admin_metrics_retention_rate": "Рівень утримання",
+	"admin_metrics_retention_note": "клієнтів із ≥2 різними воркшопами",
 
 	"admin_users_search_placeholder": "Пошук за ім'ям або email…",
 	"admin_users_search": "Пошук",
@@ -165,6 +180,7 @@
 	"admin_active": "Активний",
 
 	"admin_venue_name": "Назва",
+	"admin_venue_room": "Зал/приміщення",
 	"admin_venue_address": "Адреса",
 	"admin_venue_city": "Місто",
 	"admin_venue_postal": "Індекс",
@@ -177,7 +193,7 @@
 	"admin_workshop_title": "Назва",
 	"admin_workshop_description": "Опис",
 	"admin_workshop_teacher": "Викладач",
-	"admin_workshop_venue": "Локація",
+	"admin_workshop_venue_moved_note": "Місце проведення тепер вказується для кожної групи окремо, не для всього воркшопу — дивись розділ «Групи».",
 	"admin_workshop_start": "Початок",
 	"admin_workshop_end": "Кінець",
 	"admin_workshop_max_participants": "Макс. учасників",
@@ -185,11 +201,16 @@
 	"admin_workshop_status": "Статус",
 
 	"admin_group_workshop": "Воркшоп",
+	"admin_group_venue": "Місце/зал",
+	"admin_group_age_group": "Вікова група",
 	"admin_group_activity": "Напрям",
 	"admin_group_capacity": "Місткість",
 	"admin_group_start": "Початок",
 	"admin_group_end": "Кінець",
 	"admin_group_workshop_locked_note": "Воркшоп для існуючої групи тут змінити не можна.",
+
+	"admin_age_group_min_age": "Мінімальний вік",
+	"admin_age_group_max_age": "Максимальний вік",
 
 	"admin_performance_title": "Назва",
 	"admin_performance_venue": "Місце",

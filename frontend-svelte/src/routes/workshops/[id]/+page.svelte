@@ -67,9 +67,6 @@
 			{#if workshop.startDate}
 				<div><dt class="font-semibold text-paper">Start</dt><dd>{workshop.startDate}</dd></div>
 			{/if}
-			{#if workshop.venueName}
-				<div><dt class="font-semibold text-paper">Ort</dt><dd>{workshop.venueName}</dd></div>
-			{/if}
 			{#if workshop.teacher}
 				<div>
 					<dt class="font-semibold text-paper">Kursleitung</dt>
@@ -103,6 +100,9 @@
 									{formatDateTime(group.startDateTime)}
 									{#if group.endDateTime}— {formatDateTime(group.endDateTime)}{/if}
 								</p>
+								{#if group.venueName}
+									<p class="mt-1 text-sm text-paper-dim">{group.venueName}</p>
+								{/if}
 								<p class="mt-1 text-sm text-paper-dim">
 									{group.enrolledCount}/{group.capacity} {m.workshops_spots_left()}
 								</p>

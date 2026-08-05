@@ -31,7 +31,17 @@ public class GroupDTO {
     private Long activityId;
     private Long teacherId;
     private Long ageGroupId;
+    // LR-015 — human-readable label for the admin Groups list/edit form,
+    // same reasoning as venueName below (composed server-side so the
+    // frontend doesn't need to know the "titleDe (min–max)" format).
+    private String ageGroupName;
     private Long languageId;
+
+    // LR-015 — venue moved here from Workshop; venueName includes the
+    // room, since one venues row == one physical room (e.g. "TLab29 —
+    // Blauer Saal"), not a separate field the UI needs to compose.
+    private Long venueId;
+    private String venueName;
 
     private boolean active;
 }
