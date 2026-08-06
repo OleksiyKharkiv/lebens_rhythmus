@@ -2,6 +2,27 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-06 — security: LR-014 — timing side-channel в `resend-verification` закрыт
+
+### Область (`backend/src/main/java/com/be/service/AuthService.java`, `backend/src/main/resources/application.properties`, `backend/src/test/java/com/be/service/AuthServiceTest.java`)
+
+- **security** — `POST /auth/resend-verification` больше не выдаёт факт
+  "этот email существует и не подтверждён" через разницу во времени
+  ответа. Быстрая ветка (неизвестный/уже-подтверждённый email — один
+  `findByEmail`) и медленная (реальный неподтверждённый аккаунт — токен +
+  запись в БД + синхронный SMTP) теперь неотличимы по скорости: элапсед-
+  тайм меряется вокруг всей ветки, при необходимости досыпается до
+  `app.email-verification.resend-min-response-ms` (дефолт 400мс,
+  `EMAIL_VERIFICATION_RESEND_MIN_MS`).
+- **refactor** — `AuthService` переведён с `@RequiredArgsConstructor` на
+  явный конструктор ради `@Value`-инъекции порога — тот же паттерн, что
+  уже используется в `EmailVerificationService`.
+- **test** — новый `resendVerification_unknownEmail_
+  stillTakesAtLeastMinResponseTime` (конструктор в тестах получает
+  50мс-порог, не 400мс — сьют не замедляется, тест не флеки).
+- **verify** — `./gradlew test` зелёный (полный сьют).
+- LR-014 закрыт, перенесён в `archive.md`.
+
 ## 2026-08-06 — feat: LR-019 — светлая/тёмная тема + переключатель; docs: LR-018 заведён
 
 ### Область (`frontend-svelte/src/routes/layout.css`, `+layout.svelte`, `src/app.html`, `messages/*.json`; `docs/tickets/tickets.md`)

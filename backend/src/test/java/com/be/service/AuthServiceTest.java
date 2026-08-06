@@ -46,8 +46,14 @@ class AuthServiceTest {
     @Mock
     private EmailVerificationService emailVerificationService;
 
+    // 50ms — small enough to keep the suite fast, large enough for
+    // resendVerification_*'s timing assertions to not be flaky against
+    // System.currentTimeMillis() jitter.
+    private static final long TEST_MIN_RESPONSE_MS = 50;
+
     private AuthService authService() {
-        return new AuthService(userService, passwordEncoder, userMapper, jwtUtils, emailVerificationService);
+        return new AuthService(userService, passwordEncoder, userMapper, jwtUtils, emailVerificationService,
+                TEST_MIN_RESPONSE_MS);
     }
 
     @Test
@@ -128,6 +134,20 @@ class AuthServiceTest {
         authService().resendVerification("nobody@example.com");
 
         verify(emailVerificationService, never()).sendVerificationEmail(any());
+    }
+
+    @Test
+    void resendVerification_unknownEmail_stillTakesAtLeastMinResponseTime() {
+        // LR-014 — the branch that skips sending must not return
+        // near-instantly, or its speed alone re-introduces the same
+        // enumeration signal the response body is deliberately silent about.
+        when(userService.findByEmail("nobody@example.com")).thenReturn(Optional.empty());
+
+        long start = System.currentTimeMillis();
+        authService().resendVerification("nobody@example.com");
+        long elapsed = System.currentTimeMillis() - start;
+
+        assertThat(elapsed).isGreaterThanOrEqualTo(TEST_MIN_RESPONSE_MS);
     }
 
     @Test

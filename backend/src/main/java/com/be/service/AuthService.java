@@ -8,8 +8,8 @@ import com.be.web.dto.request.UserRegistrationDTO;
 import com.be.web.dto.response.RegistrationResponseDTO;
 import com.be.web.dto.response.UserLoginResponseDTO;
 import com.be.web.mapper.UserMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,7 +21,6 @@ import java.util.Optional;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AuthService {
 
     private final UserService userService;
@@ -29,6 +28,24 @@ public class AuthService {
     private final UserMapper userMapper;
     private final JwtUtils jwtUtils;
     private final EmailVerificationService emailVerificationService;
+    private final long resendVerificationMinResponseMs;
+
+    // Explicit constructor (not @RequiredArgsConstructor) — needed for the
+    // @Value below, same reasoning as EmailVerificationService's constructor.
+    public AuthService(
+            UserService userService,
+            PasswordEncoder passwordEncoder,
+            UserMapper userMapper,
+            JwtUtils jwtUtils,
+            EmailVerificationService emailVerificationService,
+            @Value("${app.email-verification.resend-min-response-ms:400}") long resendVerificationMinResponseMs) {
+        this.userService = userService;
+        this.passwordEncoder = passwordEncoder;
+        this.userMapper = userMapper;
+        this.jwtUtils = jwtUtils;
+        this.emailVerificationService = emailVerificationService;
+        this.resendVerificationMinResponseMs = resendVerificationMinResponseMs;
+    }
 
     /**
      * Authenticates user; returns token on valid credentials
@@ -106,11 +123,30 @@ public class AuthService {
      * Re-sends the verification email. Always succeeds from the caller's
      * point of view regardless of whether the email exists or is already
      * verified — revealing that would let anyone enumerate registered
-     * accounts by probing this endpoint.
+     * accounts by probing this endpoint. Response time is normalized too
+     * (LR-014): without this, the branch that skips (unknown/already-
+     * verified email, one cheap findByEmail) returns near-instantly while
+     * the branch that sends (token generation + DB write + synchronous
+     * SMTP) takes noticeably longer — a timing side-channel that leaks the
+     * same "does this unverified account exist" fact the response body is
+     * deliberately silent about.
      */
     public void resendVerification(String email) {
+        long start = System.currentTimeMillis();
         userService.findByEmail(email)
                 .filter(user -> !user.isEmailVerified())
                 .ifPresent(emailVerificationService::sendVerificationEmail);
+        padToMinResponseTime(start);
+    }
+
+    private void padToMinResponseTime(long startMillis) {
+        long remaining = resendVerificationMinResponseMs - (System.currentTimeMillis() - startMillis);
+        if (remaining > 0) {
+            try {
+                Thread.sleep(remaining);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 }
