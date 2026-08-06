@@ -8,6 +8,8 @@
 	"nav_admin": "Admin",
 	"nav_teacher": "My teaching",
 	"nav_logout": "Log out",
+	"nav_theme_switch_to_light": "Switch to light theme",
+	"nav_theme_switch_to_dark": "Switch to dark theme",
 
 	"home_hero_title": "Find your rhythm.",
 	"home_hero_tagline": "Theatre, dance and movement work for adults ready to discover their creative potential.",

@@ -2,6 +2,34 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-06 — feat: LR-019 — светлая/тёмная тема + переключатель; docs: LR-018 заведён
+
+### Область (`frontend-svelte/src/routes/layout.css`, `+layout.svelte`, `src/app.html`, `messages/*.json`; `docs/tickets/tickets.md`)
+
+- **feat** — переключатель темы (солнце/луна) в header, десктоп и
+  мобильное меню. Светлая тема — переопределение тех же CSS-переменных
+  (`--color-ink`/`--color-paper`/`--color-gold`/`--color-teal`/
+  `--color-error`) под `:root[data-theme="light"]`; так как весь фронтенд
+  уже и до этого использовал только Tailwind-классы токенов (`bg-ink`,
+  `text-paper`...), а не хардкод-цвета, ни одна страница/компонент не
+  потребовали правки. Persist через `localStorage`, anti-FOUC inline-
+  скрипт в `app.html` (выполняется до гидратации). Дефолт — тёмная тема
+  независимо от `prefers-color-scheme` (сознательно, не менять дефолтное
+  первое впечатление без явного клика посетителя).
+- **docs** — `layout.css` ранее содержал комментарий "no light/dark
+  toggle — a deliberate brand choice" (ссылка на LR-ADR-014) — сама ADR
+  такого пункта буквально не формулирует, это была интерпретация
+  реализации на момент дизайна, не отдельно подтверждённое заказчиком
+  решение. Прямой запрос заказчика 2026-08-06 отменяет её для этого
+  пункта — комментарий обновлён, ADR не переписывается (не противоречит).
+- **verify** — проверено вживую в браузере (dev-сервер, desktop 1280×720
+  + mobile 375×812): дефолт/переключение/persist через reload/aria-label
+  — всё корректно на обоих брейкпоинтах. `npm run check` — 0 ошибок.
+- **docs** — LR-019 закрыт и перенесён в `archive.md`. Заведён LR-018
+  (bootstrap первого админа — сейчас только через ручной `psql`, нет
+  env-var/seed-механизма) — остаётся open, требует решения заказчика
+  (код vs документация), не начат.
+
 ## 2026-08-05 — closed: LR-015 — дашборд-метрики M1/M4/M5/M6 (M2/M3 отложены на LR-017)
 
 ### Область (backend: `web/dto/response/{GroupFillRateDTO,RegistrationTrendPointDTO,WorkshopAlertDTO,RetentionDTO,AdminMetricsDTO}.java`, `service/MetricsService.java`, `web/controller/MetricsController.java`, `domain/repository/{UserRepository,EnrollmentRepository}.java`, `test/.../MetricsServiceTest.java`; frontend: `lib/api.ts`, `routes/admin/+page.svelte`, `messages/*.json`)

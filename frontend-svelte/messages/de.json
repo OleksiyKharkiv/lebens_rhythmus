@@ -8,6 +8,8 @@
 	"nav_admin": "Admin",
 	"nav_teacher": "Mein Unterricht",
 	"nav_logout": "Abmelden",
+	"nav_theme_switch_to_light": "Helles Design aktivieren",
+	"nav_theme_switch_to_dark": "Dunkles Design aktivieren",
 
 	"home_hero_title": "Finde deinen Rhythmus.",
 	"home_hero_tagline": "Theater, Tanz und Körperarbeit für Erwachsene, die ihr kreatives Potenzial entdecken wollen.",

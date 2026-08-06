@@ -20,6 +20,23 @@
 	let roleAreaHref = $state('/dashboard');
 	let roleAreaLabel = $state('');
 
+	// LR-019 — dark is the default/prerendered assumption (matches
+	// app.html's blocking inline script, which only ever sets the
+	// attribute for 'light'), corrected once mounted in the browser, same
+	// reasoning as loggedIn above.
+	let theme = $state<'dark' | 'light'>('dark');
+
+	function applyTheme(t: 'dark' | 'light') {
+		if (t === 'light') document.documentElement.dataset.theme = 'light';
+		else delete document.documentElement.dataset.theme;
+		localStorage.setItem('lr-theme', t);
+	}
+
+	function toggleTheme() {
+		theme = theme === 'dark' ? 'light' : 'dark';
+		applyTheme(theme);
+	}
+
 	function refreshAuthState() {
 		loggedIn = isAuthenticated();
 		const role = getStoredRole();
@@ -47,6 +64,13 @@
 	// the moment this layout first mounted.
 	afterNavigate(() => {
 		refreshAuthState();
+	});
+
+	// Runs once on mount (no reactive reads) — mirrors app.html's inline
+	// script so the toggle's displayed icon matches whatever theme was
+	// actually applied pre-hydration, not always assuming 'dark'.
+	$effect(() => {
+		theme = localStorage.getItem('lr-theme') === 'light' ? 'light' : 'dark';
 	});
 
 	function handleLogout() {
@@ -118,6 +142,26 @@
 						</a>
 					{/each}
 				</div>
+
+				<button
+					onclick={toggleTheme}
+					aria-label={theme === 'dark' ? m.nav_theme_switch_to_light() : m.nav_theme_switch_to_dark()}
+					class="text-paper-dim hover:text-gold ml-2 transition-colors"
+				>
+					{#if theme === 'dark'}
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<circle cx="12" cy="12" r="4" />
+							<path
+								stroke-linecap="round"
+								d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+							/>
+						</svg>
+					{:else}
+						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<path stroke-linecap="round" stroke-linejoin="round" d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
+						</svg>
+					{/if}
+				</button>
 			</nav>
 
 			<button
@@ -153,16 +197,33 @@
 				{:else}
 					<a href={resolve('/login')} onclick={closeMobileMenu} class="text-gold">{m.nav_login()}</a>
 				{/if}
-				<div class="flex gap-4 pt-2 text-sm">
-					{#each locales as locale (locale)}
-						<a
-							href={resolve(localizeHref(page.url.pathname, { locale }) as Pathname)}
-							onclick={closeMobileMenu}
-							class="text-paper-dim"
-						>
-							{localeLabels[locale] ?? locale}
-						</a>
-					{/each}
+				<div class="flex items-center justify-between pt-2">
+					<div class="flex gap-4 text-sm">
+						{#each locales as locale (locale)}
+							<a
+								href={resolve(localizeHref(page.url.pathname, { locale }) as Pathname)}
+								onclick={closeMobileMenu}
+								class="text-paper-dim"
+							>
+								{localeLabels[locale] ?? locale}
+							</a>
+						{/each}
+					</div>
+					<button onclick={toggleTheme} aria-label={theme === 'dark' ? m.nav_theme_switch_to_light() : m.nav_theme_switch_to_dark()} class="text-paper-dim">
+						{#if theme === 'dark'}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<circle cx="12" cy="12" r="4" />
+								<path
+									stroke-linecap="round"
+									d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"
+								/>
+							</svg>
+						{:else}
+							<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+								<path stroke-linecap="round" stroke-linejoin="round" d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z" />
+							</svg>
+						{/if}
+					</button>
 				</div>
 			</nav>
 		{/if}

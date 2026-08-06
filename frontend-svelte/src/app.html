@@ -12,6 +12,16 @@
 		<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 		<link rel="manifest" href="/site.webmanifest" />
+		<script>
+			// LR-019 — runs before first paint so the page never flashes the
+			// wrong theme. Dark is the default (LR-ADR-014's approved look) —
+			// only an explicit prior toggle switches this, not OS preference.
+			try {
+				if (localStorage.getItem('lr-theme') === 'light') {
+					document.documentElement.dataset.theme = 'light';
+				}
+			} catch (e) {}
+		</script>
 		%sveltekit.head%
 	</head>
 

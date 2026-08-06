@@ -18,8 +18,14 @@
   (rounded geometric display) + Nunito Sans (rounded-terminal body).
   Motion kept to 1/5 per Olena's answer — no scroll choreography, only
   small hover/focus transitions.
-  Single signature look, no light/dark toggle — a deliberate brand choice,
-  not an omission (this is a marketing/brand site, not a utility tool).
+
+  Dark is the default, brand-approved look (unchanged values below).
+  Light theme (LR-019, 2026-08-06, direct customer request — supersedes
+  this file's earlier "no toggle, deliberate brand choice" comment, which
+  was an implementer-time interpretation, not something LR-ADR-014 itself
+  states) overrides the same variable names under [data-theme="light"],
+  so every component keeps using the same bg-ink/text-paper/text-gold/...
+  classes unchanged — only the values these tokens resolve to differ.
 */
 @theme {
 	--color-ink: #2b1b29;
@@ -44,11 +50,32 @@
 	--font-body: 'Nunito Sans', sans-serif;
 }
 
+/* Light theme — same warm/elegant character (LR-ADR-014), ground and text
+   swapped, gold/teal/error promoted to their "-deep" shade as the base
+   (the pale dark-mode shade doesn't have enough contrast on a light
+   ground) with new, deeper "-deep" hover shades of their own. */
+:root[data-theme='light'] {
+	--color-ink: #faf3e6;
+	--color-ink-soft: #f1e6d3;
+	--color-ink-line: #ddccb0;
+	--color-paper: #2b1b29;
+	--color-paper-dim: #6b5a63;
+	--color-gold: #c7841c;
+	--color-gold-deep: #a66a12;
+	--color-teal: #1f8f76;
+	--color-teal-deep: #156b59;
+	--color-error: #b23b32;
+	--color-error-deep: #8f2e27;
+}
+
 html {
 	background: var(--color-ink);
 	color: var(--color-paper);
 	font-family: var(--font-body);
 	scroll-behavior: smooth;
+	transition:
+		background-color 0.2s ease,
+		color 0.2s ease;
 }
 
 body {
