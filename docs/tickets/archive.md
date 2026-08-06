@@ -5,6 +5,109 @@
 
 ---
 
+## LR-020 — Bean Validation не работал НИГДЕ в бэкенде: провайдер отсутствовал на classpath
+
+**Tier:** HIGH (re-tier с изначальной оценки — затрагивает auth, DSGVO-
+согласие на регистрации, и de-facto всю границу `@Valid` по всему
+приложению; найдено architect-reviewer как переоценка тира при ревью
+LR-012, согласовано)
+**Статус:** Closed 2026-08-06 · исправлено, проверено полным сьютом,
+architect-reviewer approve
+**Источник:** обнаружено случайно при реализации LR-012 — новый юнит-тест
+упал не с "невалидные данные не отклонены", а с
+`jakarta.validation.NoProviderFoundException`
+
+**Находка:** `backend/build.gradle` объявлял только
+`jakarta.validation:jakarta.validation-api:3.1.1` (интерфейсы/аннотации)
+— никогда `spring-boot-starter-validation` или любой другой
+`jakarta.validation.spi.ValidationProvider` (Hibernate Validator и т.п.).
+Значит **все** `@Valid @RequestBody` по всему бэкенду молча не
+исполнялись в проде: Spring MVC ищет validator-бин для аргумента, не
+находит провайдера, `OptionalValidatorFactoryBean` ловит
+`NoProviderFoundException` внутри себя (DEBUG-лог, не исключение),
+`targetValidator` остаётся `null`, `validate()` на `null` — no-op.
+Ни ошибки при старте, ни исключения на запрос — запрос просто проходит
+как будто валиден. Подтверждено `architect-reviewer` трассировкой
+реального механизма Spring, не с моих слов.
+
+**Что реально было мертво:**
+- `@Email` на регистрации — формат мэйла не проверялся.
+- `@Size(min=8)` на пароле (`UserRegistrationDTO`, `UserPasswordUpdateDTO`)
+  — теоретически можно было зарегистрироваться с паролём в 1 символ.
+- **`@AssertTrue` на `acceptedTerms`/`privacyPolicyAccepted`** —
+  единственная точка проверки согласия с условиями/политикой
+  конфиденциальности при регистрации была декоративной. `UserMapper`
+  прокидывает булево значение как есть, сервисный слой его повторно не
+  перепроверяет — то есть регистрация с `acceptedTerms: false` технически
+  проходила. Самая серьёзная часть находки — DSGVO-adjacent.
+- Все аннотации LR-012 (см. ниже) до фикса тоже были декоративны.
+- **Шире, чем DTO**: `spring.jpa.properties.hibernate.validation.mode`
+  не переопределён (дефолт `AUTO`) — значит entity-level
+  bean-валидация (Hibernate's JPA event listener на persist/flush) тоже
+  была тем же багом отключена и теперь тоже ожила: `Order.orderNumber`
+  (`@Size(max=100)`), `Workshop.workshopName` (`@NotBlank @Size(max=200)`),
+  `User.firstName`/`lastName` (`@Size(min=2,max=50)`) — это единственные
+  три сущности с bean-валидацией на уровне entity (проверено grep'ом по
+  `domain/entity/`). Границы щедрые, реальным данным Olena не должны
+  мешать, но если после деплоя где-то вылезет `ConstraintViolationException`
+  на flush существующей записи — это первое место искать.
+
+**Фикс:** `backend/build.gradle` — `jakarta.validation-api` заменён на
+`implementation 'org.springframework.boot:spring-boot-starter-validation'`
+(тянет Hibernate Validator 8.0.3.Final + API транзитивно, версия API
+опустилась с зафиксированной 3.1.1 до управляемой Spring Boot BOM 3.0.2 —
+`architect-reviewer` подтвердил: стандартная поддерживаемая пара для
+Spring Boot 3.5.7, конфликтов версии нигде в кодовой базе нет).
+
+**Проверено:** `./gradlew clean test` — полный сьют, 52 теста, 0 упавших,
+включая context-loading/Testcontainers-интеграционные тесты — ни один
+существующий тест/код-путь не зависел от того, что невалидные данные
+молча проходили. `architect-reviewer` — approve with changes
+(must-fix'ов в самом коде не нашёл, только документационные: зафиксировать
+HIGH-тир и упомянуть entity-level эффект — оба сделаны здесь).
+
+**Follow-up, не блокирует:** `PaymentRequestDTO`/`OrderRequestDTO` вообще
+без единой аннотации валидации — заведён отдельный LR-021 (MED, платёжные
+поля заслуживают отдельного внимательного прохода, не "по аналогии").
+
+---
+
+## LR-012 — Добавить валидацию длины на `address`/`phone`/`city`/`zipCode`
+
+**Tier:** LOW (валидация, без риска для существующих данных — сам фикс
+провайдера валидации, найденный по ходу, документирован отдельно как
+LR-020, HIGH)
+**Статус:** Closed 2026-08-06
+**Источник:** architect-reviewer, ревью фикса LR-011 (VARCHAR→TEXT), 2026-08-03
+
+`V2__widen_encrypted_pii_columns.sql` расширил
+`users.{first_name,last_name,phone,address,city,zip_code}` и аналогичные
+колонки `teachers`/`participants` до `TEXT` (нужно было, чтобы починить
+риск переполнения после шифрования — см. LR-011). Побочный эффект:
+`VARCHAR(255)` был единственным ограничением длины для `address`/`phone`/
+`city`/`zipCode` — не ограничены вообще ничем, ни в БД, ни в DTO/entity.
+
+**Сделано:**
+- `UserRegistrationDTO`/`UserUpdateDTO`: `address` (max 255), `city`
+  (max 100), `zipCode` (max 20), `phone` (`@Size(max=25)` рядом с уже
+  существовавшим `@Pattern`).
+- Попутно найдено и исправлено то же самое, но шире: `TeacherRequestDTO`/
+  `ParticipantRequestDTO` не имели **вообще ни одной** аннотации
+  валидации (тикет ошибочно предполагал, что firstName/lastName там уже
+  защищены, как у `User` — на самом деле нет). Добавлены
+  `@Size(min=2,max=50)` на firstName/lastName (та же конвенция, что у
+  `User`), `@Email`, `@Pattern`+`@Size(max=25)` на phone.
+- Новый тест `RequestDtoValidationTest` (прямая Bean Validation, без
+  Spring-контекста) — 6 тестов, покрывают и лимиты LR-012, и попутно
+  найденный Teacher/Participant пробел.
+
+**Важно:** сами аннотации были добавлены до того, как обнаружилось, что
+провайдер валидации отсутствовал вообще (см. LR-020) — новый тест сразу
+упал с `NoProviderFoundException`, что и вскрыло более серьёзную
+находку. После фикса LR-020 все тесты (включая эти шесть) зелёные.
+
+---
+
 ## LR-014 — `resendVerification`: timing side-channel палит существование аккаунта
 
 **Tier:** LOW (низкоценная цель для атаки, не платёжные/детские данные)

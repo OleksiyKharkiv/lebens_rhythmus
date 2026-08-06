@@ -31,6 +31,7 @@ public class UserRegistrationDTO {
     private String lastName;
 
     @Pattern(regexp = "\\+[0-9\\s\\-()]+", message = "Invalid phone number format")
+    @Size(max = 25, message = "Phone number must be at most 25 characters long")
     private String phone;
 
     @Past(message = "Birth date should be in the past")
@@ -47,8 +48,14 @@ public class UserRegistrationDTO {
     @Builder.Default
     private boolean privacyPolicyAccepted = false;
 
+    @Size(max = 255, message = "Address must be at most 255 characters long")
     private String address;
+
+    @Size(max = 100, message = "City must be at most 100 characters long")
     private String city;
+
+    @Size(max = 20, message = "ZIP code must be at most 20 characters long")
     private String zipCode;
+
     private String country;
 }

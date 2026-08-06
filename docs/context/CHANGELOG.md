@@ -2,6 +2,49 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-06 — security: LR-020 — Bean Validation не работал нигде в бэкенде (провайдер отсутствовал); feat: LR-012 — `@Size` на address/phone/city/zipCode
+
+### Область (`backend/build.gradle`, `backend/src/main/java/com/be/web/dto/request/{UserRegistrationDTO,UserUpdateDTO,TeacherRequestDTO,ParticipantRequestDTO}.java`, `backend/src/test/java/com/be/web/dto/request/RequestDtoValidationTest.java`)
+
+- **security (LR-020, HIGH)** — `build.gradle` объявлял только
+  `jakarta.validation-api` (интерфейсы), никогда `spring-boot-starter-
+  validation`/Hibernate Validator — то есть **ни один** `@Valid
+  @RequestBody` по всему бэкенду реально не исполнялся в проде. Spring MVC
+  молча теряет провайдера (`OptionalValidatorFactoryBean` ловит
+  `NoProviderFoundException` внутри себя, `targetValidator = null`,
+  `validate()` — no-op), без ошибки при старте и без исключения на запрос.
+  Мертвы были: `@Email` на регистрации, `@Size(min=8)` на пароле, и —
+  самое серьёзное — **`@AssertTrue` на `acceptedTerms`/
+  `privacyPolicyAccepted`**, единственная точка проверки согласия при
+  регистрации. Шире DTO: JPA-уровневая bean-валидация (Hibernate,
+  `validation.mode=AUTO` по умолчанию) тоже была отключена тем же багом —
+  теперь тоже активна на `Order.orderNumber`/`Workshop.workshopName`/
+  `User.firstName`/`lastName` (границы щедрые, риск для существующих
+  данных Olena низкий, но первое место искать при `ConstraintViolation`
+  на flush после деплоя).
+- **fix** — `jakarta.validation-api` заменён на `spring-boot-starter-
+  validation` (тянет Hibernate Validator 8.0.3.Final; версия API ушла с
+  зафиксированной 3.1.1 на управляемую Spring Boot BOM 3.0.2 —
+  `architect-reviewer` подтвердил: не конфликтует, стандартная пара).
+- **feat (LR-012)** — `@Size` на `address`/`city`/`zipCode`/`phone`
+  (`UserRegistrationDTO`/`UserUpdateDTO`). Попутно найдено и исправлено:
+  `TeacherRequestDTO`/`ParticipantRequestDTO` не имели вообще ни одной
+  аннотации валидации (не только про address-семейство) — добавлены
+  `@Size`/`@Email`/`@Pattern` на firstName/lastName/email/phone.
+- **test** — `RequestDtoValidationTest` (прямая Bean Validation, без
+  Spring-контекста), 6 тестов; именно этот тест первым упал с
+  `NoProviderFoundException` и вскрыл LR-020.
+- **review** — `architect-reviewer`: approve with changes, re-тир LR-012→
+  выделен в отдельный HIGH-тикет LR-020, must-fix'ов в коде не найдено.
+  Follow-up заведён отдельно: LR-021 (`PaymentRequestDTO`/
+  `OrderRequestDTO` вообще без валидации — MED, платёжные поля, отдельный
+  внимательный проход, не "по аналогии").
+- **verify** — `./gradlew clean test` — полный сьют, 52 теста, 0 упавших
+  (включая context-loading/Testcontainers-интеграционные тесты — реальное
+  включение валидации app-wide ничего не сломало).
+- LR-012 и LR-020 закрыты, перенесены в `archive.md`. LR-021 заведён,
+  остаётся open.
+
 ## 2026-08-06 — security: LR-014 — timing side-channel в `resend-verification` закрыт
 
 ### Область (`backend/src/main/java/com/be/service/AuthService.java`, `backend/src/main/resources/application.properties`, `backend/src/test/java/com/be/service/AuthServiceTest.java`)

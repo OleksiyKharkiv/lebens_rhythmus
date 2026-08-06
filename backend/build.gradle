@@ -44,8 +44,14 @@ dependencies {
     testImplementation 'org.testcontainers:junit-jupiter'
     testImplementation 'org.testcontainers:postgresql'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-    // https://mvnrepository.com/artifact/jakarta.validation/jakarta.validation-api
-    implementation("jakarta.validation:jakarta.validation-api:3.1.1")
+    // LR-012 (2026-08-06) — was jakarta.validation-api alone (interfaces
+    // only, no provider). @Valid/@NotBlank/@Size/... compiled fine but were
+    // never actually enforced anywhere in the app — no
+    // jakarta.validation.spi.ValidationProvider was ever on the classpath
+    // for Spring to wire in. This starter pulls in Hibernate Validator
+    // (the reference implementation) + the API transitively, which is what
+    // actually makes @Valid @RequestBody do something at runtime.
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
     // https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
     implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'

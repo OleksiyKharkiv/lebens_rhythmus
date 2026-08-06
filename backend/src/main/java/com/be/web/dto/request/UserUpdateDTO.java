@@ -22,14 +22,21 @@ public class UserUpdateDTO {
     private String lastName;
 
     @Pattern(regexp = "\\+?[0-9\\s\\-()]+")
+    @Size(max = 25)
     private String phone;
 
     private LocalDate birthDate;
 
     // Address information
+    @Size(max = 255)
     private String address;
+
+    @Size(max = 100)
     private String city;
+
+    @Size(max = 20)
     private String zipCode;
+
     private String country;
 
     // Teacher-specific fields
