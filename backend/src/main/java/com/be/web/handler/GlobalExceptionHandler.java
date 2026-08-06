@@ -15,6 +15,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -93,6 +94,25 @@ public class GlobalExceptionHandler {
         log.debug("Access denied: {}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
+    }
+
+    /**
+     * A request that matches no controller mapping (and no static resource)
+     * used to fall through to handleAll() below and come back as a
+     * misleading 500 — found while writing LR-023's regression test
+     * (verifying spring-boot-starter-data-rest's removal actually made
+     * /users//participants stop existing, not just stop being reachable).
+     * A truly-unmapped path is a 404, not a server error.
+     */
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNoResourceFound(NoResourceFoundException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.NOT_FOUND.value());
+        body.put("error", "Not Found");
+
+        log.debug("No handler for request: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
     }
 
     /**

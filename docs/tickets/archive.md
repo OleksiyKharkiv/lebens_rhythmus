@@ -5,6 +5,78 @@
 
 ---
 
+## LR-023 — `spring-boot-starter-data-rest`: каждый репозиторий торчал наружу в обход ВСЕХ `@PreAuthorize`, само-эскалация до ADMIN одним запросом
+
+**Tier:** CRITICAL (переопределяет обычную HIGH-шкалу проекта — полный
+обход авторизации + тривиальная эскалация привилегий + расшифрованный
+дамп PII, включая bcrypt-хэши паролей)
+**Статус:** Closed 2026-08-06 · исправлено немедленно по прямому указанию
+заказчика, подтверждено живым эксплойтом до и после фикса, `architect-
+reviewer` approve
+**Источник:** фоновый агент DevSecOps-аудита (LR-022, фаза 1, backend)
+
+**Находка:** `backend/build.gradle` подключал `spring-boot-starter-data-
+rest` без единого механизма отключения авто-экспозиции
+(`@RepositoryRestResource(exported=false)`, `RepositoryRestConfigurer`,
+`spring.data.rest.detection-strategy` — ни одного нет нигде в коде).
+Spring Data REST по умолчанию экспортирует **каждый** `JpaRepository`
+(User, Participant, Payment, Order, ...) как полноценный HAL CRUD REST-
+ресурс в корне приложения, защищённый только общим fallback'ом
+`SecurityConfig`'s `.anyRequest().authenticated()` — без единой проверки
+роли. Это делает бессмысленными все `@PreAuthorize` во всех
+хендрайтен-контроллерах, потому что параллельный авто-сгенерированный
+путь их не проходит вообще.
+
+**Подтверждено вживую, не только статическим анализом** — поднял бэкенд
+локально против чистой Postgres, зарегистрировал обычного `USER` через
+реальный `/auth/register` + `/auth/login`:
+- `GET /users` → **200**, полный дамп таблицы: bcrypt-хэши паролей,
+  токены верификации, расшифрованные ФИО (JPA-конвертер расшифровывает
+  прозрачно).
+- `PATCH /users/1 {"role":"ADMIN"}` → **200**, и в БД роль реально
+  сменилась на `ADMIN`. Свежезарегистрированный обычный пользователь
+  сделал себя администратором одним HTTP-запросом.
+
+**Фикс:**
+- `backend/build.gradle` — зависимость `spring-boot-starter-data-rest`
+  **удалена полностью** (не переконфигурирована) — grep по всему коду
+  подтвердил, что `@RepositoryRestResource`/`RepositoryRestConfigurer`
+  нигде не используются, это была мёртвая, никогда не нужная зависимость.
+  Проверено, что фронтендовский `authRequest('/users')` резолвится в
+  `/api/v1/users` (настоящий, защищённый `UserController`), не в
+  уязвимый `/users` — удаление ничего не сломало.
+- `GlobalExceptionHandler.java` — добавлен `@ExceptionHandler
+  (NoResourceFoundException.class)` → честный 404. Понадобилось, потому
+  что после удаления зависимости `GET /users` стал бросать
+  `NoResourceFoundException`, которую старый catch-all глотал и превращал
+  в вводящий в заблуждение 500 (и заодно утекал `ex.getMessage()`).
+  Точечный фикс только этого типа исключения — более широкая проблема
+  catch-all'а с `ex.getMessage()` не тронута, отдельная находка аудита.
+- Новый `SpringDataRestExposureTest` (реальный E2E: `@SpringBootTest`
+  + `TestRestTemplate` + Testcontainers Postgres, полный цикл
+  регистрация→логин→запрос, не mock) — 4 теста: `GET /users`/
+  `/participants` и `PATCH /users/{id}` для обычного `USER` **и** для
+  `ADMIN` (добавлено по замечанию `architect-reviewer`) — все должны
+  быть 404, не 401/403 (эндпоинта не должно существовать вообще, ни для
+  какой роли), плюс прямая проверка через `userRepository`, что роль не
+  изменилась.
+
+**`architect-reviewer`:** approve, must-fix не найдено. Ревьюер сам
+пересобрал и прогнал `SpringDataRestExposureTest` против реальной
+Testcontainers Postgres, не поверил на слово — зелёный. Подтвердил:
+удаление зависимости полностью закрывает путь (`@ConditionalOnClass`
+гейтит автоконфигурацию Spring Data REST на классы, которых больше нет
+на classpath — никакой property не может её частично воскресить), нет
+побочных эффектов на `GlobalExceptionHandler`-фикс (бэкенд не отдаёт
+статику вообще, это отдельно nginx).
+
+**Follow-up, не блокирует:** дешёвый CI-guard (grep/dependency-assertion)
+чтобы `spring-boot-starter-data-rest` не вернулся незаметно — не
+заведено отдельным тикетом, можно добавить в LR-002 (CI/CD) при
+следующем touch.
+
+---
+
 ## LR-020 — Bean Validation не работал НИГДЕ в бэкенде: провайдер отсутствовал на classpath
 
 **Tier:** HIGH (re-tier с изначальной оценки — затрагивает auth, DSGVO-

@@ -2,6 +2,65 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-06 — docs: LR-022 фазы 1-5 завершены — протокол `docs/security/audit-2026-08-06.md`, LR-024..LR-030 заведены
+
+### Область (`docs/security/audit-2026-08-06.md` (new), `docs/tickets/tickets.md`)
+
+- **docs** — три фоновых агента (backend/infra/frontend), "круглый стол"
+  экспертов (Moussouris, Mackey, Wysopal, Winch, Long) + методологии
+  (SbD, Zero Trust, NIST SSDF, OWASP SbD, STRIDE), сверка против
+  `docs/architecture/decisions.md`/`IMPLEMENTATION-PROTOCOL-2026-07.md`/
+  `PROJECT_INDEX.md`. Итог: 1 CRITICAL (LR-023, уже закрыт вне очереди),
+  5 HIGH, 6 MEDIUM, 9 LOW/INFORMATIONAL.
+- **прямой ответ на вопрос заказчика** — прямого доступа к БД из
+  фронтенда не обнаружено (подтверждено grep'ом на все известные
+  DB-клиентские библиотеки и сырой SQL, фронтенд общается с бэкендом
+  исключительно через `fetch()` к `/api/v1/**`).
+- **docs** — заведены LR-024 (teacher IDOR — контакты детей из чужих
+  групп, HIGH), LR-025 (`OrderController` NPE — проверка владения
+  никогда не исполняется, HIGH), LR-026 (account-lockout content oracle,
+  MED — тот же класс, что уже закрытый LR-014), LR-027 (scoped DB-роль
+  вместо суперюзера Postgres, HIGH, расширяет LR-003 п.6), LR-028
+  (scoped CI kubeconfig вместо вероятного cluster-admin, HIGH, требует
+  сначала живой проверки GitLab CI/CD Variables), LR-029
+  (`GlobalExceptionHandler` системная утечка `ex.getMessage()` +
+  entity-existence oracle, MED), LR-030 (`GroupController` mass
+  assignment через raw-entity binding, LOW-MED).
+- LR-022 (сам аудит): П.1-5 готовы. П.6 (финальная верификация) —
+  гейтится на закрытии LR-024..LR-030 и уже открытого LR-021, не начата.
+
+## 2026-08-06 — security: LR-023 (CRITICAL) — Spring Data REST давал полный обход авторизации + само-эскалацию до ADMIN
+
+### Область (`backend/build.gradle`, `backend/src/main/java/com/be/web/handler/GlobalExceptionHandler.java`, `backend/src/test/java/com/be/SpringDataRestExposureTest.java` (new))
+
+- **security (CRITICAL)** — `spring-boot-starter-data-rest` был на classpath
+  без единого механизма отключения авто-экспозиции репозиториев.
+  Подтверждено вживую (не только статически): свежезарегистрированный
+  обычный `USER` через `GET /users` получал полный дамп таблицы (bcrypt-
+  хэши, токены верификации, расшифрованные ФИО), а через `PATCH /users/1
+  {"role":"ADMIN"}` реально повышал себя до администратора — в обход
+  всех `@PreAuthorize` во всех контроллерах. Найдено фоновым агентом
+  DevSecOps-аудита (LR-022, фаза 1), устранено немедленно вне очереди по
+  прямому указанию заказчика, не дожидаясь остальных фаз аудита.
+- **fix** — зависимость удалена полностью (не переконфигурирована —
+  нигде в коде `@RepositoryRestResource`/`RepositoryRestConfigurer` не
+  используется, подтверждено grep). Фронтендовский `/users`-вызов
+  резолвится в защищённый `/api/v1/users`, не в уязвимый путь — ничего
+  не сломано.
+- **fix** — `GlobalExceptionHandler` получил `@ExceptionHandler
+  (NoResourceFoundException.class)` → честный 404 вместо введённого в
+  заблуждение 500 (найдено при написании регрессионного теста).
+- **test** — `SpringDataRestExposureTest`, реальный E2E (не mock):
+  регистрация → логин → запрос, 4 теста (`USER` и `ADMIN` × `GET`/`PATCH`),
+  все должны быть 404 (эндпоинта не должно существовать вообще, ни для
+  какой роли) + проверка через репозиторий, что роль не изменилась.
+- **review** — `architect-reviewer`: approve, must-fix не найдено.
+  Ревьюер сам пересобрал и прогнал тест против реальной Testcontainers
+  Postgres, не поверил на слово.
+- **verify** — `./gradlew clean test` — полный сьют зелёный.
+- LR-023 закрыт и заархивирован. LR-022 (сам аудит) продолжается —
+  фазы 1-3 готовы, фаза 4 (протокол в `docs/security/`) следующая.
+
 ## 2026-08-06 — security: LR-020 — Bean Validation не работал нигде в бэкенде (провайдер отсутствовал); feat: LR-012 — `@Size` на address/phone/city/zipCode
 
 ### Область (`backend/build.gradle`, `backend/src/main/java/com/be/web/dto/request/{UserRegistrationDTO,UserUpdateDTO,TeacherRequestDTO,ParticipantRequestDTO}.java`, `backend/src/test/java/com/be/web/dto/request/RequestDtoValidationTest.java`)

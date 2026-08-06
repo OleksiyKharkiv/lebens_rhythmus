@@ -26,7 +26,17 @@ ext {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-data-rest'
+    // LR-022 (2026-08-06) — spring-boot-starter-data-rest REMOVED. It was
+    // never used (no @RepositoryRestResource/RepositoryRestConfigurer
+    // anywhere in the codebase — confirmed by grep before removal), but its
+    // mere presence on the classpath auto-exports every JpaRepository as a
+    // full HAL CRUD REST resource at the app root, gated only by
+    // SecurityConfig's generic `.anyRequest().authenticated()` — no role
+    // check. Verified live against a real running instance: a freshly
+    // registered plain USER could GET /users (full table dump: bcrypt
+    // hashes, decrypted PII) and PATCH /users/1 {"role":"ADMIN"} to
+    // self-escalate to admin, completely bypassing every @PreAuthorize in
+    // every controller (LR-023).
     implementation 'org.flywaydb:flyway-core'
     runtimeOnly 'org.flywaydb:flyway-database-postgresql'
     implementation 'org.springframework.boot:spring-boot-starter-security'

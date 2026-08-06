@@ -12,6 +12,235 @@
 
 ---
 
+## LR-024 — Teacher IDOR: доступ к контактам детей из чужих групп
+
+**Tier:** HIGH (контактные данные несовершеннолетних, реальный, не
+гипотетический риск)
+**Статус:** Open · приоритет #1 среди находок LR-022
+**Источник:** LR-022, фаза 1+3 (найдено независимо backend- и
+frontend-агентами — см. `docs/security/audit-2026-08-06.md`, H1)
+
+`GET /api/v1/teacher/groups/{groupId}/participants`
+(`EnrollmentController.java:124-135`) и парные `GET /workshops/teacher/
+{teacherId}`, `GET /groups/teacher/{teacherId}` (последний — вообще без
+`@PreAuthorize`) проверяют только роль `TEACHER`, не владение конкретной
+группой/воркшопом. Любой преподаватель может перебрать `groupId` и
+получить email+ФИО участников чужих групп. `LR-ADR-004` обещает
+"преподаватель управляет только своими группами" — код этого не
+реализует.
+
+**Сделать:** резолвить `teacherId` из JWT server-side (паттерн уже есть
+в `PaymentController.getMyPayments()`, LR-004), сравнивать с параметром
+пути, 403 при несовпадении. Добавить отсутствующий `@PreAuthorize` на
+`GroupController.getGroupsByTeacher`.
+
+---
+
+## LR-025 — `OrderController.getById()`: NPE на каждом вызове, проверка владения никогда не исполняется
+
+**Tier:** HIGH (тот же класс, что LR-020 — код выглядит как защита,
+никогда реально не проверен)
+**Статус:** Open
+**Источник:** LR-022, фаза 1 (см. `docs/security/audit-2026-08-06.md`, H2)
+
+`OrderController.java:46` читает claim `"roles"` (JWT минтит только
+единственный `"role"`) — `getClaimAsStringList` на отсутствующем claim'е
+тихо возвращает `null`, следующий `.stream()` кидает NPE на КАЖДОМ
+запросе, включая от админов. Реальная проверка владения заказом (строка
+48) никогда не достигается. `GlobalExceptionHandler` отдаёт 500 с
+`ex.getMessage()` (JDK helpful-NPE утекает точное выражение). Нет ни
+одного `OrderControllerTest`.
+
+**Сделать:** использовать `JwtAuthUtils.hasRole(jwt, "ADMIN")` (уже
+корректно читает `"role"`), добавить тест с реально сминченным JWT
+(не hand-built mock claim, см. предостережение LR-007 в `archive.md`).
+
+---
+
+## LR-026 — Account-lockout: content-based oracle существования аккаунта на `/auth/login`
+
+**Tier:** MED (тот же класс, что уже закрытый LR-014, но на более
+ценном эндпоинте)
+**Статус:** Open
+**Источник:** LR-022, фаза 1 (см. `docs/security/audit-2026-08-06.md`, H3)
+
+`AuthService.java:61-63` кидает голый `RuntimeException` на
+заблокированный аккаунт → 500 с отличным от bad-credentials (401) телом
+— атакующий, вогнавший аккаунт в лок, различает "существует и
+заблокирован" от "неверные данные/неизвестен" по содержимому ответа.
+
+**Сделать:** типизированное исключение → тот же generic 401, что
+bad-credentials, либо осознанный `423 Locked`.
+
+---
+
+## LR-027 — Scoped DB-роль для приложения (сейчас — суперюзер Postgres)
+
+**Tier:** HIGH (SQL-инъекция/небезопасный native query = ключи от всего
+кластера БД, не только таблиц приложения)
+**Статус:** Open · требует ручной `psql`-сессии против прода (не может
+быть сделано мной)
+**Источник:** LR-022, фаза 2 (см. `docs/security/audit-2026-08-06.md`,
+H4). Расширяет уже открытый `LR-003` пункт 6 (backup-роль) на runtime-
+креденшл самого приложения — более ценную из двух целей.
+
+`backend-deployment.yaml` и `pg-statefulset.yaml` используют один и тот
+же Secret `lr-db-credentials` — то, что `initdb` делает bootstrap-
+суперюзером. Приложение аутентифицируется в Postgres суперюзером для
+всего обычного трафика.
+
+**Сделать:** создать scoped-роль `lr_app` (без `SUPERUSER`/`CREATEDB`/
+`CREATEROLE`) и отдельную `lr_backup` (read-only), перевести креды,
+разнести секреты.
+
+---
+
+## LR-028 — Scoped CI kubeconfig (сейчас — вероятно full cluster-admin)
+
+**Tier:** HIGH · **Статус:** Open · сначала требует живой проверки
+(GitLab project Settings → CI/CD → Variables), не может быть подтверждено
+из файлов репозитория
+**Источник:** LR-022, фаза 2 (см. `docs/security/audit-2026-08-06.md`, H5)
+
+`.gitlab-ci.yml`'s `deploy-dev` использует `$KUBECONFIG_FILE` — по
+единственной задокументированной конвенции получения (`INFRA-LR.md`
+§10) это копия `/etc/rancher/k3s/k3s.yaml`, встроенный cluster-admin
+конфиг k3s. Ни одного namespace-scoped `ServiceAccount`/`RoleBinding`
+для CI нет нигде в репозитории.
+
+**Не начинать фикс без:** живой проверки, что `$KUBECONFIG_FILE`
+реально настолько широкий, как предполагает эта единственная
+задокументированная процедура — может быть уже уже, чем кажется из
+файлов.
+
+---
+
+## LR-029 — `GlobalExceptionHandler`: системная утечка `ex.getMessage()` + entity-existence oracle
+
+**Tier:** MED (много мест сразу, не point-fix)
+**Статус:** Open
+**Источник:** LR-022, фаза 1 (см. `docs/security/audit-2026-08-06.md`, M1)
+
+Catch-all (`GlobalExceptionHandler.java:101-111`) отдаёт `ex.getMessage()`
+клиенту буквально для любого необработанного исключения. В сочетании с
+повсеместным идиомом `orElseThrow(() -> new RuntimeException("X not
+found with id: " + id))` (`UserService`, `GroupService`,
+`EnrollmentService` и другие) любой авторизованный вызывающий может
+перебирать ID `Order`/`Enrollment`/`Contract`/`Payment` и различать
+"не существует" (500, называет сущность+id) от "существует, но
+запрещено" (403) от "существует и разрешено" (200).
+
+**Сделать:** catch-all — фиксированное generic-сообщение, никогда не
+эхо `ex.getMessage()` (уже логируется server-side отдельно, это
+корректно). Заменить ad hoc `RuntimeException("X not found")` на
+выделенное not-found-исключение с единообразным 404.
+
+---
+
+## LR-030 — `GroupController.createGroup`: mass assignment через raw-entity binding без allow-листа полей
+
+**Tier:** LOW-MED (требует уже-привилегированного аккаунта ADMIN/
+BUSINESS_OWNER — понижает severity)
+**Статус:** Open
+**Источник:** LR-022, фаза 1 (см. `docs/security/audit-2026-08-06.md`, M11)
+
+`GroupController.java:42-48` → `GroupService.save()` — голый
+`groupRepository.save(group)`, без field allow-листа (контраст с
+`update()`, который копирует поля вручную). Вызывающий может задать
+`capacityLeft` произвольно (обходит `@PrePersist`-дефолт) и —
+потенциальный реальный риск — `enrollments` (`CascadeType.ALL,
+orphanRemoval=true`): сфабрикованное тело с ID существующего enrollment
+может пере-родить чужую реальную запись на новую/редактируемую группу
+при сохранении.
+
+**Не решено окончательно:** нужна ли живая проверка, реально ли Jackson
+может инстанциировать `Group` через protected-конструктор без
+`@JsonCreator` — architect-reviewer/агент пометил как "needs deeper
+trace", не подтверждено.
+
+**Сделать:** тот же фикс, что уже применён для `Workshop` — выделенный
+`GroupCreateDTO` вместо raw-entity binding.
+
+---
+
+## LR-022 — DevSecOps-аудит: backend/infra/frontend, "круглый стол" экспертов + протокол в docs/security/
+
+**Tier:** HIGH (вся граница auth/authz, инфра-доступ к серверу и БД,
+потенциальные SQLi/обход бэкенда — максимальный блэст-радиус на проекте)
+**Статус:** Open · активная разработка (внеочередной, вне обычной
+приоритизации — по прямому запросу заказчика 2026-08-06, сразу после
+LR-014/LR-020, которые и стали поводом)
+**Источник:** прямой запрос заказчика 2026-08-06, после того как в этой
+же сессии дважды нашлись реальные, ранее незамеченные проблемы
+безопасности (LR-014 timing side-channel, LR-020 — Bean Validation не
+работал нигде в бэкенде вообще)
+
+**Формат — "круглый стол"** (установленная в проекте конвенция:
+именованные реальные фигуры индустрии, транслирующие свою публичную
+методологию, не выдуманные цитаты) специально под этот аудит, состав и
+методологии — по заданию заказчика:
+
+- **Katie Moussouris** (Luta Security) — координированное раскрытие
+  уязвимостей, устранение корневых архитектурных причин, а не подсчёт
+  багов.
+- **Tim Mackey** (Synopsys) — software supply chain risk, полная
+  трассируемость build-пайплайна.
+- **Chris Wysopal** (Veracode) — риски AI-generated кода, runtime-
+  валидация поведения, не только статический анализ.
+- **Rob Winch** (Spring Security Lead) — архитектура `SecurityFilterChain`,
+  многоуровневая авторизация (`@PreAuthorize` + URL-правила),
+  deny-by-default, OAuth2/JWT.
+- **Josh Long** (Spring Developer Advocate) — security as a first-class
+  property: stateless JWT, ролевая/scope-based авторизация, secure
+  defaults (BCrypt/TLS/CSRF), zero-trust между сервисами.
+
+**Методологии:** Security by Design, Zero Trust Architecture, NIST SSDF
+(SP 800-218), OWASP Secure by Design, Threat Modeling (STRIDE/DREAD/
+Attack Trees).
+
+### Скоуп (6 пунктов, задание заказчика дословно)
+
+1. Ревизия всего бэкенда на паттерны/уязвимости, включая всё, что
+   касается авторизации (`@PreAuthorize`, `SecurityConfig`, JWT, границы
+   `ADMIN`/`BUSINESS_OWNER`/`TEACHER`/`USER`).
+2. Ревизия инфра-файлов и деплоя — дыры, через которые можно
+   проникнуть на сервер/к БД (Helm/K8s манифесты, secrets-хендлинг,
+   `.gitlab-ci.yml`, сетевые правила, доступ к Postgres).
+3. Ревизия всего фронтенда — возможные SQL-инъекции, и отдельно —
+   **есть ли прямые обращения из фронта напрямую к БД в обход бэкенда**
+   (архитектурно не должно быть по ADR, но нужно реально проверить, не
+   поверить на слово).
+4. По результатам — протокол в новой `docs/security/` (имя файла с датой
+   аудита), с общим результирующим уровнем архитектурной безопасности +
+   перечнем необходимых изменений.
+5. По протоколу — завести тикеты на устранение найденных дыр/уязвимостей.
+6. После закрытия этих тикетов — повторить пп.1-4 как финальную
+   верификацию (не в этом заходе — гейтится на закрытии тикетов из п.5).
+
+**Базовые артефакты для анализа** — используются одновременно и как
+источник правды об архитектуре, и как потенциальный источник
+уязвимостей (проверять на архитектурные решения, которые могли
+неосознанно создать дыры или неэффективность):
+`docs/architecture/erm.drawio`, `docs/architecture/decisions.md`,
+`docs/architecture/IMPLEMENTATION-PROTOCOL-2026-07.md`,
+`docs/architecture/lr-erm-2026-07.drawio`, `docs/context/PROJECT_INDEX.md`.
+
+**Прогресс:**
+- [x] П.1 — backend (готово 2026-08-06, три фоновых агента параллельно)
+- [x] П.2 — infra/deploy (готово 2026-08-06)
+- [x] П.3 — frontend (готово 2026-08-06)
+- [x] П.4 — протокол в `docs/security/audit-2026-08-06.md` (готово
+      2026-08-06; 1 CRITICAL, 5 HIGH, 6 MEDIUM, 9 LOW/INFO)
+- [x] П.5 — тикеты по результатам: LR-024..LR-030 заведены (см. выше),
+      LR-021 уже был заведён отдельно (Payment/Order DTO validation).
+      **LR-023 — CRITICAL-находка п.1, устранена немедленно вне очереди
+      п.4/5, см. `archive.md`** — Spring Data REST давал полный обход
+      авторизации + само-эскалацию до ADMIN
+- [ ] П.6 — финальная верификация (после закрытия LR-024..LR-030,
+      LR-021 — не начата)
+
+---
+
 ## LR-021 — `PaymentRequestDTO`/`OrderRequestDTO`: нет ни одной аннотации валидации
 
 **Tier:** MED (платёжные данные — сумма/валюта/статус, выше среднего по
