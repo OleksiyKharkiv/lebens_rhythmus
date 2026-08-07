@@ -2,6 +2,163 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-07 — security: LR-031 Фаза 1 — observability-фундамент
+
+### Область (`backend/{build.gradle,src/main/{resources/application.properties,java/com/be/{service/AuthService,web/handler/GlobalExceptionHandler}.java},src/test/java/com/be/{ApiSurfaceAllowlistTest(new),service/AuthServiceTest,web/handler/GlobalExceptionHandlerTest,web/controller/{UserControllerTest,PaymentControllerTest}}.java}`, `devops/helm/lr-app/{values.yaml,templates/backend-deployment.yaml}`, `.gitlab-ci.yml`, `docs/{security/roadmap.md,tickets/tickets.md}`)
+
+- **feat (LR-031 Фаза 1, HIGH)** — `micrometer-registry-prometheus`
+  добавлен в `backend/build.gradle`;
+  `management.endpoints.web.exposure.include` дополнен `prometheus` —
+  `/actuator/prometheus` в формате, который `otelcol-contrib` уже умеет
+  скрейпить (проверенный на numi паттерн).
+- **feat (LR-031 Фаза 1)** — security-метрики в choke-point'ах:
+  `AuthService.authenticate()`/`register()` → `auth.login.failure{reason}`
+  (4 фиксированных значения тега: `unknown_email`/`locked`/
+  `bad_password`/`email_not_verified` — не сырой ввод, кардинальность
+  ограничена по построению), `auth.login.success`, `auth.register`.
+  `GlobalExceptionHandler.handleAccessDenied()`/`handleNoResourceFound()`
+  → `authz.denied`, `http.unmapped_path` — **осознанно без тегов
+  `path`/`role`**, в отличие от исходной спецификации в
+  `docs/security/roadmap.md` (raw-path/role как тег — известный
+  источник неограниченной кардинальности; см. комментарий в коде и
+  обновлённый `roadmap.md` "Статус" для полного обоснования).
+  `http.unmapped_path` отмечен в роадмапе как "ретроспективно самый
+  ценный" — существуй он на момент LR-023, exploit-трафик
+  (`GET/PATCH /users`, `/participants` вне `/api/v1/**`) был бы виден с
+  первого дня, а не спустя ~9.5 месяцев.
+- **test (LR-031 Фаза 1, новый файл)** — `ApiSurfaceAllowlistTest` —
+  "правильный" CI-guard взамен точечного grep по имени зависимости,
+  **двухслойный** (не как в исходной спецификации роадмапа):
+  1. путь-based проверка на `RequestMappingHandlerMapping` — каждый
+     смонтированный путь либо под `/api/v1/**`, либо в explicit
+     allow-листе (`/error`);
+  2. **добавлено по находке `architect-reviewer`** — enumeration всех
+     бинов `HandlerMapping` по имени против explicit allow-листа. Причина:
+     проверено напрямую по исходникам `spring-data-rest-webmvc` — свои
+     auto-exposed пути (LR-023) регистрирует внутри package-private
+     `DelegatingHandlerMapping`, обёртывающего `RepositoryRestHandlerMapping`/
+     `BasePathAwareHandlerMapping` как обычные `new`'ые объекты, никогда
+     не публикуемые Spring-бинами сами по себе — **проверка #1 сама по
+     себе НЕ поймала бы LR-023**, если бы существовала на момент
+     инцидента. Только комбинация обоих слоёв ловит фактический механизм.
+- **fix (регрессия, найдена своим же изменением)** — конструктор
+  `GlobalExceptionHandler` теперь требует `MeterRegistry` → оба
+  существующих `@WebMvcTest`-среза (`UserControllerTest`,
+  `PaymentControllerTest`) не поднимали контекст
+  (`NoSuchBeanDefinitionException` — `@WebMvcTest` не автоконфигурирует
+  Micrometer). Исправлено `@MockitoBean(answers = Answers.RETURNS_MOCKS)`
+  на оба — `RETURNS_DEFAULTS` дал бы `null` на `.counter(...)` →
+  `NullPointerException` на цепочечном `.increment()`.
+- **infra (LR-031 Фаза 1, предусловие Фазы 2)** —
+  `management.server.port=${MANAGEMENT_SERVER_PORT:9090}` — actuator
+  переезжает с публичного бизнес-порта на отдельный (образец numi's
+  `9090`). Обновлены в том же дифе, чтобы не сломать деплой:
+  `backend-deployment.yaml`'s liveness/readinessProbe (были захардкожены
+  на `8080`) + новый `containerPort`/env var; `.gitlab-ci.yml`'s
+  smoke-test (был `curl .../actuator/health`, теперь реальный публичный
+  `/api/v1/workshops` — де-факто лучшая проверка). `backend-service.yaml`
+  сознательно НЕ тронут — управляющий порт остаётся недоступен через
+  Service/Ingress уже сейчас, полная сетевая изоляция (`NetworkPolicy`)
+  — предмет Фазы 2, не этой.
+- **review** — `architect-reviewer`: approve with changes. Нашёл реальный
+  HIGH-пробел в первой версии `ApiSurfaceAllowlistTest` (см. выше) —
+  исправлено до закрытия, перепройдено ревью не потребовалось (фикс
+  строго расширяет покрытие, не меняет уже одобренную часть). Также
+  поймал вводящий в заблуждение комментарий про `/actuator/**` в
+  path-based тесте (actuator использует `WebMvcEndpointHandlerMapping`,
+  sibling-класс, а не subtype `RequestMappingHandlerMapping` —
+  исходное предположение спецификации роадмапа было неверным) —
+  скорректировано в коде и в `roadmap.md`.
+- **docs** — `docs/security/roadmap.md`'s "Статус": Фаза 0 (была
+  пропущена при предыдущем закрытии) и Фаза 1 отмечены `[x]` с полным
+  разбором всех отклонений от исходной спецификации. `tickets.md`'s
+  LR-031 progress — Фаза 1 отмечена `[x]`.
+- **verify** — `./gradlew test` зелёный (полный прогон + изолированный
+  прогон `ApiSurfaceAllowlistTest`), `FIELD_ENCRYPTION_KEY`/`JWT_SECRET`
+  сгенерированы заново на прогон, `JAVA_HOME` — `temurin-21.0.11`.
+
+## 2026-08-07 — security: LR-031 Фаза 0 — 6 тикетов закрыты (LR-021/024/025/026/029/030)
+
+### Область (`backend/src/main/java/com/be/{web/controller/{WorkshopController,GroupController,EnrollmentController,OrderController},service/{TeacherService,GroupService,AuthService},domain/repository/TeacherRepository,web/handler/GlobalExceptionHandler,web/dto/request/{GroupCreateDTO(new),PaymentRequestDTO,OrderRequestDTO}}.java`, `frontend-svelte/src/{lib/api.ts,routes/admin/groups/+page.svelte}`, новые тесты `OrderOwnershipTest`/`GroupServiceTest`/`GlobalExceptionHandlerTest`/`AuthServiceTest`)
+
+- **security (LR-024, HIGH)** — teacher IDOR: `EnrollmentController.
+  participantsForGroup`/`WorkshopController.byTeacher`/`GroupController.
+  getGroupsByTeacher` (последний — вообще без `@PreAuthorize`) проверяли
+  только роль, не владение. Новый `TeacherRepository.findByEmail()` +
+  `TeacherService.resolveTeacherIdForUser()` резолвит User→Teacher по
+  email (единственная существующая связь, раньше матчилась только на
+  фронте) — все три эндпоинта теперь 403'ят при чужом `teacherId`/`groupId`.
+- **security (LR-025, HIGH)** — `OrderController.getById()` читал
+  несуществующий JWT-claim `"roles"` (реальный — `"role"`) →
+  `NullPointerException` на каждом вызове → проверка владения никогда не
+  исполнялась. Исправлено на `JwtAuthUtils.hasRole()`. Новый реальный
+  E2E-тест `OrderOwnershipTest`.
+- **security (LR-026, MED)** — account-lockout кидал `RuntimeException`
+  → 500, отличимый от bad-credentials' 401 — content-based oracle
+  существования аккаунта. Теперь та же `BadCredentialsException`.
+- **security (LR-029, MED, частично)** — `GlobalExceptionHandler`'s
+  catch-all больше не эхо `ex.getMessage()` клиенту (закрывает реальную
+  утечку для 59+ мест `RuntimeException("X not found")` разом). Полная
+  замена на типизированное 404-исключение вынесена в новый `LR-032`
+  (LOW, отдельный проход по 18 сервисам).
+- **security (LR-030, LOW-MED)** — `GroupController.createGroup`
+  биндил raw JPA entity без allow-листа полей (риск: чужой `enrollments`
+  ID, произвольный `capacityLeft`). Новый `GroupCreateDTO` (тот же
+  паттерн, что уже применён для `WorkshopCreateDTO`) — структурно не
+  может нести эти поля. Фронтенд: `GroupCreateRequestDTO` +
+  `toCreateRequest()`, `updateGroup`/PUT не тронут.
+- **feat (LR-021, MED)** — `@DecimalMin`/`@NotNull` на amount,
+  `@Pattern` на currency, `@Size` по реальным `@Column` — на
+  `PaymentRequestDTO`/`OrderRequestDTO`. Осознанно не сделано: `status`
+  → enum (нет установленного домена значений в коде — продуктовое
+  решение, не гадать), `orderNumber` → `@NotBlank` (DTO общий с
+  `update()`, который его не читает).
+- **review** — `architect-reviewer`: один пакетный обзор на все 6
+  тикетов сразу, approve with changes (единственный "must-fix" —
+  окружение самого ревьюера, не код; независимо подтвердил каждый
+  открытый вопрос по каждому тикету).
+- **docs** — `backend/README.md`: добавлена секция про обязательные
+  `FIELD_ENCRYPTION_KEY`/`JWT_SECRET` для локального `./gradlew test`
+  (найдено ревьюером — без документации любой свежий клон падает по
+  той же причине, не относящейся ни к одному конкретному тикету).
+- **verify** — `./gradlew test` зелёный, 61 тест (перепрогнан `--rerun`
+  для подтверждения).
+- LR-021/024/025/026/029(частично)/030 закрыты и заархивированы. Новый
+  `LR-032` заведён (follow-up). LR-027/LR-028 остаются open — блокируются
+  на живом инфра-доступе (ручной `psql`, GitLab CI/CD Variables).
+
+## 2026-08-06 — docs: LR-031 — роадмап "структура безопасности + мониторинг" (Roundtable #4/#5)
+
+### Область (`docs/decision-history/roundtable-log.md`, `docs/security/roadmap.md` (new), `docs/tickets/tickets.md`)
+
+- **docs** — по запросу заказчика собран круглый стол (тот же состав,
+  что проектировал LR-022: Moussouris, Mackey, Wysopal, Winch, Long) на
+  две задачи: (1) ретроспектива LR-023 — почему дыра прожила ~9.5
+  месяцев (зависимость попала в `build.gradle` в один из первых
+  коммитов бэкенда, 2025-10-21, и не была названа вслух ни разу за всю
+  историю проекта, включая архитектурный Roundtable #1 с явными
+  security-местами — записано как **Roundtable #4**); (2) не точечный
+  CI-guard, а полный роадмап структуры безопасности + интеграции с
+  централизованным мониторингом на VM600 (`numi/infra/infra-backlog.md`
+  INFRA-008 — записано как **Roundtable #5**).
+- **docs** — `docs/security/roadmap.md`: 4 фазы — observability-
+  фундамент в приложении (Micrometer/Prometheus, security-метрики через
+  уже существующие choke-point'ы `GlobalExceptionHandler`/`AuthService`,
+  обобщённый CI-guard на allow-лист HTTP-путей вместо точечного grep'а
+  по имени зависимости), сетевая изоляция (`NetworkPolicy` в `lr-dev` —
+  закрывает заодно M4 и уже известный пункт `INFRA-LR.md` §8; отдельный
+  management-порт — закрывает заодно M7), подключение к VM600 (гейтится
+  на INFRA-008, не в скоупе одного LR), институционализация
+  (периодический повтор аудита, SBOM в CI).
+- **docs** — заведён `LR-031` (master-тикет роадмапа, HIGH,
+  `docs/tickets/tickets.md`), трекает прогресс по фазам, ссылается на
+  Roundtable #5 и `roadmap.md` вместо дублирования обоснования.
+- Порядок в `roundtable-log.md` также исправлен (Roundtable #4 ранее
+  случайно попал перед Roundtable #1 в результате предыдущей правки —
+  восстановлена хронология, добавлена явная сноска про пропуск в
+  нумерации #2/#3, которые синтезировались напрямую в `tickets.md`/
+  `CHANGELOG.md`, не в этот лог).
+
 ## 2026-08-06 — docs: LR-022 фазы 1-5 завершены — протокол `docs/security/audit-2026-08-06.md`, LR-024..LR-030 заведены
 
 ### Область (`docs/security/audit-2026-08-06.md` (new), `docs/tickets/tickets.md`)

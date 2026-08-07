@@ -5,6 +5,165 @@
 
 ---
 
+## LR-024 — Teacher IDOR: доступ к контактам детей из чужих групп
+
+**Tier:** HIGH · **Статус:** Closed 2026-08-07 · `architect-reviewer` approve
+**Источник:** LR-022, фаза 1+3 (найдено независимо backend- и
+frontend-агентами — `docs/security/audit-2026-08-06.md`, H1)
+
+`GET /api/v1/teacher/groups/{groupId}/participants`
+(`EnrollmentController.java`) и парные `GET /workshops/teacher/
+{teacherId}`, `GET /groups/teacher/{teacherId}` (последний — вообще без
+`@PreAuthorize`) проверяли только роль `TEACHER`, не владение конкретной
+группой/воркшопом.
+
+**Сделано:** `User` и `Teacher` — разные сущности без FK, связаны только
+по уникальному `email` — новый `TeacherRepository.findByEmail()` +
+`TeacherService.resolveTeacherIdForUser(userId)` резолвит "какой
+Teacher-профиль у этого JWT-пользователя". Все три эндпоинта сравнивают
+резолвнутый id с запрошенным ресурсом, 403 (`AccessDeniedException`) при
+несовпадении или отсутствии профиля — ADMIN/BUSINESS_OWNER не
+затронуты. `GroupController.getGroupsByTeacher` получил отсутствовавший
+`@PreAuthorize`. Раньше эта связка резолвилась только на фронте
+(`teacher/+page.svelte`, `t.email === user.email`) — UX-удобство, не
+security-граница.
+
+`architect-reviewer` подтвердил: NPE/500-путей нет,
+`resolveTeacherIdForUser` корректно возвращает `Optional.empty()` и на
+`userId == null`, и на отсутствие Teacher-строки — оба падают в 403, не
+в исключение.
+
+---
+
+## LR-025 — `OrderController.getById()`: NPE на каждом вызове, проверка владения никогда не исполняется
+
+**Tier:** HIGH · **Статус:** Closed 2026-08-07 · `architect-reviewer` approve
+**Источник:** LR-022, фаза 1 (`docs/security/audit-2026-08-06.md`, H2)
+
+Читал claim `"roles"` (JWT минтит только единственный `"role"`) —
+`getClaimAsStringList` на отсутствующем claim'е тихо возвращал `null`,
+следующий `.stream()` кидал NPE на каждом запросе, включая от админов.
+Реальная проверка владения заказом никогда не исполнялась.
+
+**Сделано:** `JwtAuthUtils.hasRole(jwt, "ADMIN")`/`"BUSINESS_OWNER"`
+(уже корректно читает реальный claim). Новый реальный E2E-тест
+`OrderOwnershipTest` (регистрация → логин → реальный JWT, не
+mock-claim — см. предостережение LR-007) — владелец читает свой заказ
+(200, не 500), посторонний получает 403 (не 500, не 200).
+`architect-reviewer`: `getClaimAsStringList("roles")` больше нигде в
+кодовой базе не встречается (grep).
+
+---
+
+## LR-026 — Account-lockout: content-based oracle существования аккаунта на `/auth/login`
+
+**Tier:** MED · **Статус:** Closed 2026-08-07 · `architect-reviewer` approve
+**Источник:** LR-022, фаза 1 (`docs/security/audit-2026-08-06.md`, H3)
+
+`AuthService`'s лок-аут-проверка кидала голый `RuntimeException` → 500 с
+телом, отличным от bad-credentials' 401 — тот же класс находки, что уже
+закрытый LR-014, но на `/auth/login`, более ценном эндпоинте.
+
+**Сделано:** та же `BadCredentialsException("Invalid credentials")`,
+что и на пути неверного пароля — неотличимо по конструкции. Новый тест
+`AuthServiceTest.authenticate_lockedAccount_throwsBadCredentials_
+sameAsWrongPassword`.
+
+---
+
+## LR-029 — `GlobalExceptionHandler`: системная утечка `ex.getMessage()` + entity-existence oracle
+
+**Tier:** MED · **Статус:** Closed 2026-08-07 (частично — см. follow-up
+LR-032) · `architect-reviewer` approve
+**Источник:** LR-022, фаза 1 (`docs/security/audit-2026-08-06.md`, M1)
+
+Catch-all отдавал `ex.getMessage()` клиенту буквально для любого
+необработанного исключения — в сочетании с 59 местами по 18 сервисам,
+использующими идиом `orElseThrow(() -> new RuntimeException("X not
+found with id: " + id))`, это был entity-existence oracle.
+
+**Сделано (сознательно уже, чем полный текст тикета):** catch-all
+теперь отдаёт фиксированное generic-сообщение, никогда не эхо
+`ex.getMessage()` (полная информация по-прежнему логируется server-side
+— не менялось). Это закрывает реальную утечку для всех 59+ мест сразу,
+независимо от типа исключения. **Не сделано:** замена всех 59 мест на
+типизированное not-found-исключение с единообразным 404 — заведён
+отдельный `LR-032` (LOW, статус-код есть 500 вместо 404, но контента
+больше не эхо). `architect-reviewer` подтвердил: такой скоуп разумен,
+оставшийся 500-vs-404-vs-403 сигнал — материально меньшая по масштабу
+утечка, чем исходная, корректно трекается отдельно, не тихо забыта.
+Новый тест `GlobalExceptionHandlerTest`.
+
+---
+
+## LR-030 — `GroupController.createGroup`: mass assignment через raw-entity binding без allow-листа полей
+
+**Tier:** LOW-MED · **Статус:** Closed 2026-08-07 · `architect-reviewer` approve
+**Источник:** LR-022, фаза 1 (`docs/security/audit-2026-08-06.md`, M11)
+
+`GroupService.save()` был голым `groupRepository.save(group)`, без
+field allow-листа. "Needs deeper trace" из исходной находки (может ли
+Jackson вообще инстанциировать `Group` через protected-конструктор) —
+снято: очевидно да, поскольку создание групп уже работает в проде через
+именно этот путь.
+
+**Сделано:** новый `GroupCreateDTO` (явные поля, `xxxId: Long` — тот же
+паттерн, что уже применён для `WorkshopCreateDTO`), `GroupService.
+createGroup()` резолвит id через репозитории. `GroupController.
+createGroup()` больше не биндит raw-entity. Фронтенд: новый
+`GroupCreateRequestDTO` (плоские id) + `toCreateRequest()`-трансформация
+в `admin/groups/+page.svelte` — `updateGroup`/PUT не тронут, по-прежнему
+корректно защищён на уровне сервиса (`update()`'s ручное копирование
+полей). `architect-reviewer` подтвердил: `GroupCreateDTO` структурно не
+может нести `capacityLeft`/`enrollments` — невозможно по конструкции, не
+просто "не замаплено". Новый `GroupServiceTest`.
+
+---
+
+## LR-021 — `PaymentRequestDTO`/`OrderRequestDTO`: нет ни одной аннотации валидации
+
+**Tier:** MED · **Статус:** Closed 2026-08-07 · `architect-reviewer` approve
+**Источник:** architect-reviewer, ревью LR-012/LR-020, 2026-08-06
+
+**Сделано (сознательно уже полного текста тикета — см. его же
+предостережение "не на автомате"):** `@NotNull @DecimalMin("0.01")` на
+`amount` (обеих DTO), `@Pattern("[A-Z]{3}")` на `currency`, `@Size`
+границы по реальным `@Column`-определениям (или неявному дефолту
+Hibernate 255 символов, где явной длины нет). **Не сделано осознанно:**
+`status` НЕ конвертирован в enum — `Payment.java`'s собственный
+комментарий уже говорит "Kept as String for now — optionally switch to
+enum", и grep по кодовой базе не нашёл ни одного места, где Order/
+Payment.status реально устанавливается программно — придумывать enum
+сейчас значило бы гадать продуктовое решение, не чинить баг.
+`OrderRequestDTO.orderNumber` НЕ `@NotBlank`, несмотря на
+`nullable=false` в сущности — DTO общий для create и update
+(`OrderController`), а `OrderService.update()` `orderNumber` вообще не
+читает; требовать его на каждом PUT было бы искусственным. DB-уровневый
+`NOT NULL` по-прежнему ловит реально отсутствующее значение на create.
+`architect-reviewer` подтвердил обе развилки (PaymentRequestDTO — только
+create, без shared-update; OrderRequestDTO.update() не читает
+orderNumber) через grep, независимо.
+
+---
+
+## LR-032 — Заменить 59 мест `RuntimeException("X not found")` на типизированное not-found-исключение с единообразным 404
+
+**Tier:** LOW (статус-код неверный, но контент больше не течёт — LR-029
+уже закрыл реальную утечку)
+**Статус:** Open · backlog, не блокирует ничего
+**Источник:** follow-up к LR-029, `architect-reviewer` подтвердил
+разумность отдельного скоупа, 2026-08-07
+
+59 мест в 18 сервисных файлах используют голый `orElseThrow(() -> new
+RuntimeException("X not found with id: " + id))` → падает в общий
+catch-all → 500 вместо семантически верного 404. Реальная утечка
+контента уже закрыта (LR-029) — это чисто про корректность статус-кода,
+не про security. Требует отдельного, внимательного прохода по всем 18
+сервисам (свой `architect-reviewer`, свои тесты), не точечный патч —
+заведено отдельно, а не тихо расширен скоуп LR-029.
+
+---
+
 ## LR-023 — `spring-boot-starter-data-rest`: каждый репозиторий торчал наружу в обход ВСЕХ `@PreAuthorize`, само-эскалация до ADMIN одним запросом
 
 **Tier:** CRITICAL (переопределяет обычную HIGH-шкалу проекта — полный
