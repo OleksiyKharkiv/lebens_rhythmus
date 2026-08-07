@@ -2,6 +2,7 @@ package com.be.web.handler;
 
 import com.be.domain.exception.EmailNotVerifiedException;
 import com.be.domain.exception.InvalidVerificationTokenException;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -25,6 +26,11 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     private final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private final MeterRegistry meterRegistry;
+
+    public GlobalExceptionHandler(MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
 
     /**
      * Handler for @Valid validation errors on request body (DTO).
@@ -86,6 +92,14 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler({AuthorizationDeniedException.class, AccessDeniedException.class})
     public ResponseEntity<Map<String, Object>> handleAccessDenied(RuntimeException ex) {
+        // LR-031 Phase 1 — no per-path tag deliberately: this app's path
+        // set is small and fixed today, but tagging by raw request path is
+        // a well-known Micrometer cardinality footgun (a path-traversal
+        // probe or similar could mint unbounded tag values) — a plain
+        // total is the safe default; add a bounded tag (e.g. controller
+        // class) later if per-endpoint breakdown turns out to matter.
+        meterRegistry.counter("authz.denied").increment();
+
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpStatus.FORBIDDEN.value());
         body.put("error", "Forbidden");
@@ -106,6 +120,13 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Map<String, Object>> handleNoResourceFound(NoResourceFoundException ex) {
+        // LR-031 Phase 1 — retrospectively the most valuable metric in this
+        // whole batch: if this had existed 2025-10-21..2026-08-06, LR-023's
+        // exploit traffic (GET/PATCH /users, /participants — spring-data-rest
+        // paths outside /api/v1/**) would have shown up as an anomaly here
+        // from day one instead of sitting undetected for ~9.5 months.
+        meterRegistry.counter("http.unmapped_path").increment();
+
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpStatus.NOT_FOUND.value());
         body.put("error", "Not Found");
@@ -117,6 +138,21 @@ public class GlobalExceptionHandler {
 
     /**
      * Fallback — catches everything else and returns 500.
+     * <p>
+     * LR-029 — used to echo ex.getMessage() verbatim to the client. Full
+     * detail is still logged server-side right above (that's correct and
+     * stays) — the client-facing body is now a fixed, generic message.
+     * The combination of this catch-all + the codebase-wide
+     * `orElseThrow(() -> new RuntimeException("X not found with id: " + id))`
+     * idiom (dozens of call sites across the service layer) let any
+     * authenticated caller distinguish "resource doesn't exist" (message
+     * named the entity+id) from "exists but denied" (403, separate
+     * handler) from "exists and allowed" (200) — an entity-existence
+     * oracle across Order/Enrollment/Contract/Payment/etc. Converting
+     * every one of those call sites to a dedicated not-found exception
+     * with a uniform 404 is a larger, separate refactor (see follow-up
+     * ticket) — this fix closes the actual information leak for all of
+     * them at once, regardless of which exception type is thrown.
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleAll(Exception ex) {
@@ -125,7 +161,7 @@ public class GlobalExceptionHandler {
         Map<String, Object> body = new HashMap<>();
         body.put("status", HttpStatus.INTERNAL_SERVER_ERROR.value());
         body.put("error", "Internal server error");
-        body.put("message", ex.getMessage());
+        body.put("message", "An unexpected error occurred");
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }

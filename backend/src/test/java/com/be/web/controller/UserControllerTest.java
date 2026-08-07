@@ -4,7 +4,9 @@ import com.be.config.CorsProperties;
 import com.be.config.SecurityConfig;
 import com.be.service.UserService;
 import com.be.web.mapper.UserMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -35,6 +37,15 @@ class UserControllerTest {
 
     @MockitoBean
     private UserMapper userMapper;
+
+    // LR-031 Phase 1 — GlobalExceptionHandler now requires a MeterRegistry
+    // (security-metric counters), which @WebMvcTest's thin slice context
+    // doesn't autoconfigure. RETURNS_MOCKS (not the default RETURNS_DEFAULTS)
+    // because .counter(...) must return a non-null Counter for the chained
+    // .increment() call the handler makes — this slice doesn't assert on
+    // metrics, it just needs the bean graph to construct without NPEs.
+    @MockitoBean(answers = Answers.RETURNS_MOCKS)
+    private MeterRegistry meterRegistry;
 
     @Test
     void reactivateUser_asAdmin_succeeds() throws Exception {

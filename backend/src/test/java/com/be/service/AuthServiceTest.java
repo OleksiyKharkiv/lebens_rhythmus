@@ -9,6 +9,8 @@ import com.be.web.dto.request.UserRegistrationDTO;
 import com.be.web.dto.response.RegistrationResponseDTO;
 import com.be.web.dto.response.UserLoginResponseDTO;
 import com.be.web.mapper.UserMapper;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -16,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,6 +49,13 @@ class AuthServiceTest {
     @Mock
     private EmailVerificationService emailVerificationService;
 
+    // Real in-memory registry, not a mock — LR-031's metric increments are
+    // fire-and-forget from AuthService's own perspective (nothing reads the
+    // return value), a mock would work too but a real one costs nothing and
+    // means these tests would also fail loudly if a counter() call ever
+    // threw for a real reason.
+    private final MeterRegistry meterRegistry = new SimpleMeterRegistry();
+
     // 50ms — small enough to keep the suite fast, large enough for
     // resendVerification_*'s timing assertions to not be flaky against
     // System.currentTimeMillis() jitter.
@@ -53,7 +63,7 @@ class AuthServiceTest {
 
     private AuthService authService() {
         return new AuthService(userService, passwordEncoder, userMapper, jwtUtils, emailVerificationService,
-                TEST_MIN_RESPONSE_MS);
+                TEST_MIN_RESPONSE_MS, meterRegistry);
     }
 
     @Test
@@ -86,6 +96,26 @@ class AuthServiceTest {
 
         assertThatThrownBy(() -> authService().authenticate(dto))
                 .isInstanceOf(BadCredentialsException.class);
+    }
+
+    @Test
+    void authenticate_lockedAccount_throwsBadCredentials_sameAsWrongPassword() {
+        // LR-026 — a locked account must be indistinguishable from
+        // wrong-credentials/unknown-email: same exception type, same
+        // message, so the response body/status can't be used as an
+        // account-existence oracle (previously a bare RuntimeException
+        // here produced a distinct 500, unlike bad-credentials' 401).
+        User user = User.builder().email("locked@example.com").password("hashed").role(Role.USER)
+                .emailVerified(true).lockUntil(LocalDateTime.now().plusMinutes(10)).build();
+        when(userService.findByEmail("locked@example.com")).thenReturn(Optional.of(user));
+
+        UserLoginRequestDTO dto = UserLoginRequestDTO.builder().email("locked@example.com").password("whatever").build();
+
+        assertThatThrownBy(() -> authService().authenticate(dto))
+                .isInstanceOf(BadCredentialsException.class)
+                .hasMessage("Invalid credentials");
+
+        verify(jwtUtils, never()).generateToken(any());
     }
 
     @Test

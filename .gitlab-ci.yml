@@ -109,12 +109,24 @@ deploy-dev:
 #    - lr-runner
 
 # ----------  Smoke-test ----------
+# LR-031 Phase 1 (2026-08-07) — was curl'ing /actuator/health through the
+# public path. Actuator moved to its own k8s-Service-unexposed port
+# (application.properties' management.server.port, closes audit finding
+# M7) specifically so it's NOT reachable through api.tlab29.com anymore —
+# checking it externally would now always fail regardless of real app
+# health. A real public, permitAll API endpoint is actually a *better*
+# smoke test anyway: it proves the actual application logic responds
+# through the real public path, not just that an ops endpoint answers.
+# Pod-level health (the thing /actuator/health used to prove here) is
+# already independently enforced by this Deployment's own liveness/
+# readiness probes before a pod ever receives traffic — unhealthy pods
+# never reach this check.
 smoke-test:
   stage: smoke
   image: curlimages/curl:latest
   needs: [ deploy-dev ]
   script:
-    - curl -f https://api.tlab29.com/actuator/health || exit 1
+    - curl -f https://api.tlab29.com/api/v1/workshops || exit 1
     - curl -f https://tlab29.com || exit 1
   tags:
     - lr-runner

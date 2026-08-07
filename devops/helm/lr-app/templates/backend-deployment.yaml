@@ -69,11 +69,20 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: {{ .Values.backend.service.port }}
+            # LR-031 Phase 1 — actuator's own port, deliberately NOT listed
+            # in backend-service.yaml's exposed ports (closes audit finding
+            # M7 — actuator no longer reachable through the k8s Service/
+            # Ingress/public domain at all). Only reachable via direct pod
+            # IP — which is exactly how the liveness/readinessProbe below
+            # already talk to it (kubelet probes bypass the Service).
+            - containerPort: {{ .Values.backend.service.managementPort }}
           env:
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://lr-postgres:5432/lebens_rhythmus"
             - name: JWT_EXPIRATION
               value: "{{ .Values.backend.env.JWT_EXPIRATION }}"
+            - name: MANAGEMENT_SERVER_PORT
+              value: "{{ .Values.backend.service.managementPort }}"
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
@@ -114,12 +123,12 @@ spec:
           livenessProbe:
             httpGet:
               path: /actuator/health
-              port: 8080
+              port: {{ .Values.backend.service.managementPort }}
             initialDelaySeconds: 60
             periodSeconds: 10
           readinessProbe:
             httpGet:
               path: /actuator/health
-              port: 8080
+              port: {{ .Values.backend.service.managementPort }}
             initialDelaySeconds: 30
             periodSeconds: 5

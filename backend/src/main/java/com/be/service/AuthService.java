@@ -8,6 +8,7 @@ import com.be.web.dto.request.UserRegistrationDTO;
 import com.be.web.dto.response.RegistrationResponseDTO;
 import com.be.web.dto.response.UserLoginResponseDTO;
 import com.be.web.mapper.UserMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -29,6 +30,7 @@ public class AuthService {
     private final JwtUtils jwtUtils;
     private final EmailVerificationService emailVerificationService;
     private final long resendVerificationMinResponseMs;
+    private final MeterRegistry meterRegistry;
 
     // Explicit constructor (not @RequiredArgsConstructor) — needed for the
     // @Value below, same reasoning as EmailVerificationService's constructor.
@@ -38,32 +40,56 @@ public class AuthService {
             UserMapper userMapper,
             JwtUtils jwtUtils,
             EmailVerificationService emailVerificationService,
-            @Value("${app.email-verification.resend-min-response-ms:400}") long resendVerificationMinResponseMs) {
+            @Value("${app.email-verification.resend-min-response-ms:400}") long resendVerificationMinResponseMs,
+            MeterRegistry meterRegistry) {
         this.userService = userService;
         this.passwordEncoder = passwordEncoder;
         this.userMapper = userMapper;
         this.jwtUtils = jwtUtils;
         this.emailVerificationService = emailVerificationService;
         this.resendVerificationMinResponseMs = resendVerificationMinResponseMs;
+        this.meterRegistry = meterRegistry;
     }
 
     /**
      * Authenticates user; returns token on valid credentials
+     * <p>
+     * LR-031 Phase 1 — each failure branch increments auth.login.failure
+     * with a `reason` tag, even though the client-facing exception/message
+     * stays identical across all of them (LR-014/LR-026's anti-enumeration
+     * property is about the HTTP response, not server-side observability —
+     * knowing internally *why* a login failed doesn't leak anything to the
+     * caller). A sustained spike in one reason is exactly the signal that
+     * would have made LR-023's live exploit attempt visible in real time,
+     * instead of sitting undetected for ~9.5 months.
      */
     public UserLoginResponseDTO authenticate(UserLoginRequestDTO dto) {
         Optional<User> maybeUser = userService.findByEmail(dto.getEmail());
         if (maybeUser.isEmpty()) {
+            meterRegistry.counter("auth.login.failure", "reason", "unknown_email").increment();
             throw new BadCredentialsException("Invalid credentials");
         }
         User user = maybeUser.get();
 
-        // Throws if account is temporarily locked
+        // LR-026 — used to throw a bare RuntimeException here, which fell
+        // through to the generic catch-all as a 500 with a distinct body
+        // ("Account locked...") from bad-credentials' 401 ("Invalid
+        // credentials") — a content-based oracle letting anyone who drives
+        // an account into lockout (trivial: 5 wrong-password attempts,
+        // no real credentials needed) then tell "this account exists and
+        // is locked" apart from "wrong credentials or unknown email".
+        // Same BadCredentialsException, same message, as every other
+        // reason this method can fail before a real session is issued —
+        // indistinguishable by design, matching LR-014's reasoning for
+        // /auth/resend-verification.
         if (user.getLockUntil() != null && user.getLockUntil().isAfter(LocalDateTime.now())) {
-            throw new RuntimeException("Account locked. Try again later.");
+            meterRegistry.counter("auth.login.failure", "reason", "locked").increment();
+            throw new BadCredentialsException("Invalid credentials");
         }
 
         if (!passwordEncoder.matches(dto.getPassword(), user.getPassword())) {
             userService.incrementFailedLoginAttempts(user.getEmail());
+            meterRegistry.counter("auth.login.failure", "reason", "bad_password").increment();
             throw new BadCredentialsException("Invalid credentials");
         }
 
@@ -72,6 +98,7 @@ public class AuthService {
         // probe whether an email is registered/verified without knowing
         // the password at all.
         if (!user.isEmailVerified()) {
+            meterRegistry.counter("auth.login.failure", "reason", "email_not_verified").increment();
             throw new EmailNotVerifiedException("Please verify your email before logging in");
         }
 
@@ -79,6 +106,8 @@ public class AuthService {
 
         String token = jwtUtils.generateToken(user);
         long expiresInSec = jwtUtils.getExpirationTime();
+
+        meterRegistry.counter("auth.login.success").increment();
 
         return userMapper.toLoginResponseDTO(user, token, expiresInSec,
                 Collections.emptyList(), Collections.emptyList());
@@ -105,6 +134,7 @@ public class AuthService {
         User saved = userService.createUser(user);
 
         emailVerificationService.sendVerificationEmail(saved);
+        meterRegistry.counter("auth.register").increment();
 
         return RegistrationResponseDTO.builder()
                 .message("Please check your email to confirm your account.")

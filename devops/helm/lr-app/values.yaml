@@ -9,6 +9,11 @@ backend:
     tag: ""           # Set from CI pipeline - backend image tag
   service:
     port: 8080
+    # LR-031 Phase 1 — actuator's port, deliberately not exposed in
+    # backend-service.yaml (see that file + backend-deployment.yaml's
+    # probes) — closes audit finding M7, matches numi's dedicated
+    # metrics-port pattern.
+    managementPort: 9090
   imagePullSecrets:
     - name: gitlab-registry
   # Environment variables for backend application

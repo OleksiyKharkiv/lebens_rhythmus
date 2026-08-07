@@ -42,6 +42,13 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-security'
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-actuator'
+    // LR-031 Phase 1 (2026-08-07) — Prometheus-format /actuator/prometheus,
+    // consumed by otelcol-contrib's `prometheus` receiver (same format
+    // already proven end-to-end for numi, see numi/docs/runbooks/monitoring.md).
+    // No app dependency on VM600 existing yet — this endpoint is only
+    // useful once something scrapes it, but the app-side half is fully
+    // independent of that (Phase 3, gated on VM600's own provisioning).
+    implementation 'io.micrometer:micrometer-registry-prometheus'
     compileOnly 'org.projectlombok:lombok'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'
     developmentOnly 'org.springframework.boot:spring-boot-docker-compose'

@@ -6,7 +6,9 @@ import com.be.domain.entity.Payment;
 import com.be.service.PaymentService;
 import com.be.web.dto.response.PaymentResponseDTO;
 import com.be.web.mapper.PaymentMapper;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.Test;
+import org.mockito.Answers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -48,6 +50,12 @@ class PaymentControllerTest {
 
     @MockitoBean
     private PaymentMapper paymentMapper;
+
+    // LR-031 Phase 1 — see UserControllerTest's identical field for why
+    // this is needed (GlobalExceptionHandler now requires a MeterRegistry)
+    // and why RETURNS_MOCKS specifically.
+    @MockitoBean(answers = Answers.RETURNS_MOCKS)
+    private MeterRegistry meterRegistry;
 
     @Test
     void getMyPayments_returnsOnlyTheAuthenticatedUsersOwnPayments() throws Exception {
