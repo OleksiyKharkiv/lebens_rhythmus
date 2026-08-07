@@ -2,6 +2,61 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-07 — infra: LR-031 Фаза 2 — сетевая изоляция (`NetworkPolicy`, код готов, не применён)
+
+### Область (`devops/helm/lr-app/templates/{networkpolicy-baseline,networkpolicy-backend,networkpolicy-frontend,networkpolicy-postgres,networkpolicy-postgres-backup}.yaml (new)`, `devops/helm/lr-app/templates/postgres-backup-cronjob.yaml`, `devops/helm/lr-app/values.yaml`, `docs/{runbooks/infra-fix-shutdown.md,security/{roadmap.md,ARCHITECTURE.md},tickets/tickets.md}`)
+
+- **infra (LR-031 Фаза 2, INFRA-tier)** — default-deny `NetworkPolicy`
+  для namespace `lr-dev`, с explicit allow: DNS (namespace-wide),
+  ingress только от Traefik (backend/frontend), backend↔postgres на
+  5432, backend/backup-job → интернет (порты 443/587, исключая
+  `10.0.0.0/8` — k3s pod/service CIDR + VM LAN одним исключением).
+  Закрывает audit-находку **M4** ("Postgres достижим с любого пода,
+  защита только на пароле") — но только после реального применения, не
+  в момент написания манифеста.
+- **fix** — `postgres-backup-cronjob.yaml`'s pod template получил
+  `labels: app: lr-postgres-backup` (раньше не было вообще никаких
+  меток) — без этого NetworkPolicy-селекторы не смогли бы отличить этот
+  под от любого другого.
+- **safety** — вся фича спрятана за `networkPolicy.enabled: false`
+  (`values.yaml`), тот же паттерн и та же причина, что и у
+  `postgresBackup.enabled`: `.gitlab-ci.yml` гонит `helm upgrade
+  --install` на каждый пуш безусловно, живое сетевое поведение не
+  должно меняться попутно с несвязанным тикетом.
+- **verify** — `helm template`/`helm lint` локально, оба состояния
+  (`networkPolicy.enabled` true/false, все 4 комбинации с
+  `postgresBackup.enabled`) — рендерится корректно, 0 ресурсов при
+  дефолтных `values.yaml`. **НЕ применялось на реальном кластере** — эта
+  сессия не имела доступа к живому k3s.
+- **review** — `architect-reviewer`: approve with changes. Нашёл
+  реальный HIGH-пробел: изначальная процедура применения проверяла
+  только позитивные пути (разрешённое работает), никогда — что запрет
+  реально работает. Это критично именно здесь: голый flannel НЕ
+  энфорсит `NetworkPolicy` сам по себе (нужен kube-router, не
+  подтверждён для этого кластера) — без негативного теста все
+  "позитивные" проверки прошли бы одинаково успешно и при полностью
+  неработающей политике. Исправлено: добавлен шаг 0a (проверка, что
+  netpol-контроллер вообще включён) и обязательный негативный тест
+  (под без нужной метки НЕ должен достучаться до postgres) в
+  `docs/runbooks/infra-fix-shutdown.md`. Также поймал, что
+  `docs/security/ARCHITECTURE.md` не был обновлён вопреки собственному
+  явному правилу файла — исправлено (§2.9 добавлен).
+- **docs** — `docs/runbooks/infra-fix-shutdown.md`: новый раздел
+  "LR-031 Phase 2" — пошаговая процедура применения с mgmt-core (шаг за
+  шагом, не всем чартом разом), включая предусловие "свериться с
+  реальными метками кластера, не с предположением из комментариев" и
+  негативный тест. `docs/security/ARCHITECTURE.md` §2.9 (новый) +
+  правки §2.8/§3.3. `docs/security/roadmap.md`'s "Статус" и
+  `docs/tickets/tickets.md`'s LR-031 progress — Фаза 2 остаётся `[ ]`
+  (честно, не закрыта до реального применения+негативного теста), с
+  полным разбором того, что готово vs. что требует ручного шага.
+- **Прошлый инцидент, почему особая осторожность** —
+  `docs/infra/INFRA-LR.md` §6.3: старый `flannel-patch.yaml` в этом же
+  Helm-чарте когда-то мутировал общий кластерный ConfigMap, вызвав
+  каскад поломок по всему кластеру, не только LR. Новые манифесты
+  ничего не трогают за пределами namespace `lr-dev` — не повторяют этот
+  класс ошибки.
+
 ## 2026-08-07 — security: LR-031 Фаза 1 — observability-фундамент
 
 ### Область (`backend/{build.gradle,src/main/{resources/application.properties,java/com/be/{service/AuthService,web/handler/GlobalExceptionHandler}.java},src/test/java/com/be/{ApiSurfaceAllowlistTest(new),service/AuthServiceTest,web/handler/GlobalExceptionHandlerTest,web/controller/{UserControllerTest,PaymentControllerTest}}.java}`, `devops/helm/lr-app/{values.yaml,templates/backend-deployment.yaml}`, `.gitlab-ci.yml`, `docs/{security/roadmap.md,tickets/tickets.md}`)
