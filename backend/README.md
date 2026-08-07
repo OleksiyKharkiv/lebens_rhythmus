@@ -6,6 +6,26 @@
 
 ---
 
+## 🔑 0. Required Environment Variables (local `bootRun`/`test`)
+
+`./gradlew test` and `./gradlew bootRun` both fail on a fresh clone
+without these — `FIELD_ENCRYPTION_KEY` fails fast at
+`EncryptedStringConverter`'s `@PostConstruct` (see
+`docs/architecture/decisions.md`), `JWT_SECRET` at `JwtUtils`'s. Neither
+has an insecure default — that's deliberate (LR-022 security audit
+confirmed no service-starts-with-empty-secret class of bug exists here).
+
+```bash
+export FIELD_ENCRYPTION_KEY="<32-byte base64 key — any value works for local dev/test, does not need to match prod>"
+export JWT_SECRET="<any string at least 32 bytes long — does not need to match prod>"
+./gradlew test
+```
+
+Tests use Testcontainers (real Postgres in Docker) — Docker must be
+running.
+
+---
+
 ## 🚀 1. Start the Backend Application
 
 ### ▶️ Option 1 — Run Locally (Gradle)

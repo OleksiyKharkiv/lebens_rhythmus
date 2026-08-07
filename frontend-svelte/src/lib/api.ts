@@ -633,6 +633,25 @@ export interface GroupWriteDTO {
 	active: boolean;
 }
 
+// LR-030 — POST /groups no longer binds the raw entity (backend:
+// GroupCreateDTO) — flat ids, not nested {id} objects like GroupWriteDTO
+// above (still correct for PUT, which the raw-entity-bound update()
+// endpoint is unaffected by this fix and still expects).
+export interface GroupCreateRequestDTO {
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	capacity: number;
+	startDateTime: string;
+	endDateTime: string | null;
+	workshopId: number | null;
+	teacherId: number | null;
+	activityId: number | null;
+	venueId: number | null;
+	ageGroupId: number | null;
+	active: boolean;
+}
+
 // Same authRequest correction as getVenues() above — GET /groups requires
 // a valid JWT under the current SecurityConfig even though it has no
 // @PreAuthorize of its own.
@@ -640,7 +659,7 @@ export function getGroups(workshopId?: number) {
 	return authRequest<GroupDTO[]>(`/groups${workshopId ? `?workshopId=${workshopId}` : ''}`);
 }
 
-export function createGroup(input: GroupWriteDTO) {
+export function createGroup(input: GroupCreateRequestDTO) {
 	return authRequest<GroupDTO>('/groups', { method: 'POST', body: JSON.stringify(input) });
 }
 

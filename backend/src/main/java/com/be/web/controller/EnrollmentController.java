@@ -1,13 +1,17 @@
 package com.be.web.controller;
 
 import com.be.domain.entity.Enrollment;
+import com.be.domain.entity.Group;
 import com.be.service.EnrollmentService;
+import com.be.service.GroupService;
+import com.be.service.TeacherService;
 import com.be.web.dto.request.EnrollmentRequestDTO;
 import com.be.web.dto.response.EnrollmentAdminDTO;
 import com.be.web.dto.response.EnrollmentResponseDTO;
 import com.be.web.mapper.EnrollmentMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -26,10 +30,15 @@ public class EnrollmentController {
 
     private final EnrollmentService enrollmentService;
     private final EnrollmentMapper mapper;
+    private final GroupService groupService;
+    private final TeacherService teacherService;
 
-    public EnrollmentController(EnrollmentService enrollmentService, EnrollmentMapper mapper) {
+    public EnrollmentController(EnrollmentService enrollmentService, EnrollmentMapper mapper,
+                                 GroupService groupService, TeacherService teacherService) {
         this.enrollmentService = enrollmentService;
         this.mapper = mapper;
+        this.groupService = groupService;
+        this.teacherService = teacherService;
     }
 
     /**
@@ -120,12 +129,30 @@ public class EnrollmentController {
 
     /**
      * Teacher / admin: list participants of the group.
+     * <p>
+     * LR-024 — role-only check used to be the whole story: any TEACHER
+     * account could pass any groupId and read another teacher's
+     * participants (children's name/email — EnrollmentAdminDTO carries
+     * full UserBasicDTO per row). ADMIN/BUSINESS_OWNER still see every
+     * group, unchanged; a caller whose real role is TEACHER now must
+     * actually be the group's assigned teacher.
      */
     @GetMapping("/teacher/groups/{groupId}/participants")
     @PreAuthorize("hasRole('TEACHER') or hasRole('BUSINESS_OWNER') or hasRole('ADMIN')")
     public ResponseEntity<List<EnrollmentAdminDTO>> participantsForGroup(
-            @PathVariable Long groupId
+            @PathVariable Long groupId,
+            @AuthenticationPrincipal Jwt jwt
     ) {
+        if (hasRole(jwt, "TEACHER")) {
+            Long callerTeacherId = teacherService.resolveTeacherIdForUser(extractUserId(jwt))
+                    .orElseThrow(() -> new AccessDeniedException("No teacher profile linked to this account"));
+            Group group = groupService.findById(groupId);
+            boolean isOwnGroup = group.getTeacher() != null && callerTeacherId.equals(group.getTeacher().getId());
+            if (!isOwnGroup) {
+                throw new AccessDeniedException("Cannot view another teacher's group participants");
+            }
+        }
+
         List<EnrollmentAdminDTO> dto = enrollmentService.getByGroup(groupId)
                 .stream()
                 .map(mapper::toAdminDTO)

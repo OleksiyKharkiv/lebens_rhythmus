@@ -1,12 +1,19 @@
 package com.be.web.controller;
 
+import com.be.config.JwtAuthUtils;
 import com.be.domain.entity.Group;
 import com.be.service.GroupService;
+import com.be.service.TeacherService;
+import com.be.web.dto.request.GroupCreateDTO;
 import com.be.web.dto.response.GroupDTO;
 import com.be.web.mapper.GroupMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -19,6 +26,7 @@ public class GroupController {
 
     private final GroupService groupService;
     private final GroupMapper groupMapper;
+    private final TeacherService teacherService;
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
@@ -39,11 +47,13 @@ public class GroupController {
         return groupMapper.toDto(g);
     }
 
+    // LR-030 — was @RequestBody Group (raw entity, mass-assignment risk),
+    // now an explicit DTO — see GroupCreateDTO/GroupService.createGroup.
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
-    public GroupDTO createGroup(@RequestBody Group group) {
-        Group created = groupService.save(group);
+    public GroupDTO createGroup(@Valid @RequestBody GroupCreateDTO dto) {
+        Group created = groupService.createGroup(dto);
         return groupMapper.toDto(created);
     }
 
@@ -70,9 +80,21 @@ public class GroupController {
         return groups.stream().map(groupMapper::toDto).collect(Collectors.toList());
     }
 
+    // LR-024 — had NO @PreAuthorize at all (any authenticated USER could
+    // call this, same bug class LR-006 already fixed on this controller's
+    // write methods) + role-only ownership, same fix as
+    // WorkshopController.byTeacher.
     @GetMapping("/teacher/{teacherId}")
     @ResponseStatus(HttpStatus.OK)
-    public List<GroupDTO> getGroupsByTeacher(@PathVariable Long teacherId) {
+    @PreAuthorize("hasRole('TEACHER') or hasRole('BUSINESS_OWNER') or hasRole('ADMIN')")
+    public List<GroupDTO> getGroupsByTeacher(@PathVariable Long teacherId, @AuthenticationPrincipal Jwt jwt) {
+        if (JwtAuthUtils.hasRole(jwt, "TEACHER")) {
+            Long callerTeacherId = teacherService.resolveTeacherIdForUser(JwtAuthUtils.extractUserId(jwt))
+                    .orElseThrow(() -> new AccessDeniedException("No teacher profile linked to this account"));
+            if (!callerTeacherId.equals(teacherId)) {
+                throw new AccessDeniedException("Cannot view another teacher's groups");
+            }
+        }
         List<Group> groups = groupService.findByTeacherId(teacherId);
         return groups.stream().map(groupMapper::toDto).collect(Collectors.toList());
     }

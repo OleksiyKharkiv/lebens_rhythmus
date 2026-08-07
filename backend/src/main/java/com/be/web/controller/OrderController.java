@@ -37,13 +37,22 @@ public class OrderController {
                 .collect(Collectors.toList()));
     }
 
+    // LR-025 — read "roles" (plural), a claim JwtUtils never actually
+    // mints (the real, singular claim is "role" — see JwtAuthUtils).
+    // getClaimAsStringList() on a missing claim returns null, not an
+    // exception, so the .stream() right after it threw a NullPointerException
+    // on every single call to this endpoint, for every caller including
+    // real admins — the ownership check below it never ran. No
+    // OrderControllerTest existed to catch this. Fixed to use
+    // JwtAuthUtils.hasRole(), which already reads the real claim
+    // correctly (same helper WorkshopController/GroupController use).
     @GetMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER') or isAuthenticated()")
     public ResponseEntity<OrderResponseDTO> getById(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
         Order order = orderService.getById(id);
         // Basic security check: user can only see their own order unless they are admin/owner
         Long userId = JwtAuthUtils.extractUserId(jwt);
-        boolean isAdmin = jwt.getClaimAsStringList("roles").stream().anyMatch(r -> r.equals("ADMIN") || r.equals("BUSINESS_OWNER"));
+        boolean isAdmin = JwtAuthUtils.hasRole(jwt, "ADMIN") || JwtAuthUtils.hasRole(jwt, "BUSINESS_OWNER");
 
         if (!isAdmin && !order.getUser().getId().equals(userId)) {
             return ResponseEntity.status(403).build();

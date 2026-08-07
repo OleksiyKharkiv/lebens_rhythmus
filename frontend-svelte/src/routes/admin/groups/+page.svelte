@@ -12,6 +12,7 @@
 		getAgeGroups,
 		type GroupDTO,
 		type GroupWriteDTO,
+		type GroupCreateRequestDTO,
 		type WorkshopListItem,
 		type TeacherInfoDTO,
 		type ActivityDTO,
@@ -96,12 +97,32 @@
 		form = { ...blank };
 	}
 
+	// LR-030 — POST /groups now takes flat ids (backend: GroupCreateDTO),
+	// PUT is unaffected and still takes the nested-object GroupWriteDTO
+	// shape `form` is otherwise kept in.
+	function toCreateRequest(f: GroupWriteDTO): GroupCreateRequestDTO {
+		return {
+			titleDe: f.titleDe,
+			titleEn: f.titleEn,
+			titleUa: f.titleUa,
+			capacity: f.capacity,
+			startDateTime: f.startDateTime,
+			endDateTime: f.endDateTime,
+			workshopId: f.workshop?.id ?? null,
+			teacherId: f.teacher?.id ?? null,
+			activityId: f.activity?.id ?? null,
+			venueId: f.venue?.id ?? null,
+			ageGroupId: f.ageGroup?.id ?? null,
+			active: f.active
+		};
+	}
+
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		saving = true;
 		try {
 			if (editingId !== null) await updateGroup(editingId, form);
-			else await createGroup(form);
+			else await createGroup(toCreateRequest(form));
 			cancelEdit();
 			load();
 		} finally {

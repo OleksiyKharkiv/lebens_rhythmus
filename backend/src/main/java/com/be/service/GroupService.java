@@ -1,10 +1,19 @@
 package com.be.service;
 
 import com.be.domain.entity.Activity;
+import com.be.domain.entity.AgeGroup;
 import com.be.domain.entity.Group;
 import com.be.domain.entity.Participant;
 import com.be.domain.entity.Teacher;
+import com.be.domain.entity.Venue;
+import com.be.domain.entity.Workshop;
+import com.be.domain.repository.ActivityRepository;
+import com.be.domain.repository.AgeGroupRepository;
 import com.be.domain.repository.GroupRepository;
+import com.be.domain.repository.TeacherRepository;
+import com.be.domain.repository.VenueRepository;
+import com.be.domain.repository.WorkshopRepository;
+import com.be.web.dto.request.GroupCreateDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +26,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class GroupService {
     private final GroupRepository groupRepository;
+    private final WorkshopRepository workshopRepository;
+    private final TeacherRepository teacherRepository;
+    private final ActivityRepository activityRepository;
+    private final VenueRepository venueRepository;
+    private final AgeGroupRepository ageGroupRepository;
 
     @Transactional(readOnly = true)
     public List<Group> findAll() {
@@ -34,8 +48,51 @@ public class GroupService {
                 .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + id));
     }
 
+    // LR-030 — replaces the old bare save(Group) pass-through, which bound
+    // the raw JPA entity as @RequestBody with no field allow-list at all
+    // (a caller could set capacityLeft directly, or reference an existing
+    // Enrollment's id inside a crafted `enrollments` array to re-parent it
+    // — Group.enrollments is CascadeType.ALL, orphanRemoval=true). Explicit
+    // fields only, ids resolved here — same pattern already used in
+    // WorkshopService.createWorkshop.
     @Transactional
-    public Group save(Group group) {
+    public Group createGroup(GroupCreateDTO dto) {
+        Group group = Group.builder()
+                .titleDe(dto.getTitleDe())
+                .titleEn(dto.getTitleEn())
+                .titleUa(dto.getTitleUa())
+                .capacity(dto.getCapacity() != null ? dto.getCapacity() : 0)
+                .startDateTime(dto.getStartDateTime())
+                .endDateTime(dto.getEndDateTime())
+                .active(dto.isActive())
+                .build();
+
+        if (dto.getWorkshopId() != null) {
+            Workshop workshop = workshopRepository.findById(dto.getWorkshopId())
+                    .orElseThrow(() -> new EntityNotFoundException("Workshop not found with id: " + dto.getWorkshopId()));
+            group.setWorkshop(workshop);
+        }
+        if (dto.getTeacherId() != null) {
+            Teacher teacher = teacherRepository.findById(dto.getTeacherId())
+                    .orElseThrow(() -> new EntityNotFoundException("Teacher not found with id: " + dto.getTeacherId()));
+            group.setTeacher(teacher);
+        }
+        if (dto.getActivityId() != null) {
+            Activity activity = activityRepository.findById(dto.getActivityId())
+                    .orElseThrow(() -> new EntityNotFoundException("Activity not found with id: " + dto.getActivityId()));
+            group.setActivity(activity);
+        }
+        if (dto.getVenueId() != null) {
+            Venue venue = venueRepository.findById(dto.getVenueId())
+                    .orElseThrow(() -> new EntityNotFoundException("Venue not found with id: " + dto.getVenueId()));
+            group.setVenue(venue);
+        }
+        if (dto.getAgeGroupId() != null) {
+            AgeGroup ageGroup = ageGroupRepository.findById(dto.getAgeGroupId())
+                    .orElseThrow(() -> new EntityNotFoundException("Age group not found with id: " + dto.getAgeGroupId()));
+            group.setAgeGroup(ageGroup);
+        }
+
         return groupRepository.save(group);
     }
 

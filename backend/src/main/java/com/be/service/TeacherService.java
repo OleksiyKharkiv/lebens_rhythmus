@@ -2,12 +2,14 @@ package com.be.service;
 
 import com.be.domain.entity.Teacher;
 import com.be.domain.repository.TeacherRepository;
+import com.be.domain.repository.UserRepository;
 import com.be.web.dto.request.TeacherRequestDTO;
 import com.be.web.mapper.TeacherMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -15,10 +17,26 @@ public class TeacherService {
 
     private final TeacherRepository teacherRepository;
     private final TeacherMapper teacherMapper;
+    private final UserRepository userRepository;
 
-    public TeacherService(TeacherRepository teacherRepository, TeacherMapper teacherMapper) {
+    public TeacherService(TeacherRepository teacherRepository, TeacherMapper teacherMapper,
+                           UserRepository userRepository) {
         this.teacherRepository = teacherRepository;
         this.teacherMapper = teacherMapper;
+        this.userRepository = userRepository;
+    }
+
+    // LR-024 — resolves the JWT's userId to "their" Teacher.id, via the
+    // only link that exists (matching email — see TeacherRepository).
+    // Used by WorkshopController/GroupController/EnrollmentController to
+    // check a caller with role TEACHER is only ever looking at their own
+    // resources, not just any teacherId/groupId they pass in the URL.
+    @Transactional(readOnly = true)
+    public Optional<Long> resolveTeacherIdForUser(Long userId) {
+        if (userId == null) return Optional.empty();
+        return userRepository.findById(userId)
+                .flatMap(u -> teacherRepository.findByEmail(u.getEmail()))
+                .map(Teacher::getId);
     }
 
     @Transactional(readOnly = true)

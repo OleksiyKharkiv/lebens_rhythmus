@@ -2,6 +2,7 @@ package com.be.web.controller;
 
 import com.be.config.JwtAuthUtils;
 import com.be.domain.entity.Workshop;
+import com.be.service.TeacherService;
 import com.be.service.WorkshopService;
 import com.be.web.dto.request.WorkshopCreateDTO;
 import com.be.web.dto.response.WorkshopDetailDTO;
@@ -11,6 +12,7 @@ import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -30,10 +32,12 @@ public class WorkshopController {
 
     private final WorkshopService workshopService;
     private final WorkshopMapper mapper;
+    private final TeacherService teacherService;
 
-    public WorkshopController(WorkshopService workshopService, WorkshopMapper mapper) {
+    public WorkshopController(WorkshopService workshopService, WorkshopMapper mapper, TeacherService teacherService) {
         this.workshopService = workshopService;
         this.mapper = mapper;
+        this.teacherService = teacherService;
     }
 
     // Public list (optional filter upcoming=true)
@@ -95,10 +99,21 @@ public class WorkshopController {
         return ResponseEntity.noContent().build();
     }
 
-    // teacher view of own workshops
+    // Teacher view of own workshops. Role alone used to be the only check
+    // (LR-024) — any TEACHER account could pass any other teacher's id.
+    // ADMIN/BUSINESS_OWNER still see everyone's, unchanged; a caller whose
+    // real role is TEACHER is now restricted to their own resolved id.
     @GetMapping("/teacher/{teacherId}")
     @PreAuthorize("hasRole('TEACHER') or hasRole('BUSINESS_OWNER') or hasRole('ADMIN')")
-    public ResponseEntity<List<WorkshopListDTO>> byTeacher(@PathVariable Long teacherId) {
+    public ResponseEntity<List<WorkshopListDTO>> byTeacher(@PathVariable Long teacherId,
+                                                            @AuthenticationPrincipal Jwt jwt) {
+        if (JwtAuthUtils.hasRole(jwt, "TEACHER")) {
+            Long callerTeacherId = teacherService.resolveTeacherIdForUser(JwtAuthUtils.extractUserId(jwt))
+                    .orElseThrow(() -> new AccessDeniedException("No teacher profile linked to this account"));
+            if (!callerTeacherId.equals(teacherId)) {
+                throw new AccessDeniedException("Cannot view another teacher's workshops");
+            }
+        }
         List<Workshop> list = workshopService.findByTeacher(teacherId);
         return ResponseEntity.ok(list.stream().map(mapper::toListDTO).collect(Collectors.toList()));
     }
