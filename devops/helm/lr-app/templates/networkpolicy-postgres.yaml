@@ -1,0 +1,33 @@
+{{- if .Values.networkPolicy.enabled }}
+# LR-031 Phase 2 — directly closes audit finding M4 ("Postgres reachable
+# from any pod, protected only by password"). Ingress-only allow-list:
+# lr-backend (normal application traffic) and, when enabled, the restic
+# backup CronJob's pod (see postgres-backup-cronjob.yaml's
+# app: lr-postgres-backup label, added alongside this policy). No egress
+# rule at all — Postgres has no legitimate reason to initiate outbound
+# connections; the baseline default-deny already blocks it, this is just
+# not overriding that, deliberately.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-postgres-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: lr-postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: lr-backend
+        {{- if .Values.postgresBackup.enabled }}
+        - podSelector:
+            matchLabels:
+              app: lr-postgres-backup
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 5432
+{{- end }}

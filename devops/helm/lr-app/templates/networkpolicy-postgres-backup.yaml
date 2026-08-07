@@ -1,0 +1,33 @@
+{{- if and .Values.networkPolicy.enabled .Values.postgresBackup.enabled }}
+# LR-031 Phase 2. Egress for the restic backup CronJob's pod (LR-003):
+# needs to reach Postgres (pg_dump) and the IDrive e2 S3-compatible
+# endpoint (restic upload) — same internet-not-internal-network shape as
+# lr-backend-netpol's egress rule, see that file's comment for why
+# 10.0.0.0/8 is excluded. DNS is covered by the namespace-wide baseline.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-postgres-backup-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: lr-postgres-backup
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lr-postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 443
+{{- end }}

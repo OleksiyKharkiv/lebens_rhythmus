@@ -1,0 +1,69 @@
+{{- if .Values.networkPolicy.enabled }}
+# LR-031 Phase 2. Two concerns in one policy (both apply to the same pod):
+#
+# Ingress: only Traefik (namespace `traefik`, confirmed in
+# docs/infra/INFRA-LR.md — NodePort 30080/30443, not kube-system) may reach
+# the backend's business port. This also has the side effect of blocking
+# any other pod from ever reaching port {{ .Values.backend.service.managementPort }}
+# (Actuator/Prometheus) via pod-to-pod traffic — which backend-service.yaml
+# already doesn't expose via the Service, but that alone doesn't stop a
+# same-namespace pod from dialing the pod IP directly if the CNI allows it.
+# This is the actual network-level enforcement of audit finding M7, on top
+# of LR-031 Phase 1's app-level port split. NOT opened up for VM600 yet —
+# INFRA-008 (numi/infra/infra-backlog.md) isn't provisioned, so there is no
+# real IP to allow. Add it as a second `from` entry under `ingress` for
+# port {{ .Values.backend.service.managementPort }} once it exists — do not
+# widen this to 0.0.0.0/0 "temporarily", that defeats the point of Phase 2.
+#
+# Egress: DB access (matches pg-service.yaml's selector/port exactly) plus
+# outbound internet for the Brevo SMTP relay (email verification,
+# LR-013) and any future external API (Stripe, per LR-017 — not live yet,
+# this rule doesn't need to change when it lands, same shape of traffic).
+# The internet-egress rule excludes 10.0.0.0/8 specifically to keep this
+# "can reach the public internet" without also being "can reach every
+# other pod/node/VM on the private 10.10.10.0/24 segment or any other
+# namespace's ClusterIP range" — that lateral-movement path is exactly
+# what Phase 2 exists to close. 10.0.0.0/8 covers k3s's DEFAULT pod CIDR
+# (10.42.0.0/16) and service CIDR (10.43.0.0/16, confirmed via kube-dns's
+# address in INFRA-LR.md) as well as the VM LAN (10.10.10.0/24) in one
+# exclusion — same caveat as the baseline file: the pod/service CIDR are
+# k3s defaults, not independently reconfirmed live from this session,
+# verify before applying.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-backend-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: lr-backend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+      ports:
+        - protocol: TCP
+          port: {{ .Values.backend.service.port }}
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lr-postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 587
+{{- end }}

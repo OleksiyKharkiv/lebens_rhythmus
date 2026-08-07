@@ -1,0 +1,25 @@
+{{- if .Values.networkPolicy.enabled }}
+# LR-031 Phase 2. Frontend is a static SvelteKit build served by Nginx —
+# no server-side calls of its own, so unlike lr-backend-netpol it needs no
+# egress rule beyond the DNS baseline (networkpolicy-baseline.yaml) and no
+# egress block here at all. Ingress-only, same Traefik-namespace source as
+# the backend policy.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-frontend-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: lr-frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+      ports:
+        - protocol: TCP
+          port: {{ .Values.frontend.service.port }}
+{{- end }}

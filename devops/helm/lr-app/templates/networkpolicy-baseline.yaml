@@ -1,0 +1,52 @@
+{{- if .Values.networkPolicy.enabled }}
+# LR-031 Phase 2 (audit finding M4: "Postgres reachable from any pod, only
+# password-protected"). Baseline default-deny for the whole namespace —
+# every other networkpolicy-*.yaml file in this chart adds the specific
+# allow-rules on top of this, none of them work without it.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-default-deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+# Every pod needs this regardless of its own role — without it, the
+# default-deny above also blocks DNS lookups (including the short-name
+# Service lookups lr-backend/lr-postgres already rely on), not just the
+# traffic someone intended to restrict.
+#
+# ⚠️ kube-dns's namespace label and port are the k3s DEFAULTS
+# (kube-system, k8s-app=kube-dns, port 53) — CONFIRMED for THIS cluster
+# only as far as docs/infra/INFRA-LR.md §"DNS" goes (kube-dns Service at
+# 10.43.0.10, namespace kube-system). The k8s-app=kube-dns pod label
+# itself was NOT independently verified against live kubectl output from
+# this session (no cluster access here, see docs/security/roadmap.md
+# Фаза 2 item 6's own caution about not trusting an unverified assumption)
+# — confirm with `kubectl get pods -n kube-system --show-labels | grep
+# dns` before applying, per the runbook step in
+# docs/runbooks/infra-fix-shutdown.md.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-allow-dns-egress
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+{{- end }}

@@ -19,6 +19,13 @@ spec:
       # scheduled run than by same-night retries.
       backoffLimit: 1
       template:
+        metadata:
+          # LR-031 Phase 2 — selector target for networkpolicy-postgres-
+          # backup.yaml and networkpolicy-postgres.yaml's ingress allow-list.
+          # Without this label, default-deny (once networkPolicy.enabled)
+          # would silently block this job from ever reaching Postgres.
+          labels:
+            app: lr-postgres-backup
         spec:
           nodeSelector:
             project: lr

@@ -40,6 +40,23 @@ postgres:
   db: lebens_rhythmus  # PostgreSQL database name
   storage: 10Gi        # Storage size for PostgreSQL persistence
 
+# LR-031 Phase 2 — default-deny NetworkPolicy for lr-dev (closes audit
+# finding M4: Postgres reachable from any pod). See templates/
+# networkpolicy-*.yaml for the actual rules.
+networkPolicy:
+  # Same reasoning as postgresBackup.enabled below, and it's the same
+  # unconditional-CI-push risk: defaults false so an ordinary push for an
+  # unrelated ticket can't be the first time this is ever live. Flip to
+  # true ONLY after a manual, verified `helm upgrade` run from mgmt-core
+  # confirms (a) the DNS/Traefik-namespace selectors in the templates
+  # actually match this cluster's real labels, and (b) flannel actually
+  # enforces NetworkPolicy at all — docs/security/roadmap.md Фаза 2 item 6
+  # explicitly warns not to assume this from the manifest existing, same
+  # lesson as the numi-nat.service/Litestream "active ≠ working" incidents
+  # in KNOWN_ISSUES.md. Step-by-step verification procedure:
+  # docs/runbooks/infra-fix-shutdown.md "LR-031 Phase 2".
+  enabled: false
+
 # Interim minimum backup solution (LR-003) — lr-postgres had NO backup at
 # all before this. Temporary until the autumn hardware upgrade brings a
 # dedicated backup controller; not the final answer, see tickets.md LR-003.
