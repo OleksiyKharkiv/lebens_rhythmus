@@ -44,18 +44,27 @@ postgres:
 # finding M4: Postgres reachable from any pod). See templates/
 # networkpolicy-*.yaml for the actual rules.
 networkPolicy:
-  # Same reasoning as postgresBackup.enabled below, and it's the same
-  # unconditional-CI-push risk: defaults false so an ordinary push for an
-  # unrelated ticket can't be the first time this is ever live. Flip to
-  # true ONLY after a manual, verified `helm upgrade` run from mgmt-core
-  # confirms (a) the DNS/Traefik-namespace selectors in the templates
-  # actually match this cluster's real labels, and (b) flannel actually
-  # enforces NetworkPolicy at all — docs/security/roadmap.md Фаза 2 item 6
-  # explicitly warns not to assume this from the manifest existing, same
-  # lesson as the numi-nat.service/Litestream "active ≠ working" incidents
-  # in KNOWN_ISSUES.md. Step-by-step verification procedure:
-  # docs/runbooks/infra-fix-shutdown.md "LR-031 Phase 2".
-  enabled: false
+  # VERIFIED LIVE on lr-dev, 2026-08-08, from mgmt-core (manually — this
+  # flag was flipped in git to match reality AFTER the cluster already had
+  # it applied, not the other way around; see docs/runbooks/
+  # infra-fix-shutdown.md "LR-031 Phase 2" for the full procedure and its
+  # results). Confirmed both ways, not just "manifest applied without
+  # erroring": (a) legitimate traffic still works — curl through the
+  # public path (frontend + backend) returned 200, DNS resolves inside
+  # lr-backend; (b) the actual deny is enforced — an unlabeled probe pod's
+  # `nc -zv lr-postgres 5432` returned exit code 1 (connection failed),
+  # not just "manifest exists". (b) is the one that matters for M4 — see
+  # docs/security/roadmap.md Фаза 2 item 6's warning about not trusting
+  # (a) alone, same lesson as the numi-nat.service/Litestream "active ≠
+  # working" incidents in KNOWN_ISSUES.md.
+  #
+  # First application attempt (same day) caused a short real outage:
+  # applying networkpolicy-baseline.yaml alone, as a separate step before
+  # the Traefik-ingress-allow policies, left a human-paced gap where
+  # ingress was fully denied — see KNOWN_ISSUES.md. Fixed by applying
+  # baseline + all ingress-allow policies as one batch; that version is
+  # what's actually live now.
+  enabled: true
 
 # Interim minimum backup solution (LR-003) — lr-postgres had NO backup at
 # all before this. Temporary until the autumn hardware upgrade brings a

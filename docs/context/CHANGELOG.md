@@ -2,6 +2,36 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-08 — infra: LR-031 Фаза 2 — `NetworkPolicy` применён и подтверждён на живом кластере (M4 закрыт)
+
+### Область (`devops/helm/lr-app/values.yaml`, `docs/{runbooks/infra-fix-shutdown.md,security/{roadmap.md,ARCHITECTURE.md},context/KNOWN_ISSUES.md,tickets/tickets.md}`)
+
+- **security (LR-031 Фаза 2, закрыта)** — `networkPolicy.enabled: true`
+  закоммичен, манифесты из вчерашнего дня применены с mgmt-core.
+  Закрывает audit-находку **M4**, подтверждено негативным тестом (под
+  без нужных меток → `nc -zv lr-postgres 5432` → exit code 1), не
+  только позитивными проверками (curl 200 через публичный путь, DNS
+  резолвится).
+- **incident (короткий, самоустранённый)** — первая попытка применения
+  вызвала реальный простой сайта: `networkpolicy-baseline.yaml`
+  (default-deny всего ingress) применён отдельным шагом ДО
+  ingress-allow правил для backend/frontend — Traefik на несколько
+  минут не мог достучаться ни до чего. Откачено (`kubectl delete
+  networkpolicy -n lr-dev --all`), процедура исправлена (все нужные для
+  доступности сайта правила — одним `kubectl apply` без человеческой
+  паузы между "запретить всё" и "разрешить нужное"), повторное
+  применение — чисто. Полный разбор — `docs/context/KNOWN_ISSUES.md`.
+- **docs** — `docs/runbooks/infra-fix-shutdown.md`'s "LR-031 Phase 2"
+  переписан под исправленную (batch) процедуру + добавлен пример
+  явного чтения exit code вместо доверия `kubectl wait`/verbose-выводу
+  `nc` (тоже найдено в процессе — `busybox nc -v` может ничего не
+  печатать при неудачном подключении, `sh -c '...; echo $?'` даёт
+  однозначный ответ). `docs/security/roadmap.md`'s "Статус" и
+  `docs/tickets/tickets.md`'s LR-031 progress — Фаза 2 → `[x]`.
+  `docs/security/ARCHITECTURE.md` §2.9 — статус обновлён с
+  "authored, not applied" на "применено и подтверждено", с полными
+  доказательствами.
+
 ## 2026-08-07 — infra: LR-031 Фаза 2 — сетевая изоляция (`NetworkPolicy`, код готов, не применён)
 
 ### Область (`devops/helm/lr-app/templates/{networkpolicy-baseline,networkpolicy-backend,networkpolicy-frontend,networkpolicy-postgres,networkpolicy-postgres-backup}.yaml (new)`, `devops/helm/lr-app/templates/postgres-backup-cronjob.yaml`, `devops/helm/lr-app/values.yaml`, `docs/{runbooks/infra-fix-shutdown.md,security/{roadmap.md,ARCHITECTURE.md},tickets/tickets.md}`)

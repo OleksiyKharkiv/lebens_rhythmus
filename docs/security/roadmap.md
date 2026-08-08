@@ -178,25 +178,41 @@ listener'е слабее, чем у numi) — это не побочный эф�
          сознательно не изменён — порт остаётся недоступен через публичный
          Service/Ingress, что и держит его закрытым до полноценной Фазы 2
          NetworkPolicy.
-- [ ] Фаза 2 — **манифесты написаны и провалидированы (`helm template`/
-      `helm lint`), 2026-08-07, но НЕ применены на реальном кластере** —
-      эта сессия не имела доступа к живому k3s (см. `docs/security/
-      ARCHITECTURE.md` §2.9 для полного статуса). `devops/helm/lr-app/
-      templates/networkpolicy-*.yaml` (default-deny + explicit allow:
-      DNS, backend↔postgres, ingress только от Traefik, backup-job),
-      спрятаны за `networkPolicy.enabled: false` (та же причина, что и у
-      `postgresBackup.enabled` — `.gitlab-ci.yml` гонит `helm upgrade
-      --install` на каждый пуш безусловно). Пошаговая процедура
-      применения + обязательный негативный тест (что запрет реально
-      работает, не только что разрешённое всё ещё работает) —
-      `docs/runbooks/infra-fix-shutdown.md` "LR-031 Phase 2". `architect-
-      reviewer`: approve with changes — нашёл, что процедура изначально
-      проверяла только позитивные пути (разрешённое работает), не
-      негативные (запрещённое реально блокируется) — это единственный
-      способ поймать ситуацию "flannel не энфорсит NetworkPolicy вообще"
-      (`--disable-network-policy` на k3s, не проверено для этого
-      кластера) — исправлено до закрытия. Не закрывать M4/эту фазу по
-      факту существования файлов — только после реального применения +
-      подтверждённого негативного теста с mgmt-core.
+- [x] Фаза 2 — **применено и подтверждено на реальном кластере, 2026-08-08**
+      (закрывает **M4**). Манифесты написаны 2026-08-07
+      (`devops/helm/lr-app/templates/networkpolicy-*.yaml`, `architect-
+      reviewer` approve with changes — см. историю ниже), применены
+      живьём с mgmt-core 2026-08-08, `networkPolicy.enabled: true`
+      закоммичен. Полная процедура и результаты —
+      `docs/runbooks/infra-fix-shutdown.md` "LR-031 Phase 2".
+      **Доказательство закрытия M4** (не просто "манифест применился без
+      ошибки" — реальный негативный тест): под без меток
+      `app: lr-backend`/`app: lr-postgres-backup` (`nc -zv lr-postgres
+      5432`) получил **exit code 1** (соединение не удалось) — Postgres
+      реально недостижим с произвольного пода, не только по конфигу.
+      Позитивные проверки тоже прошли: `curl` через полный публичный путь
+      (`api.tlab29.com`, `tlab29.com`) — оба `200`, DNS внутри
+      `lr-backend` резолвит `lr-postgres` корректно.
+      **По пути — реальный, короткий инцидент** (см. `KNOWN_ISSUES.md`
+      для полного разбора): первая попытка применить
+      `networkpolicy-baseline.yaml` отдельным шагом, ДО ingress-allow
+      правил для backend/frontend, вызвала простой сайта — deny-all
+      блокирует весь ingress включая от Traefik, а разрешение для
+      Traefik лежало в файлах следующего шага. Откачено
+      (`kubectl delete networkpolicy -n lr-dev --all`), процедура
+      исправлена (baseline + все ingress-allow правила одним `kubectl
+      apply` без человеческой паузы между ними), повторная попытка —
+      успешна, без простоя.
+      `architect-reviewer` (на этапе написания манифестов, до применения):
+      approve with changes — нашёл, что исходная процедура проверяла
+      только позитивные пути, не негативные — единственный способ
+      поймать ситуацию "flannel не энфорсит NetworkPolicy вообще"
+      (`--disable-network-policy` на k3s) — исправлено до первого
+      применения. Также нашёл, что изначальная диагностика искала под
+      `kube-router` в `kube-system` — неверно для k3s (netpol-контроллер
+      встроен в бинарник `k3s server`, не отдельный под) — поправлено,
+      реально проверено через `journalctl -u k3s` (регулярные "Starting
+      network policy controller" при каждом рестарте, без
+      `--disable-network-policy` в конфиге).
 - [ ] Фаза 3 — гейтится на VM600 (INFRA-008)
 - [ ] Фаза 4 — не начата

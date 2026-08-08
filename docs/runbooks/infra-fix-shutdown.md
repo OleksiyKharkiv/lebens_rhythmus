@@ -220,97 +220,265 @@ kubectl run -n lr-dev restic-check --rm -it --restart=Never \
 > см. "Доступ — шпаргалка" ниже.
 
 **0. Предусловие — свериться с реальными метками кластера, не с
-предположением из комментариев в манифестах:**
+предположением из комментариев в манифестах.** ✅ Выполнено 2026-08-08,
+подтверждено на реальном кластере:
 ```bash
 kubectl get pods -n kube-system --show-labels | grep -i dns
-# ожидается: k8s-app=kube-dns где-то в списке меток. Если метка другая —
-# поправить networkpolicy-baseline.yaml ПЕРЕД применением, не после.
+# → coredns-*, k8s-app=kube-dns — совпадает с networkpolicy-baseline.yaml.
 
 kubectl get ns traefik --show-labels
-# ожидается: kubernetes.io/metadata.name=traefik (авто-проставляется
-# k8s >=1.21 для ВСЕХ namespace — должно быть, но не предполагать).
-
-kubectl get pods -n kube-system -o wide | grep -i flannel
-kubectl cluster-info | head -1   # версия k3s, для сверки с default pod/service CIDR
+# → kubernetes.io/metadata.name=traefik — совпадает с networkpolicy-backend.yaml
+# и networkpolicy-frontend.yaml.
 ```
+**Поправка по факту (2026-08-08):** на этом кластере flannel живёт в
+СВОЕЙ namespace `kube-flannel`, не в `kube-system` — новее версии k3s
+переехали на такую раскладку. Не влияет ни на один манифест (фланнел —
+CNI, реализующий проверку пакетов на уровне ядра/iptables, а не под, с
+которым что-либо из наших `NetworkPolicy` должно взаимодействовать по
+IP/label-селектору) — просто исходный `grep -i flannel` в `kube-system`
+искал не в том месте, реальное расположение подтверждено `kubectl get
+pods -A`: `kube-flannel-ds-*` × 4 (по одному на ноду), все `Running`.
 
 **0a. Критичное предусловие (найдено `architect-reviewer` — без этого
-шага весь Phase 2 может быть no-op'ом, никем не замеченным):**
-голый flannel **не** энфорсит `NetworkPolicy` сам по себе — нужен
-kube-router (или другой netpol-контроллер), встроенный в k3s, но
-проверить, что он реально включён на этом конкретном инстансе, а не
-отключён флагом `--disable-network-policy` при установке:
-```bash
-kubectl get pods -n kube-system | grep -i kube-router
-# если пусто — проверить серверные аргументы k3s:
-sudo cat /etc/systemd/system/k3s.service 2>/dev/null | grep -i disable-network-policy
-sudo journalctl -u k3s --no-pager | grep -i "network.polic" | tail -5
-```
-Если энфорсмента нет — применение манифестов ниже создаст объекты
-`NetworkPolicy`, которые ничего не блокируют. Все проверки в шагах 1-2
-(DNS резолвится, curl проходит) в этом случае **тоже пройдут** — они
-проверяют только разрешённое, не запрещённое — то есть ложно покажут
-"всё работает", пока `lr-postgres` остаётся доступен с любого пода
-ровно как до Phase 2. Тот же класс ошибки, что уже стоил времени с
-`numi-nat.service`/Litestream (`KNOWN_ISSUES.md`): "активно"/"создано"
-≠ "реально работает под настоящим условием, для которого создано". Не
-продолжать шаг 1, пока это не подтверждено положительно.
+шага весь Phase 2 может быть no-op'ом, никем не замеченным), с поправкой
+после первого реального прогона 2026-08-08:**
 
-**1. Применять по одному файлу, не всем чартом разом** — если что-то
-пойдёт не так, откатить один файл проще, чем весь `helm upgrade`:
+⚠️ Изначальная версия этого шага искала под `kube-router` в
+`kube-system` — это неверно для k3s конкретно (не общая ошибка про
+Kubernetes вообще). У k3s netpol-контроллер (урезанная версия
+kube-router, только сетевые политики, не полный роутинг) **встроен
+прямо в бинарник `k3s server`/`k3s agent`**, запускается как горутина
+внутри процесса, а не разворачивается отдельным подом — в отличие от
+"ванильной" установки kube-router. Реальный прогон `kubectl get pods -A`
+на этом кластере это подтвердил: пода `kube-router` нет нигде, что
+**само по себе НЕ значит, что энфорсмент отключён** — это ожидаемо для
+k3s с flannel по умолчанию. Проверять нужно не наличие пода, а
+конфигурацию самого k3s:
+```bash
+# На control-plane ноде (mgmt-core, VM200 — уже там, если следуешь этой процедуре):
+sudo cat /etc/systemd/system/k3s.service | grep -i disable-network-policy
+# Пусто = флаг НЕ установлен = netpol-контроллер включён (k3s default).
+# Если видишь --disable-network-policy — весь Phase 2 не будет работать
+# без переустановки k3s-сервиса без этого флага, СТОП, не продолжать.
+
+sudo journalctl -u k3s --no-pager | grep -i "network polic"
+# Ожидается строка про старт network policy controller при последнем
+# рестарте k3s (может не найтись, если рестарта давно не было и старые
+# логи уже ушли — отсутствие строки НЕ равно отсутствию контроллера,
+# в отличие от найденного --disable-network-policy, который однозначен).
+```
+Если оба флажковых чека чистые (флага нет) — это хороший знак, но
+**не финальное доказательство**, только предварительное. Финальное
+доказательство — исключительно негативный тест в шаге 2a ниже, ничего
+раньше него. Если бы энфорсмента не было, проверки в шагах 1-2 (DNS
+резолвится, curl проходит) **тоже прошли бы** — они проверяют только
+разрешённое, не запрещённое — то есть ложно показали бы "всё работает",
+пока `lr-postgres` остаётся доступен с любого пода ровно как до Phase 2.
+Тот же класс ошибки, что уже стоил времени с `numi-nat.service`/Litestream
+(`KNOWN_ISSUES.md`): "активно"/"создано" ≠ "реально работает под
+настоящим условием, для которого создано".
+
+✅ **Выполнено 2026-08-08.** `--disable-network-policy` в конфиге k3s
+отсутствует; `journalctl -u k3s` показывает регулярные `"Starting
+network policy controller version v2.5.0"` при каждом рестарте сервиса,
+последний зафиксированный запуск — 27-28 сентября (предыдущего цикла
+логов). Предварительный сигнал чистый. Переходим к шагу 1 — окончательное
+подтверждение всё ещё только шаг 2a.
+
+**1. Применять baseline + ВСЕ ingress-allow правила, нужные для базовой
+доступности сайта, ОДНИМ `kubectl apply -f -` — не по файлу за раз.**
+
+⚠️ **Поправлено 2026-08-08 по факту реального инцидента.** Первая версия
+этого раздела предписывала применить `networkpolicy-baseline.yaml`,
+остановиться и проверить, и только потом (отдельным шагом, отдельной
+командой) — `networkpolicy-backend.yaml`/`-frontend.yaml`. Ровно так и
+сделали при первом реальном прогоне — и сайт упал: `lr-default-deny-all`
+блокирует ВЕСЬ ingress в namespace сразу, включая от Traefik, а разрешение
+для Traefik лежит в отдельных файлах, применяемых следующим шагом.
+Между ними образовалось окно (пока человек читает следующий пункт
+runbook'а и печатает команду — не миллисекунды), в течение которого
+сайт был недоступен снаружи. Откатили `kubectl delete networkpolicy -n
+lr-dev --all`, восстановилось мгновенно. Разбор — `KNOWN_ISSUES.md`.
+Исправленный порядок ниже применяет всё необходимое для живого сайта
+одним вызовом, без человеческого окна между "заблокировать всё" и
+"разрешить нужное":
+```bash
+cat <<'EOF' | kubectl apply -n lr-dev -f -
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-default-deny-all
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-allow-dns-egress
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-backend-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: lr-backend
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - podSelector:
+            matchLabels:
+              app: lr-postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 10.0.0.0/8
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 587
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-frontend-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: lr-frontend
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: traefik
+      ports:
+        - protocol: TCP
+          port: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: lr-postgres-netpol
+spec:
+  podSelector:
+    matchLabels:
+      app: lr-postgres
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: lr-backend
+      ports:
+        - protocol: TCP
+          port: 5432
+EOF
+```
+(Строку с `app: lr-postgres-backup` в `lr-postgres-netpol`'s `ingress.from`
+добавить вручную перед вставкой, если `postgresBackup.enabled=true` уже
+включён — см. `networkpolicy-postgres.yaml` в репозитории для точного
+вида блока.)
+
+**Сразу после — полная проверка, не только "под жив":**
+```bash
+kubectl get pods -n lr-dev   # все Running, не CrashLoop
+kubectl exec -n lr-dev -it $(kubectl get pod -n lr-dev -l app=lr-backend -o jsonpath='{.items[0].metadata.name}') -- nslookup lr-postgres
+curl -sf -o /dev/null -w "%{http_code}\n" https://api.tlab29.com/api/v1/workshops   # ожидается 200
+curl -sf -o /dev/null -w "%{http_code}\n" https://tlab29.com/                        # ожидается 200
+```
+Если что-то не 200/не резолвится — откат немедленно, не разбираться на
+живом проде:
+```bash
+kubectl delete networkpolicy -n lr-dev --all
+```
+
+✅ **Выполнено 2026-08-08** (второй попыткой — см. врезку выше про
+первую, вызвавшую короткий простой). Оба `curl` вернули `200`, поды
+остались `Running`, `nslookup` нашёл `lr-postgres.lr-dev.svc.cluster.local`.
+
+**2a. Обязательный негативный тест (не пропускать — весь смысл M4/Phase
+2 именно в этом, а не в проверке выше):** подтвердить, что под БЕЗ
+метки `app: lr-backend`/`app: lr-postgres-backup` **не может**
+достучаться до `lr-postgres`, а не только что легитимные поды могут:
+```bash
+kubectl run -n lr-dev netpol-probe --restart=Never \
+  --image=busybox --overrides='{"spec":{"nodeSelector":{"project":"lr"}}}' \
+  -- sh -c 'nc -zv -w3 lr-postgres 5432; echo "EXITCODE=$?"'
+
+kubectl logs -n lr-dev netpol-probe
+kubectl delete pod -n lr-dev netpol-probe
+```
+**Ожидаемый результат: `EXITCODE=1` в логах** (соединение не удалось).
+Читать код явно через `echo`, не полагаться на `kubectl wait
+...phase=Failed` — оборачивание в `sh -c '...; echo ...'` меняет
+итоговый exit code КОНТЕЙНЕРА на код последней команды (`echo`, всегда
+0/`Succeeded`), даже если сам `nc` внутри провалился; текстовый вывод
+`nc -v` при таймауте в некоторых сборках busybox тоже может быть
+пустым — `EXITCODE=` в логах устраняет обе эти неоднозначности разом.
+Если `EXITCODE=0` — `NetworkPolicy` не энфорсится (см. шаг 0a) ИЛИ
+селектор в `lr-postgres-netpol` слишком широкий — не считать M4
+закрытым, разбираться, не продолжать до backup-политики ниже.
+
+✅ **Выполнено 2026-08-08.** `EXITCODE=1` — соединение не прошло, M4
+подтверждён закрытым не по факту существования манифеста, а реальным
+тестом с mgmt-core.
+
+**3. Только если `postgresBackup.enabled=true` уже включён** — отдельным
+шагом (egress-only, никакого влияния на живой ingress-трафик сайта, не
+требует той же спешки, что шаг 1):
 ```bash
 cd devops/helm/lr-app
-helm template lr-app . -f values.yaml --set networkPolicy.enabled=true \
-  --show-only templates/networkpolicy-baseline.yaml | kubectl apply -n lr-dev -f -
-```
-**Сразу после — проверить, что ничего не сломалось, ДО применения
-следующего файла:**
-```bash
-kubectl get pods -n lr-dev   # все должны остаться Running, не CrashLoop
-kubectl exec -n lr-dev -it <под lr-backend> -- nslookup lr-postgres
-# должен резолвиться — если нет, DNS-политика неверна, откатить:
-kubectl delete networkpolicy -n lr-dev lr-allow-dns-egress lr-default-deny-all
-```
-
-**2. Дальше по одному:** `networkpolicy-backend.yaml`,
-`networkpolicy-frontend.yaml`, `networkpolicy-postgres.yaml` (плюс
-`networkpolicy-postgres-backup.yaml`, только если `postgresBackup.enabled=true`
-уже раньше). После каждого — реальная проверка функциональности, не
-только "под жив":
-```bash
-# После backend+postgres policy — реальный запрос через полный путь:
-curl -sf https://api.tlab29.com/api/v1/workshops > /dev/null && echo OK
-# После frontend policy:
-curl -sf https://tlab29.com/ > /dev/null && echo OK
-```
-
-**2a. Обязательный негативный тест сразу после `networkpolicy-postgres.yaml`
-(не пропускать — весь смысл M4/Phase 2 именно в этом, а не в шагах выше):**
-проверить, что под БЕЗ метки `app: lr-backend`/`app: lr-postgres-backup`
-**не может** достучаться до `lr-postgres`, а не только что легитимные
-поды могут:
-```bash
-kubectl run -n lr-dev netpol-probe --rm -it --restart=Never \
-  --image=busybox --overrides='{"spec":{"nodeSelector":{"project":"lr"}}}' \
-  -- nc -zv -w3 lr-postgres 5432
-```
-**Ожидаемый результат: timeout/connection refused.** Если соединение
-прошло успешно — `NetworkPolicy` не энфорсится (см. шаг 0a) ИЛИ
-селектор в `networkpolicy-postgres.yaml` слишком широкий — не считать
-M4 закрытым, разбираться, не продолжать до `networkpolicy-postgres-backup.yaml`.
-```bash
-# Если используется бэкап — дождаться следующего расписания или
-# триггернуть вручную:
+helm template lr-app . -f values.yaml --set networkPolicy.enabled=true --set postgresBackup.enabled=true \
+  --show-only templates/networkpolicy-postgres-backup.yaml | kubectl apply -n lr-dev -f -
 kubectl create job -n lr-dev --from=cronjob/lr-postgres-backup manual-netpol-check
 kubectl logs -n lr-dev -l job-name=manual-netpol-check --follow
 ```
 
-**3. Только после того, как все 4-5 файлов применены и каждый шаг выше
-подтверждён реальным успешным ответом** — зафиксировать `networkPolicy.
-enabled: true` в `values.yaml` самим коммитом (не оставлять расхождение
-между тем, что в git, и тем, что реально в кластере — тот же урок, что
-уже стоил времени с ownership-багами в numi, "то, что в конфиге" и "то,
-что реально применено" должны совпадать).
+**4. Только после того, как шаги 1/2a (и 3, если применимо) подтверждены
+реальным успешным ответом** — зафиксировать `networkPolicy.enabled: true`
+в `values.yaml` самим коммитом (не оставлять расхождение между тем, что
+в git, и тем, что реально в кластере — тот же урок, что уже стоил
+времени с ownership-багами в numi, "то, что в конфиге" и "то, что
+реально применено" должны совпадать).
 
 **Откат при любой проблеме — удалить все NetworkPolicy разом:**
 ```bash
