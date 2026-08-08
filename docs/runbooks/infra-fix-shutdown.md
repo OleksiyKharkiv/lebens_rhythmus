@@ -480,6 +480,23 @@ kubectl logs -n lr-dev -l job-name=manual-netpol-check --follow
 времени с ownership-багами в numi, "то, что в конфиге" и "то, что
 реально применено" должны совпадать).
 
+⚠️ **Перед тем, как коммитить `networkPolicy.enabled: true` (реальный
+CI-инцидент, 2026-08-08 — см. `KNOWN_ISSUES.md`):** объекты выше были
+применены вручную через `kubectl apply`, не через Helm — у них нет
+Helm-owner-меток. Следующий же обычный `helm upgrade --install` (любой
+пуш в CI) увидит ресурс с тем же именем, но без своих меток, и
+откажется продолжать, роняя **весь** деплой, не только сеть. Перед
+коммитом — "усыновить" все пять объектов вручную:
+```bash
+for np in lr-default-deny-all lr-allow-dns-egress lr-backend-netpol lr-frontend-netpol lr-postgres-netpol; do
+  kubectl label networkpolicy "$np" -n lr-dev app.kubernetes.io/managed-by=Helm --overwrite
+  kubectl annotate networkpolicy "$np" -n lr-dev meta.helm.sh/release-name=lr-dev meta.helm.sh/release-namespace=lr-dev --overwrite
+done
+```
+Проверить результат: `kubectl get networkpolicy -n lr-dev -o
+custom-columns='NAME:.metadata.name,MANAGED-BY:.metadata.labels.app\.kubernetes\.io/managed-by,RELEASE:.metadata.annotations.meta\.helm\.sh/release-name'`
+— все пять строк должны показывать `Helm`/`lr-dev`.
+
 **Откат при любой проблеме — удалить все NetworkPolicy разом:**
 ```bash
 kubectl delete networkpolicy -n lr-dev --all
