@@ -2,6 +2,32 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-08 — security: LR-034 — DEBUG-логирование в проде понижено (код готов, живая проверка — нет)
+
+### Область (`backend/src/main/resources/application.properties`, `backend/README.md`, `backend/src/test/java/com/be/config/LoggingLevelsTest.java` (new), `docs/tickets/tickets.md`)
+
+- **security (LR-034, HIGH)** — `logging.level.{org.springframework.security,.web,com.be}`
+  переведены с постоянного `DEBUG` на `${LOG_LEVEL_SECURITY:WARN}`/
+  `${LOG_LEVEL_WEB:WARN}`/`${LOG_LEVEL_APP:INFO}` — тот же env-var-override
+  паттерн, что и LR-033. DEBUG остаётся доступен для разовой диагностики
+  через явный env var, задокументировано в `backend/README.md`.
+- **test** — `LoggingLevelsTest.java` (новый) — резолвит реальный
+  `application.properties` через `StandardEnvironment`+
+  `ResourcePropertySource` (не полный Spring-контекст — logging-уровни
+  не наша логика, framework сам их обрабатывает, тестируем именно то,
+  что наше — сам факт отсутствия хардкода DEBUG в файле).
+  `architect-reviewer`: approve as-is — эмпирически прогнал тест,
+  сверил `.debug`-вызовы в `GlobalExceptionHandler`/`AuthService`: все
+  дублируются Micrometer-метриками `LR-031` Фазы 1, реального
+  операционного слепого пятна нет.
+- **security (побочная находка, LR-064, новый тикет)** —
+  `spring.jpa.show-sql=true` логирует SQL безусловно, не через
+  `logging.level.*` — не затронуто этим фиксом, заведено отдельно, не
+  расширяя скоуп.
+- **Не закрыто до конца** — `tickets.md`'s LR-034 остаётся `Open`:
+  нужна живая проверка реального уровня логирования на прод-поде после
+  деплоя (`kubectl logs`) — не может быть сделано из этой сессии.
+
 ## 2026-08-08 — security: LR-033 закрыт — живая проверка CORS на прод-поде пройдена
 
 ### Область (`docs/tickets/{tickets.md,archive.md}`)

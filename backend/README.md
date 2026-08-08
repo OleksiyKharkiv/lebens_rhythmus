@@ -40,6 +40,21 @@ Comma-separated, no spaces needed (whitespace is trimmed). Add whatever
 ports you actually use locally — this list isn't meant to be exhaustive
 by default anymore.
 
+**Optional — `LOG_LEVEL_SECURITY`/`LOG_LEVEL_WEB`/`LOG_LEVEL_APP`**
+(LR-034): defaults are `WARN`/`WARN`/`INFO` — that's also what's now
+deployed to prod (this file used to hardcode `DEBUG` for all three
+permanently, not as a diagnostic opt-in). For a noisier local debugging
+session:
+
+```bash
+export LOG_LEVEL_SECURITY=DEBUG
+export LOG_LEVEL_WEB=DEBUG
+export LOG_LEVEL_APP=DEBUG
+```
+
+Set only the one(s) you actually need — no reason to turn all three up
+just to debug one area.
+
 ---
 
 ## 🚀 1. Start the Backend Application

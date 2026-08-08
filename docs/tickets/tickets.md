@@ -1088,3 +1088,55 @@ VM600 сама тихо ляжет, все три проекта теряют м
    для workout-evo — сегодня безопасно только потому, что workout-evo
    намеренно остановлен; при реальном запуске workout-evo станет тем
    же классом риска — решить до, не после).
+
+---
+
+## LR-034 — Verbose DEBUG-логирование Spring Security/MVC/`com.be` активно в проде
+
+**Tier:** HIGH (активная утечка прямо сейчас, не гипотетическая)
+**Статус:** Open · **код готов, живая проверка на проде — нет**
+**Источник:** LR-022, находка M9 (`docs/security/audit-2026-08-06.md`)
+
+**Сделано:** `application.properties`'s три `logging.level.*` строки
+переведены на `${LOG_LEVEL_SECURITY:WARN}`/`${LOG_LEVEL_WEB:WARN}`/
+`${LOG_LEVEL_APP:INFO}` — framework-пакеты тише (шум, не курируется под
+прод), `com.be` — `INFO` (curated app-логи). DEBUG — только через явный
+env var, задокументировано в `backend/README.md`. Новый тест
+`LoggingLevelsTest.java` резолвит реальный файл через `StandardEnvironment`
++ `ResourcePropertySource`, подтверждает дефолты и рабочий override.
+
+`architect-reviewer`: approve as-is. Проверил эмпирически (реально
+скомпилировал и прогнал новый тест), сверил `.debug`-вызовы в
+`GlobalExceptionHandler`/`AuthService` — все дублируются
+Micrometer-метриками из `LR-031` Фазы 1 (`auth.login.failure`/
+`authz.denied` и т.д.), которые срабатывают независимо от уровня
+логирования — реального операционного слепого пятна от понижения
+уровня нет. Подтвердил отсутствие override в Helm/CI. Побочная находка
+(вне скоупа этого тикета, заведена отдельно — **LR-064**):
+`spring.jpa.show-sql=true` логирует SQL безусловно, не через SLF4J-логгер
+— не затронуто этим фиксом.
+
+**Осталось (не может быть сделано мной — реальный прод):** после
+деплоя — проверить реальный уровень логирования на живом поде
+(`kubectl logs -n lr-dev -l app=lr-backend` — не должно быть `DEBUG`-строк
+от `org.springframework.security`/`.web` в обычном потоке). Не
+переносить в `archive.md` до этой проверки.
+
+---
+
+## LR-064 — `spring.jpa.show-sql=true` логирует SQL безусловно, не через уровень логирования
+
+**Tier:** LOW-MED (тот же класс риска, что M9, другой механизм —
+`show-sql` не проверяет `logging.level.*` вообще, использует
+Hibernate/`System.out`-путь напрямую)
+**Статус:** Open · backlog
+**Источник:** `architect-reviewer`, ревью LR-034, 2026-08-08
+
+`spring.jpa.show-sql=true` (`application.properties:6`) печатает сырой
+SQL безусловно, независимо от того, что `LR-034` только что понизил
+`logging.level.*` — SQL-запросы (потенциально с параметрами через
+Hibernate-форматтер) продолжат литься в прод-логи как есть. Решить:
+выключить полностью (`false`), или перевести на `logging.level.org.
+hibernate.SQL=${LOG_LEVEL_SQL:WARN}` (правильный Hibernate-идиоматичный
+способ логировать SQL через настоящий логгер, с контролем уровня, а не
+через `show-sql`'s собственный неконтролируемый путь).
