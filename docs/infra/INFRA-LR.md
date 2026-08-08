@@ -229,10 +229,13 @@ restart `k3s-agent.service`.
   Acer после сентябрьского апгрейда железа становится backup-контроллером —
   туда и переносить cron + restic + `pg_dump | restic backup --stdin`. До этого —
   хотя бы временный cron на VM200/lr700.
-- [ ] **`revisionHistoryLimit`** в Helm templates (см. LR-BUG-04).
-- [ ] **Задокументировать origin-адрес cloudflared** (см. LR-BUG-06).
-- [ ] **NetworkPolicy default-deny** для namespace `lr-dev` (было решено на круглом
-  столе ранее, не реализовано — см. архив чатов про namespace-изоляцию).
+- [ ] **`revisionHistoryLimit`** в Helm templates (см. LR-BUG-04) — тикет `LR-044`.
+- [ ] **Задокументировать origin-адрес cloudflared** (см. LR-BUG-06) — тикет `LR-045`.
+- [x] **NetworkPolicy default-deny** для namespace `lr-dev` — закрыто
+  2026-08-08 (`LR-031` Фаза 2), применено и подтверждено живьём с
+  mgmt-core (негативный тест: под без нужных меток → `lr-postgres:5432`
+  недостижим). Полный разбор — `docs/security/roadmap.md`,
+  `docs/security/ARCHITECTURE.md` §2.9.
 
 ---
 

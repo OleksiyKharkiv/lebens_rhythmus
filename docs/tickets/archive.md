@@ -146,24 +146,6 @@ orderNumber) через grep, независимо.
 
 ---
 
-## LR-032 — Заменить 59 мест `RuntimeException("X not found")` на типизированное not-found-исключение с единообразным 404
-
-**Tier:** LOW (статус-код неверный, но контент больше не течёт — LR-029
-уже закрыл реальную утечку)
-**Статус:** Open · backlog, не блокирует ничего
-**Источник:** follow-up к LR-029, `architect-reviewer` подтвердил
-разумность отдельного скоупа, 2026-08-07
-
-59 мест в 18 сервисных файлах используют голый `orElseThrow(() -> new
-RuntimeException("X not found with id: " + id))` → падает в общий
-catch-all → 500 вместо семантически верного 404. Реальная утечка
-контента уже закрыта (LR-029) — это чисто про корректность статус-кода,
-не про security. Требует отдельного, внимательного прохода по всем 18
-сервисам (свой `architect-reviewer`, свои тесты), не точечный патч —
-заведено отдельно, а не тихо расширен скоуп LR-029.
-
----
-
 ## LR-023 — `spring-boot-starter-data-rest`: каждый репозиторий торчал наружу в обход ВСЕХ `@PreAuthorize`, само-эскалация до ADMIN одним запросом
 
 **Tier:** CRITICAL (переопределяет обычную HIGH-шкалу проекта — полный
@@ -636,3 +618,71 @@ tlab29.com` добавлен, SMTP-креды внесены в `lr-backend-secr
 
 **Follow-up, не блокирует, отслеживается отдельно:** LR-014 (timing
 side-channel в `resendVerification`) остаётся open, low priority.
+
+---
+
+## LR-004 — Self-scoped payment history (`GET /api/v1/payments/me`)
+
+**Tier:** MED (личный дашборд, LR-ADR-016) — не HIGH: не меняет
+инвойс/платёжную запись, только читает по собственному `userId` из JWT.
+**Статус:** Closed 2026-07-23
+**Источник:** сессия 2026-07-22/23, построение личного дашборда
+
+До этого изменения `PaymentController` не имел ни одного маршрута, доступного
+обычному пользователю — все методы требовали `ADMIN`/`BUSINESS_OWNER`, что
+блокировало требование "история платежей" личного дашборда (LR-ADR-016).
+
+**Сделано:**
+- `PaymentController.getMyPayments()` — `GET /api/v1/payments/me`,
+  `@PreAuthorize("isAuthenticated()")`, `userId` берётся из JWT через
+  `JwtAuthUtils.extractUserId()`, не принимается от клиента — исключает
+  IDOR по конструкции (нет параметра `userId` для подмены).
+- `PaymentService.getMyPayments(userId)` + `PaymentRepository
+  .findByUserIdOrderByCreatedAtDesc(userId)` (тот же паттерн, что уже
+  использовался в `EnrollmentRepository`).
+- Найден и исправлен попутный баг в `SecurityConfig`: `GET
+  /api/v1/activities/**` и `/api/v1/performances/**` не были в whitelist
+  (только `/workshops/**`) — это 401'ило бы только что построенные
+  публичные страницы каталога для любого анонимного посетителя.
+- Тест `PaymentControllerTest` (`@WebMvcTest` + `spring-security-test`'s
+  `jwt()` mock) — покрывает и happy path (пользователь получает свои
+  платежи), и unauthenticated-запрос (401). Оба ревью-approve-условия
+  architect-reviewer закрыты.
+
+**Продуктовый вопрос про `note` — решён заказчиком (2026-07-23):** поле
+`PaymentResponseDTO.note` (документировано как "optional refund reference or
+note") **скрыто** от self-view — заведён `PaymentMapper.toSelfViewDTO()`,
+используется только в `/payments/me`; admin-эндпоинты (`getAll`/`getById`)
+по-прежнему используют `toResponseDTO()` с `note` как есть. Обоснование:
+данных о том, что `note` реально используется как customer-facing поле, нет
+(комментарий в коде — "admin/accounting reference"), значит по умолчанию —
+не раскрывать, пока не появится осознанное решение сделать его
+клиент-ориентированным (тогда — отдельное поле, не расширение смысла этого).
+Покрыто `PaymentMapperTest` (2 теста: self-view без note, admin-view с note).
+
+---
+
+## LR-008 — `GroupService.update()` не копировал `startDateTime`/`endDateTime`
+
+**Tier:** MED (тихая потеря данных при штатной операции — редактирование
+расписания группы визуально "срабатывало", но не сохранялось)
+**Статус:** Closed 2026-07-23
+**Источник:** построение admin-панели Groups, 2026-07-23 — найдено при
+чтении `GroupService.update()`
+
+**Retroactively filed 2026-08-08** — этот ID использовался в комментарии
+кода (`GroupService.java`) и в теле тикета LR-009 с самого начала, но
+никогда не получал собственной записи в `tickets.md`/`archive.md` —
+найдено и восстановлено при полной ретроспективе бэклога/архива. Отсюда
+разрыв нумерации LR-007→LR-009 в остальной истории проекта.
+
+`GroupService.update()` до этой сессии не копировал `startDateTime`/
+`endDateTime` из запроса вообще — редактирование расписания группы через
+admin-UI визуально проходило (200 OK), но время физически не менялось в
+БД. Исправлено вместе с построением новой admin-страницы Groups, см.
+`CHANGELOG.md` 2026-07-23.
+
+**Не входило в скоуп этого фикса** (сознательно, стало отдельным тикетом
+**LR-009**, остаётся open): смена `workshop` у уже существующей группы
+при редактировании — отдельный, более сложный вопрос про судьбу
+существующих `enrollments`.
