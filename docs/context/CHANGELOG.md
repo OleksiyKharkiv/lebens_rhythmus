@@ -2,6 +2,41 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-08 — security: LR-033 — CORS dev-origins убраны из прод-конфига (код готов, живая проверка — нет)
+
+### Область (`backend/src/main/{resources/application.properties,java/com/be/config/CorsProperties.java}`, `backend/README.md`, `backend/src/test/java/com/be/config/CorsPropertiesTest.java` (new))
+
+- **security (LR-033, HIGH)** — `application.properties`'s
+  `cors.allowed-origins` (единственный CORS-конфиг-файл, который реально
+  деплоится в прод) содержал одновременно прод-домены и три localhost
+  dev-origins, вместе с `cors.allow-credentials=true`. Дефолт теперь
+  прод-only (`${CORS_ALLOWED_ORIGINS:https://tlab29.com,...}`),
+  dev-origins доступны только через явный env var, задокументированный в
+  `backend/README.md`. `CorsProperties.java`'s собственный Java-дефолт
+  тоже поправлен (defense in depth, на случай отсутствия properties-
+  строки). `http://tlab29.com`/`https://www.tlab29.com` сознательно
+  оставлены (нет соответствующего Ingress host rule — не живая
+  поверхность атаки, не расширять скоуп security-фикса).
+- **test** — `CorsPropertiesTest.java` (новый) — грузит РЕАЛЬНЫЙ
+  `application.properties` (не дублирует значение литералом),
+  подтверждает: дефолт не содержит `localhost`, env-var override
+  реально заменяет список. `architect-reviewer` эмпирически проверил
+  диф (откатил файл к до-фикс версии, подтвердил, что тест реально
+  ловит регрессию — не просто звучит правдоподобно) и заодно закрыл
+  старый висящий вопрос из CHANGELOG.md 2026-07-21 ("CORS настроен
+  дважды независимо, не проверено рантаймом") — не дважды,
+  `SecurityConfig`'s `.cors(Customizer.withDefaults())` просто
+  делегирует в `WebMvcConfig`'s MVC-конфиг, единственный источник
+  правды.
+- **verify** — `./gradlew test` зелёный (полный прогон + изолированный
+  прогон нового теста).
+- **Не закрыто до конца** — `docs/tickets/tickets.md`'s LR-033 остаётся
+  `Open`: нужна живая проверка реального `Access-Control-Allow-Origin`
+  заголовка на прод-поде после деплоя (`architect-reviewer`'s находка) —
+  не может быть сделано из этой сессии, тот же класс "код смержен ≠
+  проверено на живом проде", что уже стоил времени с Litestream/
+  `numi-nat.service`.
+
 ## 2026-08-08 — docs: Roundtable #6/#7 (Frontend UI/UX, кросс-проектный мониторинг) + 11 новых тикетов
 
 ### Область (`docs/decision-history/roundtable-log.md`, `docs/tickets/{tickets.md,archive.md}`)

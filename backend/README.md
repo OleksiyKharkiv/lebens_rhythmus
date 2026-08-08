@@ -24,6 +24,22 @@ export JWT_SECRET="<any string at least 32 bytes long — does not need to match
 Tests use Testcontainers (real Postgres in Docker) — Docker must be
 running.
 
+**Optional — `CORS_ALLOWED_ORIGINS`** (LR-033): the default
+`cors.allowed-origins` is prod-only (`tlab29.com`/`api.tlab29.com`
+variants) — dev origins are NOT baked into `application.properties`
+anymore, on purpose (that file is what's actually deployed to prod).
+If you're running the backend locally and hitting it from a
+browser-based frontend (`frontend-svelte`'s dev server, or anything
+else running on `localhost`), set this before `bootRun`:
+
+```bash
+export CORS_ALLOWED_ORIGINS="http://localhost:3000,http://localhost:8080,http://localhost:63342"
+```
+
+Comma-separated, no spaces needed (whitespace is trimmed). Add whatever
+ports you actually use locally — this list isn't meant to be exhaustive
+by default anymore.
+
 ---
 
 ## 🚀 1. Start the Backend Application

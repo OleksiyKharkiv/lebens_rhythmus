@@ -583,17 +583,29 @@ enrollments) · **Статус:** Open · backlog
 localhost-origin реально в allow-листе прод-конфига, это рабочий вектор
 для credentialed cross-origin запросов от любой страницы, открытой в том
 же браузере)
-**Статус:** Open
+**Статус:** Open · **код готов, живая проверка на проде — нет**
 **Источник:** LR-022, находка M6 (`docs/security/audit-2026-08-06.md`)
 
-`application.properties:33-39` — CORS allow-list в единственном
-конфиг-файле, который реально деплоится в прод, содержит одновременно
-прод-домены (`tlab29.com`/`api.tlab29.com`) и localhost dev-origins, с
-`allow-credentials=true`. Нужно: разнести на profile-specific конфиги
-(`application-dev.properties`/`application-prod.properties` или env-var
-override), убедиться, что прод-под реально стартует без dev-origins в
-allow-листе — не полагаться на "и так работает", проверить фактический
-CORS-заголовок в ответе прод-пода.
+**Сделано:** `CorsProperties.java` + `application.properties`'s
+`cors.allowed-origins` теперь `${CORS_ALLOWED_ORIGINS:<только прод-домены>}`
+— dev-origins (localhost:3000/8080/63342) убраны из дефолта, доступны
+локально только через явный env var (`backend/README.md`). Новый тест
+`CorsPropertiesTest.java` — загружает реальный `application.properties`
+и подтверждает, что дефолт не содержит localhost + что env-var override
+реально работает. `architect-reviewer`: approve — эмпирически проверил
+диф (откатывал файл к до-фикс версии и обратно, подтвердил, что новый
+тест реально ловит регрессию), нашёл, что `WebMvcConfig` — единственный
+источник CORS-конфига (закрывает старый открытый вопрос из CHANGELOG.md
+2026-07-21 про "настроен дважды независимо" — не дважды, `SecurityConfig`'s
+`.cors(Customizer.withDefaults())` просто делегирует в MVC-конфиг).
+
+**Осталось (не может быть сделано мной — реальный прод):** после
+деплоя — `curl -H "Origin: http://localhost:3000" -I
+https://api.tlab29.com/...` (или эквивалент) против реального пода,
+подтвердить, что `Access-Control-Allow-Origin` реально не отражает
+localhost. Не переносить в `archive.md` до этой проверки — тот же
+урок, что уже стоил времени с Litestream/`numi-nat.service`
+(`KNOWN_ISSUES.md`): "код смержен" ≠ "проверено на живом проде".
 
 ---
 
