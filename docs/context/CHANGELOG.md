@@ -2,6 +2,18 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-08 — security: LR-033 закрыт — живая проверка CORS на прод-поде пройдена
+
+### Область (`docs/tickets/{tickets.md,archive.md}`)
+
+- **security (LR-033, закрыт)** — 4 сценария живой проверки на реальном
+  `api.tlab29.com` (с mgmt-core, прямой `curl`): `tlab29.com` получает
+  `access-control-allow-origin`/`-credentials` на обычном запросе и
+  preflight; `localhost:3000` получает `403` без единого CORS-заголовка
+  на обоих. Регрессия (dev-origins в прод-allow-листе) подтверждена
+  закрытой реальным ответом пода, не фактом смерженного кода. Перенесён
+  в `archive.md`.
+
 ## 2026-08-08 — security: LR-033 — CORS dev-origins убраны из прод-конфига (код готов, живая проверка — нет)
 
 ### Область (`backend/src/main/{resources/application.properties,java/com/be/config/CorsProperties.java}`, `backend/README.md`, `backend/src/test/java/com/be/config/CorsPropertiesTest.java` (new))

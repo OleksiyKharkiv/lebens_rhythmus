@@ -750,3 +750,52 @@ VM600). `LR-031`'s Фаза 3 остаётся заблокирована до �
 стола — теперь результат есть, зависимость снята содержательно, но сама
 Фаза 3 по-прежнему гейтится отдельно на реальном провижининге VM600
 (`INFRA-008`).
+
+---
+
+## LR-033 — CORS: прод и dev-origins смешаны в одном проде-деплоящемся файле, `allow-credentials=true`
+
+**Tier:** HIGH · **Статус:** Closed 2026-08-08 — подтверждено живой
+проверкой на реальном прод-поде
+**Источник:** LR-022, находка M6 (`docs/security/audit-2026-08-06.md`)
+
+`application.properties`'s `cors.allowed-origins` (единственный
+CORS-конфиг-файл, который реально деплоится в прод) содержал
+одновременно прод-домены и три localhost dev-origins, с
+`cors.allow-credentials=true`. Дефолт переведён на прод-only
+(`${CORS_ALLOWED_ORIGINS:https://tlab29.com,http://tlab29.com,
+https://www.tlab29.com,https://api.tlab29.com}`), dev-origins — только
+через явный env var локально (`backend/README.md`).
+`CorsProperties.java`'s Java-дефолт поправлен тем же образом (defense
+in depth). Новый тест `CorsPropertiesTest.java` грузит реальный
+`application.properties`, подтверждает отсутствие `localhost` в
+дефолте и рабочий env-var override.
+
+`architect-reviewer`: approve, эмпирически проверил диф (откатывал файл
+к до-фикс версии, подтвердил, что тест реально ловит регрессию) — заодно
+закрыл старый висящий вопрос из `CHANGELOG.md` 2026-07-21 ("CORS
+настроен дважды независимо, не проверено рантаймом"): не дважды,
+`SecurityConfig`'s `.cors(Customizer.withDefaults())` делегирует в
+`WebMvcConfig`'s MVC-регистрацию, единственный источник правды.
+
+**Живая проверка на реальном проде, 2026-08-08** (4 сценария, с
+mgmt-core через `curl` напрямую на `api.tlab29.com`):
+1. `Origin: https://tlab29.com`, обычный запрос → `200`,
+   `access-control-allow-origin: https://tlab29.com`,
+   `access-control-allow-credentials: true`.
+2. `Origin: http://localhost:3000`, тот же запрос → `403`, **вообще нет**
+   `access-control-allow-origin` в ответе — не отражает localhost, не
+   просто "нет" в значении заголовка.
+3. `Origin: https://tlab29.com`, preflight (`OPTIONS` +
+   `Access-Control-Request-Method: POST` +
+   `Access-Control-Request-Headers: authorization,content-type`) на
+   `/api/v1/auth/login` → `200`, полный набор CORS-заголовков
+   (`allow-methods: POST`, `allow-headers: authorization, content-type`,
+   `max-age: 3600`).
+4. Тот же preflight с `Origin: http://localhost:3000` → `403`, ни
+   одного CORS-заголовка, отражающего localhost.
+
+Регрессия (localhost в прод-allow-листе) подтверждена закрытой не по
+факту смерженного кода, а реальным ответом живого прод-пода —
+`tickets.md`'s собственное требование "не полагаться на 'и так
+работает'" выполнено буквально.

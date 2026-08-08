@@ -577,38 +577,6 @@ enrollments) · **Статус:** Open · backlog
 
 ---
 
-## LR-033 — CORS: прод и dev-origins смешаны в одном проде-деплоящемся файле, `allow-credentials=true`
-
-**Tier:** HIGH (активная прод-конфигурация, не гипотетическая — если
-localhost-origin реально в allow-листе прод-конфига, это рабочий вектор
-для credentialed cross-origin запросов от любой страницы, открытой в том
-же браузере)
-**Статус:** Open · **код готов, живая проверка на проде — нет**
-**Источник:** LR-022, находка M6 (`docs/security/audit-2026-08-06.md`)
-
-**Сделано:** `CorsProperties.java` + `application.properties`'s
-`cors.allowed-origins` теперь `${CORS_ALLOWED_ORIGINS:<только прод-домены>}`
-— dev-origins (localhost:3000/8080/63342) убраны из дефолта, доступны
-локально только через явный env var (`backend/README.md`). Новый тест
-`CorsPropertiesTest.java` — загружает реальный `application.properties`
-и подтверждает, что дефолт не содержит localhost + что env-var override
-реально работает. `architect-reviewer`: approve — эмпирически проверил
-диф (откатывал файл к до-фикс версии и обратно, подтвердил, что новый
-тест реально ловит регрессию), нашёл, что `WebMvcConfig` — единственный
-источник CORS-конфига (закрывает старый открытый вопрос из CHANGELOG.md
-2026-07-21 про "настроен дважды независимо" — не дважды, `SecurityConfig`'s
-`.cors(Customizer.withDefaults())` просто делегирует в MVC-конфиг).
-
-**Осталось (не может быть сделано мной — реальный прод):** после
-деплоя — `curl -H "Origin: http://localhost:3000" -I
-https://api.tlab29.com/...` (или эквивалент) против реального пода,
-подтвердить, что `Access-Control-Allow-Origin` реально не отражает
-localhost. Не переносить в `archive.md` до этой проверки — тот же
-урок, что уже стоил времени с Litestream/`numi-nat.service`
-(`KNOWN_ISSUES.md`): "код смержен" ≠ "проверено на живом проде".
-
----
-
 ## LR-034 — Verbose DEBUG-логирование Spring Security/MVC/`com.be` активно в проде
 
 **Tier:** HIGH (активная утечка прямо сейчас, не гипотетическая — DEBUG
