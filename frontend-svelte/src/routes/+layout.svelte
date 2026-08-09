@@ -1,5 +1,4 @@
 <script lang="ts">
-	import type { Pathname } from '$app/types';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { afterNavigate } from '$app/navigation';
@@ -138,7 +137,7 @@
 				<div class="flex items-center gap-2 border-l border-ink-line pl-6 text-sm">
 					{#each locales as locale (locale)}
 						<a
-							href={resolve(localizeHref(page.url.pathname, { locale }) as Pathname)}
+							href={localizeHref(page.url.pathname, { locale })}
 							class={`transition-colors ${getLocale() === locale ? 'text-gold' : 'text-paper-dim hover:text-paper'}`}
 						>
 							{localeLabels[locale] ?? locale}
@@ -205,7 +204,7 @@
 					<div class="flex gap-4 text-sm">
 						{#each locales as locale (locale)}
 							<a
-								href={resolve(localizeHref(page.url.pathname, { locale }) as Pathname)}
+								href={localizeHref(page.url.pathname, { locale })}
 								onclick={closeMobileMenu}
 								class="text-paper-dim"
 							>
