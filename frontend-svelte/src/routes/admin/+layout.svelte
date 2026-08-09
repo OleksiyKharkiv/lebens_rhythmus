@@ -30,6 +30,7 @@
 		{ href: '/admin/users', label: m.admin_nav_users() },
 		{ href: '/admin/activities', label: m.admin_nav_activities() },
 		{ href: '/admin/workshops', label: m.admin_nav_workshops() },
+		{ href: '/admin/courses', label: m.admin_nav_courses() },
 		{ href: '/admin/groups', label: m.admin_nav_groups() },
 		{ href: '/admin/venues', label: m.admin_nav_venues() },
 		{ href: '/admin/age-groups', label: m.admin_nav_age_groups() },

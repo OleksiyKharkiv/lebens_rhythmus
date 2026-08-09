@@ -912,3 +912,57 @@ security`/`.web`/`com.be` постоянным дефолтом, не диагн
 
 **Verify:** `./gradlew test` зелёный (полный прогон, включая новый
 integration-тест против реального Testcontainers Postgres).
+
+---
+
+## LR-068 — Круглый стол: модель расписания/периодичности `Course`
+
+**Tier:** N/A (архитектурная сессия) · **Статус:** Closed 2026-08-09
+**Источник:** `LR-ADR-021` (явно отложенный вопрос), прямое приглашение
+заказчика "если нет 100% уверенности в паттерне — собрать круглый стол"
+
+**Сделано:**
+- `docs/decision-history/roundtable-log.md` — Roundtable #8, панель
+  Fowler (recurring-events паттерн) / Vernon (DDD aggregate boundaries)
+  / McGrane (content-as-data / ZFU) / Long (Spring/JPA-преемственность).
+  Итог: `Course` остаётся чисто описательной сущностью без полей
+  расписания; `Group` несёт `courseId` + правило повторения
+  (дни недели/время/диапазон дат); `Session` (`LR-067`) переиспользуется
+  для материализации занятий из правила.
+- `architect-reviewer` — review до формализации (не после): подтвердил
+  факты о коде (`Group`/`Session`/`Enrollment` реально в заявленном
+  состоянии), но нашёл 5 реальных пробелов, все закрыты правкой
+  протокола до принятия ADR: (1) пробел `Enrollment.workshop` шире, чем
+  два nullable-поля — затрагивает `EnrollmentService.enroll`
+  (цена/статус выводятся из `workshop.getPrice()`, у `Course` цены нет),
+  `EnrollmentController`'s route, `Order`'s тот же паттерн, и
+  `uk_user_workshop` не защищает от дублей после nullable (Postgres не
+  считает `NULL` дубликатом); (2) `replaceSessionsForGroup`
+  (`LR-067`) — деструктивный clear+re-add, при масштабе Course
+  (~150 занятий/курс) реально стирает ручные правки отдельных `Session`
+  при регенерации правила — принят trade-off (регенерация только при
+  изменении полей правила, не на каждый save) + предупреждение в
+  будущем admin UI, не полное соответствие исходному Fowler-паттерну;
+  (3) McGrane-флаги (`isOnline`/`isSynchronous`/`hasRecordings`) не
+  покрывают "только для взрослых"/"без сертификата" из ZFU-брифа —
+  осознанно оставлено свободным текстом, не структурными полями;
+  (4) `Group.startDateTime`/`endDateTime` для Course-группы — уточнена
+  семантика (диапазон генерации, `endDateTime` обязателен, в отличие от
+  Workshop); (5) mutual-exclusivity `workshopId`/`courseId` сегодня не
+  enforced нигде — добавлено явным пунктом в scope `LR-069`+.
+- `docs/architecture/decisions.md` — `LR-ADR-023` (формализует итог
+  Roundtable #8 с учётом всех правок `architect-reviewer`).
+- `docs/architecture/erm.drawio` — снята пометка "TBD" на `Course`,
+  добавлена связь `Group↔Course` (`courseId`, nullable, пунктир,
+  оранжевый — та же визуальная конвенция "структура решена, не
+  реализована"). XML провалидирован.
+- `docs/tickets/tickets.md` — `LR-069` переформулирован под финальную
+  модель ("без полей расписания"), созданы downstream-тикеты `LR-081`
+  (расширение `Group`), `LR-082` (генерация `Session` в
+  `SessionService`), `LR-083` (mutual-exclusivity guard в
+  `GroupService`), `LR-084` (расширенный `Enrollment`/
+  `EnrollmentService`/`EnrollmentController`/`Order`-фикс).
+
+**Verify:** протокол Roundtable #8 и `LR-ADR-023` прочитаны и сверены
+друг с другом вручную — все 5 находок `architect-reviewer` отражены в
+обоих документах идентично, не только в одном из двух.

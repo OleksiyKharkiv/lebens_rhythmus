@@ -63,6 +63,7 @@
 
 	"nav_activities": "Напрями",
 	"nav_workshops": "Воркшопи",
+	"nav_courses": "Курси",
 	"nav_performances": "Виступи",
 	"nav_contact": "Контакти",
 	"nav_corporate": "Корпоративним клієнтам",
@@ -89,6 +90,9 @@
 
 	"performances_title": "Виступи",
 	"performances_none": "Наразі виступів не заплановано. Заглядайте пізніше!",
+
+	"courses_title": "Курси",
+	"courses_no_upcoming": "Наразі курсів немає.",
 
 	"contact_title": "Контакти",
 	"contact_intro": "Питання щодо наших напрямів? Просто напишіть нам.",
@@ -134,6 +138,7 @@
 	"admin_nav_users": "Користувачі",
 	"admin_nav_activities": "Напрями",
 	"admin_nav_workshops": "Воркшопи",
+	"admin_nav_courses": "Курси",
 	"admin_nav_groups": "Групи",
 	"admin_nav_venues": "Локації",
 	"admin_nav_age_groups": "Вікові групи",
@@ -201,6 +206,11 @@
 	"admin_workshop_max_participants": "Макс. учасників",
 	"admin_workshop_max_participants_note": "Це значення наразі не зчитується з бекенду при редагуванні (відома прогалина) — введіть його знову.",
 	"admin_workshop_status": "Статус",
+
+	"admin_course_is_online": "Онлайн",
+	"admin_course_is_synchronous": "Синхронно (наживо, без запису)",
+	"admin_course_has_recordings": "Записи доступні",
+	"admin_course_format_disclaimer": "Пояснення формату (текст для комплаєнсу)",
 
 	"admin_group_workshop": "Воркшоп",
 	"admin_group_venue": "Місце/зал",

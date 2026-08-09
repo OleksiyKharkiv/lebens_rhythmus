@@ -63,6 +63,7 @@
 
 	"nav_activities": "Programs",
 	"nav_workshops": "Workshops",
+	"nav_courses": "Courses",
 	"nav_performances": "Performances",
 	"nav_contact": "Contact",
 	"nav_corporate": "Corporate",
@@ -89,6 +90,9 @@
 
 	"performances_title": "Performances",
 	"performances_none": "No performances are scheduled right now. Check back soon!",
+
+	"courses_title": "Courses",
+	"courses_no_upcoming": "No courses are currently available.",
 
 	"contact_title": "Contact",
 	"contact_intro": "Questions about our programs? Just write to us.",
@@ -134,6 +138,7 @@
 	"admin_nav_users": "Users",
 	"admin_nav_activities": "Programs",
 	"admin_nav_workshops": "Workshops",
+	"admin_nav_courses": "Courses",
 	"admin_nav_groups": "Groups",
 	"admin_nav_venues": "Venues",
 	"admin_nav_age_groups": "Age groups",
@@ -201,6 +206,11 @@
 	"admin_workshop_max_participants": "Max participants",
 	"admin_workshop_max_participants_note": "This value currently can't be read back from the backend when editing (known gap) — please re-enter it.",
 	"admin_workshop_status": "Status",
+
+	"admin_course_is_online": "Online",
+	"admin_course_is_synchronous": "Synchronous (live, no recording)",
+	"admin_course_has_recordings": "Recordings available",
+	"admin_course_format_disclaimer": "Format disclaimer (compliance text)",
 
 	"admin_group_workshop": "Workshop",
 	"admin_group_venue": "Venue/room",

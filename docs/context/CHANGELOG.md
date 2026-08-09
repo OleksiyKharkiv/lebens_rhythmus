@@ -2,6 +2,55 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-09 — docs: LR-068 закрыт — Roundtable #8 + `LR-ADR-023` (модель расписания `Course`) + 4 новых тикета
+
+### Область (`docs/decision-history/roundtable-log.md`, `docs/architecture/{decisions.md,erm.drawio}`, `docs/tickets/{tickets.md,archive.md}`)
+
+- **docs (Roundtable #8)** — панель Fowler/Vernon/McGrane/Long по
+  вопросу, явно отложенному `LR-ADR-021`: как `Course` хранит
+  регулярность занятий. Итог: `Course` остаётся чисто описательной
+  сущностью без полей расписания; существующая `Group` (тот же
+  прецедент, что `Workshop→Group`, `LR-015`) получает `courseId` +
+  правило повторения; существующая `Session` (`LR-067`/`LR-ADR-022`)
+  переиспользуется без изменения структуры для материализации занятий.
+- **review** — `architect-reviewer` **до** формализации ADR, не после:
+  подтвердил факты о коде (`Group.java`/`Enrollment.java`/
+  `SessionService.java` реально в заявленном состоянии), нашёл 5
+  реальных пробелов — все закрыты правкой протокола/ADR до принятия, не
+  отложены: (1) пробел `Enrollment.workshop` шире, чем два
+  nullable-поля — затрагивает `EnrollmentService.enroll` (статус
+  выводится из `workshop.getPrice()`, у `Course` цены нет),
+  `EnrollmentController`'s route, `Order`, и `uk_user_workshop` (не
+  защищает от дублей после nullable — Postgres не считает `NULL`
+  дубликатом); (2) `replaceSessionsForGroup` (`LR-067`) —
+  деструктивный `clear()`+re-add, при масштабе Course (~150
+  занятий/курс) реально стирает ручные правки при регенерации правила —
+  принят trade-off (регенерация только при изменении полей правила, не
+  на каждый save) + обязательное предупреждение в будущем admin UI;
+  (3) McGrane-флаги не покрывают "только для взрослых"/"без
+  сертификата" из ZFU-брифа — осознанно оставлено свободным текстом;
+  (4) уточнена семантика `Group.startDateTime`/`endDateTime` для
+  Course-группы (диапазон генерации, `endDateTime` обязателен);
+  (5) mutual-exclusivity `workshopId`/`courseId` нигде не enforced —
+  зафиксировано explicit-guard требованием в `LR-083`.
+- **docs (`LR-ADR-023`)** — формализует итог Roundtable #8 со всеми
+  правками `architect-reviewer`, закрывает вопрос, отложенный
+  `LR-ADR-021`.
+- **docs (`erm.drawio`)** — снята пометка "TBD" на `Course`, добавлена
+  связь `Group↔Course` (`courseId`, nullable, та же визуальная
+  конвенция "структура решена, не реализована"). XML провалидирован.
+- **docs (tickets)** — `LR-068` закрыт → `archive.md`; `LR-065`'s
+  прогресс-чеклист обновлён; `LR-069` переформулирован под финальную
+  модель (явно "без полей расписания", `teacherId`/`venueId` убраны из
+  скоупа — атрибуты `Group`, не `Course`); `LR-075` разблокирован от
+  `LR-068`; созданы `LR-081` (расширение `Group`), `LR-082`
+  (`SessionService`-генерация + change-guard), `LR-083`
+  (mutual-exclusivity guard), `LR-084` (расширенный
+  `Enrollment`/`EnrollmentService`/`EnrollmentController`/`Order`-фикс).
+- **verify** — стрей-символьный скан (`grep -nP
+  '[\x{FFFD}\x{00AD}\x{4E00}-\x{9FFF}\x{3040}-\x{39FF}]'`) на всех
+  изменённых файлах — чисто.
+
 ## 2026-08-09 — feat: LR-067 закрыт — сущность `Session` (мульти-день расписание `Group`)
 
 ### Область (`backend/src/main/{resources/db/migration/V5__add_group_sessions.sql,java/com/be/{domain/entity/{Session,Group}.java,domain/repository/SessionRepository.java,service/SessionService.java}}`, `backend/src/test/java/com/be/{service/SessionServiceTest.java,SessionIntegrationTest.java}` (new), `docs/tickets/{tickets.md,archive.md}`)

@@ -111,6 +111,9 @@
 				<a href="/workshops" class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_workshops()}
 				</a>
+				<a href="/courses" class="text-paper-dim hover:text-gold transition-colors">
+					{m.nav_courses()}
+				</a>
 				<a href="/performances" class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_performances()}
 				</a>
@@ -182,6 +185,7 @@
 				<a href={resolve('/about')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_about()}</a>
 				<a href="/activities" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_activities()}</a>
 				<a href="/workshops" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_workshops()}</a>
+				<a href="/courses" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_courses()}</a>
 				<a href="/performances" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_performances()}</a>
 				{#if loggedIn}
 					<a href={roleAreaHref} onclick={closeMobileMenu} class="text-paper-dim">{roleAreaLabel}</a>

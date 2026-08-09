@@ -35,7 +35,9 @@
 				2.2 Der Anbieter behält sich vor, Kurszeiten und -orte aus wichtigem Grund zu ändern. Die
 				Teilnehmer werden rechtzeitig informiert.<br />
 				2.3 Bei Ausfall eines Termins durch den Anbieter wird ein Ersatztermin angeboten. Ist dies
-				nicht möglich, erfolgt eine anteilige Erstattung der Kursgebühr.
+				nicht möglich, erfolgt eine anteilige Erstattung der Kursgebühr.<br />
+				2.4 Für das Online-Angebot „Theaterlabor" gelten ergänzend die besonderen Bedingungen
+				gemäß Ziffer 9.
 			</p>
 		</div>
 
@@ -121,6 +123,56 @@
 				Wirksamkeit der übrigen Bestimmungen nicht berührt.<br />
 				8.3 Gerichtsstand ist – soweit gesetzlich zulässig – Bergheim, Deutschland. Für Verbraucher
 				gelten die gesetzlichen Gerichtsstände.
+			</p>
+		</div>
+
+		<!-- Anchor for direct linking from the ZFU permission-request letter
+		     (tlab29.com/agb#theaterlabor) — docs/compliance/tlab29-zfu-compliance-brief.md §3.1. -->
+		<div id="theaterlabor">
+			<h2 class="font-display text-lg font-semibold text-paper">
+				9. Besondere Bedingungen für das Online-Angebot Theaterlabor
+			</h2>
+			<p class="mt-2">
+				Für das Online-Angebot „Theaterlabor" gelten ergänzend die besonderen Bedingungen gemäß
+				dieser Ziffer: Es richtet sich ausschließlich an erwachsene Teilnehmende und wird
+				ausschließlich synchron per Videokonferenz durchgeführt; Aufzeichnungen der Kurssitzungen
+				werden nicht erstellt.
+			</p>
+		</div>
+
+		<div>
+			<h2 class="font-display text-lg font-semibold text-paper">10. Änderung dieser AGB</h2>
+			<p class="mt-2">
+				10.1 Der Anbieter behält sich vor, diese Allgemeinen Geschäftsbedingungen mit Wirkung für
+				die Zukunft zu ändern, soweit dies aufgrund von Änderungen der Rechtslage, der
+				Rechtsprechung oder aus anderen sachlichen Gründen erforderlich ist und die Änderung für
+				den Kunden zumutbar ist.<br />
+				10.2 Über Änderungen wird der Kunde spätestens vier Wochen vor deren Inkrafttreten in
+				Textform (z. B. per E-Mail) informiert. Widerspricht der Kunde der Änderung nicht innerhalb
+				von vier Wochen nach Zugang der Mitteilung, gilt die Änderung als genehmigt. Der Anbieter
+				weist den Kunden in der Änderungsmitteilung gesondert auf sein Widerspruchsrecht und die
+				Bedeutung der Frist hin.<br />
+				10.3 Für bereits laufende Kursverhältnisse gelten Änderungen nur für nach Wirksamwerden neu
+				geschlossene Verträge, sofern nicht der Kunde der Anwendung auf das bestehende
+				Vertragsverhältnis ausdrücklich zustimmt.
+			</p>
+		</div>
+
+		<div>
+			<h2 class="font-display text-lg font-semibold text-paper">11. Bild- und Tonaufnahmen bei Aufführungen</h2>
+			<p class="mt-2">
+				11.1 Im Rahmen von Aufführungen und Präsenzveranstaltungen (ausdrücklich NICHT:
+				Online-Angebote wie das „Theaterlabor") können Foto-, Video- und Tonaufnahmen zu
+				Dokumentations- und Werbezwecken erstellt werden.<br />
+				11.2 Aufnahmen, auf denen einzelne Teilnehmende erkennbar sind, werden nur mit vorheriger,
+				gesonderter Einwilligung der betroffenen Person bzw. bei Minderjährigen ihrer
+				Erziehungsberechtigten erstellt und veröffentlicht (Art. 6 Abs. 1 lit. a DSGVO, § 22
+				KunstUrhG).<br />
+				11.3 Die Einwilligung ist freiwillig und kann jederzeit mit Wirkung für die Zukunft
+				widerrufen werden; bereits veröffentlichtes Material wird nach Widerruf im zumutbaren Rahmen
+				entfernt.<br />
+				11.4 Für das Online-Angebot „Theaterlabor" werden keine Aufzeichnungen der Kurssitzungen
+				erstellt oder bereitgestellt; diese Ziffer findet auf dieses Angebot keine Anwendung.
 			</p>
 		</div>
 	</div>

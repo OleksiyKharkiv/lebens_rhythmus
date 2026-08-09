@@ -63,6 +63,7 @@
 
 	"nav_activities": "Angebote",
 	"nav_workshops": "Workshops",
+	"nav_courses": "Kurse",
 	"nav_performances": "Aufführungen",
 	"nav_contact": "Kontakt",
 	"nav_corporate": "Firmenkurse",
@@ -89,6 +90,9 @@
 
 	"performances_title": "Aufführungen",
 	"performances_none": "Aktuell sind keine Aufführungen geplant. Schau bald wieder vorbei!",
+
+	"courses_title": "Kurse",
+	"courses_no_upcoming": "Aktuell sind keine Kurse verfügbar.",
 
 	"contact_title": "Kontakt",
 	"contact_intro": "Fragen zu unseren Angeboten? Schreib uns einfach.",
@@ -134,6 +138,7 @@
 	"admin_nav_users": "Nutzer",
 	"admin_nav_activities": "Angebote",
 	"admin_nav_workshops": "Workshops",
+	"admin_nav_courses": "Kurse",
 	"admin_nav_groups": "Gruppen",
 	"admin_nav_venues": "Standorte",
 	"admin_nav_age_groups": "Altersgruppen",
@@ -201,6 +206,11 @@
 	"admin_workshop_max_participants": "Max. Teilnehmer",
 	"admin_workshop_max_participants_note": "Dieser Wert kann beim Bearbeiten aktuell nicht aus dem Backend gelesen werden (bekannte Lücke) — bitte erneut eingeben.",
 	"admin_workshop_status": "Status",
+
+	"admin_course_is_online": "Online",
+	"admin_course_is_synchronous": "Synchron (live, keine Aufzeichnung)",
+	"admin_course_has_recordings": "Aufzeichnungen vorhanden",
+	"admin_course_format_disclaimer": "Format-Hinweis (Compliance-Text)",
 
 	"admin_group_workshop": "Workshop",
 	"admin_group_venue": "Ort/Saal",

@@ -585,6 +585,80 @@ export function getWorkshopsByTeacherUserId(teacherUserId: number) {
 	return authRequest<WorkshopListItem[]>(`/workshops/teacher/${teacherUserId}`);
 }
 
+// ----- Courses (LR-069, LR-ADR-023) -----
+// Purely descriptive/marketing entity, no schedule fields — regularity
+// lives on Group once LR-081 ships. teacherId here = User.id, same
+// temporary shape as Workshop.teacherId above (see LR-072) — use
+// searchUsers() above to look one up by lastname/email, not getTeachers().
+
+export interface CourseListItem {
+	id: number;
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	shortDescriptionDe: string | null;
+	teacher: { id: number; firstName: string; lastName: string } | null;
+	isOnline: boolean;
+	isSynchronous: boolean;
+	hasRecordings: boolean;
+}
+
+export interface CourseDetail {
+	id: number;
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	descriptionDe: string | null;
+	descriptionEn: string | null;
+	descriptionUa: string | null;
+	ageGroupId: number | null;
+	ageGroupName: string | null;
+	teacher: { id: number; firstName: string; lastName: string } | null;
+	isOnline: boolean;
+	isSynchronous: boolean;
+	hasRecordings: boolean;
+	formatDisclaimerDe: string | null;
+	formatDisclaimerEn: string | null;
+	formatDisclaimerUa: string | null;
+}
+
+export interface CourseCreateDTO {
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	descriptionDe: string;
+	descriptionEn: string;
+	descriptionUa: string;
+	ageGroupId: number | null;
+	teacherId: number | null;
+	isOnline: boolean;
+	isSynchronous: boolean;
+	hasRecordings: boolean;
+	formatDisclaimerDe: string;
+	formatDisclaimerEn: string;
+	formatDisclaimerUa: string;
+}
+
+export function getCourses() {
+	return request<CourseListItem[]>('/courses');
+}
+
+export function getCourse(id: string | number) {
+	return request<CourseDetail>(`/courses/${id}`);
+}
+
+export function createCourse(input: CourseCreateDTO) {
+	return authRequest<CourseDetail>('/courses', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateCourse(id: number, input: CourseCreateDTO) {
+	return authRequest<CourseDetail>(`/courses/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+}
+
+export function deleteCourse(id: number) {
+	return authRequest<void>(`/courses/${id}`, { method: 'DELETE' });
+}
+
 // ----- Teachers (Teacher entity, NOT User) -----
 
 export interface TeacherInfoDTO {
