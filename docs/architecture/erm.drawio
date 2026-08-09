@@ -7,6 +7,12 @@
         <mxCell id="U" value="User" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="-200" y="20" width="100" height="40" as="geometry" />
         </mxCell>
+        <mxCell id="EN" value="Enrollment" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="280" y="310" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="WF" value="WorkshopFile" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" parent="1" vertex="1">
+          <mxGeometry x="650" y="480" width="100" height="40" as="geometry" />
+        </mxCell>
         <mxCell id="P" value="Participant" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="90" y="190" width="100" height="40" as="geometry" />
         </mxCell>
@@ -19,8 +25,17 @@
         <mxCell id="A" value="Activity" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="460" y="-90" width="100" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="W" value="Workshop/Course" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+        <mxCell id="W" value="Workshop" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="460" y="420" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="CR" value="Course" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="850" y="500" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="CRNOTE" value="Course: расписание/периодичность — детали модели решает круглый стол LR-065 (см. tickets.md), до этого не считать структуру Course окончательной" style="text;whiteSpace=wrap;html=1;align=left;fontSize=10;fontColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="850" y="550" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SE" value="Session" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" parent="1" vertex="1">
+          <mxGeometry x="850" y="190" width="100" height="40" as="geometry" />
         </mxCell>
         <mxCell id="V" value="Venue" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="650" y="420" width="100" height="40" as="geometry" />
@@ -42,6 +57,9 @@
         </mxCell>
         <mxCell id="F" value="File" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="650" y="340" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="FNOTE" value="File и WorkshopFile — оба реально существуют в коде (files/ workshop_files, разные таблицы), оба ManyToOne Workshop. Похоже на дублирование, не консолидировано этим апдейтом — см. LR-080 в tickets.md" style="text;whiteSpace=wrap;html=1;align=left;fontSize=9;fontColor=#b85450;" parent="1" vertex="1">
+          <mxGeometry x="650" y="230" width="220" height="60" as="geometry" />
         </mxCell>
         <mxCell id="C" value="Contract" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="-200" y="590" width="100" height="40" as="geometry" />
@@ -241,6 +259,27 @@
             <mxPoint x="10" y="300" as="sourcePoint" />
             <mxPoint x="130" y="260" as="targetPoint" />
           </mxGeometry>
+        </mxCell>
+        <mxCell id="60" value="courseId (nullable)" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;html=1;endArrow=ERzeroToMany;endFill=1;rounded=0;dashed=1;strokeColor=#d79b00;fontColor=#d79b00;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="CR" target="W">
+          <mxGeometry width="100" height="100" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="61" value="courseId (nullable)" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;html=1;endArrow=ERzeroToMany;endFill=1;rounded=0;dashed=1;strokeColor=#d79b00;fontColor=#d79b00;exitX=0.5;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="CR" target="PF">
+          <mxGeometry width="100" height="100" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="62" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;dashed=1;strokeColor=#d79b00;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="G" target="SE">
+          <mxGeometry width="100" height="100" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="63" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="U" target="EN">
+          <mxGeometry width="100" height="100" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="64" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="W" target="EN">
+          <mxGeometry width="100" height="100" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="65" value="nullable" style="edgeStyle=orthogonalEdgeStyle;fontSize=10;html=1;endArrow=ERzeroToMany;endFill=1;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="G" target="EN">
+          <mxGeometry width="100" height="100" relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="66" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="W" target="WF">
+          <mxGeometry width="100" height="100" relative="1" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

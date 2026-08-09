@@ -2,6 +2,127 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-09 — feat: LR-067 закрыт — сущность `Session` (мульти-день расписание `Group`)
+
+### Область (`backend/src/main/{resources/db/migration/V5__add_group_sessions.sql,java/com/be/{domain/entity/{Session,Group}.java,domain/repository/SessionRepository.java,service/SessionService.java}}`, `backend/src/test/java/com/be/{service/SessionServiceTest.java,SessionIntegrationTest.java}` (new), `docs/tickets/{tickets.md,archive.md}`)
+
+- **feat (LR-067/LR-ADR-022)** — новая сущность `Session`
+  (`group_sessions`, дочерняя `Group`) для мульти-дневных воркшопов: одна
+  запись/один список участников на весь `Group`, несколько `Session`-строк
+  под ним со своим `start`/`end`/`venue` на каждый день.
+  `workshop_groups`'s собственные `start_date_time`/`end_date_time`/
+  `venue_id` не тронуты — остаются значением "первого/единственного дня".
+  `SessionRepository`, `SessionService` (`replaceSessionsForGroup` —
+  рассчитан под форму LR-074, весь список дней пересылается целиком,
+  не инкрементально).
+- **test** — `SessionServiceTest` (Mockito) + **`SessionIntegrationTest`
+  (новый, real-DB через Testcontainers)** — добавлен по находке
+  `architect-reviewer`: Mockito-тест не мог доказать, что второй вызов
+  `replaceSessionsForGroup` реально удаляет старые строки из БД
+  (Hibernate `orphanRemoval`), а не просто отвязывает их в Java-коллекции
+  — новый тест подтверждает по факту (прямой JDBC `count(*)` + поиск по
+  старым id → пусто).
+- **review** — `architect-reviewer`: approve with changes, единственная
+  should-fix находка закрыта до мержа, не отложена на потом.
+- **verify** — `./gradlew test` зелёный, включая новый integration-тест
+  против реального Postgres.
+- **docs** — `LR-067` закрыт, перенесён в `archive.md`; `LR-065`'s
+  прогресс-чеклист обновлён.
+
+## 2026-08-09 — docs: сверка устаревшей `lr-erm-2026-07.drawio` — найдены 2 пропущенные сущности
+
+### Область (`docs/architecture/erm.drawio`, `docs/tickets/tickets.md`)
+
+По запросу заказчика — проверена промежуточная ERM
+`lr-erm-2026-07.drawio` (приоритет-раскраска волн после Roundtable #1,
+2026-07-21) на предмет ценного, что не попало в основную `erm.drawio`.
+Сама раскраска по волнам устарела (все три волны закрыты) — но найдены
+и подтверждены по реальному коду (`Enrollment.java`, `WorkshopFile.java`)
+**две сущности, отсутствующие в основной ERM**: `Enrollment`
+(`User`+`Workshop` обязательные FK, `Group` — nullable) и
+`WorkshopFile` (`Workshop`, `optional=false`). Обе добавлены в
+`erm.drawio`.
+
+Побочная находка при проверке: `File` и `WorkshopFile` — похоже,
+дублирующие сущности (обе полностью реализованы, обе `@ManyToOne
+Workshop`, но `Workshop.files`-коллекция смотрит только на
+`WorkshopFile` — `File` физически "сирота" со стороны Workshop).
+Отмечено прямо в ERM (текстовая заметка) + новый тикет **LR-080**.
+
+## 2026-08-09 — docs: Эпик "Курсы" — ERM-коррекция (Course/Session) + 14 тикетов + 2 ADR
+
+### Область (`docs/architecture/{erm.drawio,decisions.md,IMPLEMENTATION-PROTOCOL-2026-07.md}`, `docs/tickets/{tickets.md,archive.md}`)
+
+Прямой срочный запрос заказчика (Olena) — страница "Курсы" в админке,
+юридически связано с `docs/compliance/tlab29-zfu-compliance-brief.md`
+(ZFU/FernUSG-заявка для онлайн-курса "Theaterlabor"). Прочитан бриф
+полностью — задача оказалась шире, чем просто новая CRUD-страница:
+затрагивает публичный контент, AGB, и требует юридически консистентных
+формулировок между сайтом и перепиской с госорганом.
+
+- **fix (архитектурная коррекция, подтверждена по коду)** — заказчик
+  указал, что на стадии проектирования `Course` и `Workshop` были
+  ошибочно слиты в один ERM-узел ("Workshop/Course"). Прочитаны реальные
+  entity-классы (`Workshop.java`, `Group.java`, `Teacher.java`,
+  `Performance.java`) — подтверждено: `Workshop.java` не имеет понятия
+  периодичности расписания вообще, `Workshop.teacher` физически
+  ссылается на `User`, а не `Teacher` (в отличие от корректного
+  `Group.teacher`) — реальная находка, не гипотеза.
+- **docs (ERM)** — `erm.drawio`: узел переименован в "Workshop", добавлены
+  `Course`/`Session`, связи `courseId` (Workshop/Performance → Course,
+  nullable) и `Group → Session`. XML провалидирован.
+- **docs (2 новых ADR)** — `LR-ADR-021` (Course — отдельная сущность,
+  с таблицей сравнения Workshop/Course по длительности/периодичности/
+  формату) и `LR-ADR-022` (`Session` — новая дочерняя `Group` сущность
+  для мульти-дня, не отдельный `Group` на день — аргумент через
+  `Group.enrollments`: участник регистрируется один раз на весь
+  многодневный воркшоп).
+- **docs (2 других документа)** — `IMPLEMENTATION-PROTOCOL-2026-07.md`
+  помечен историческим (все 3 волны закрыты, не редактируется задним
+  числом); `PROJECT_INDEX.md` §4 сознательно не тронут — уже в очереди
+  на полную пересборку через `LR-039`, точечная правка дублировала бы
+  системную работу.
+- **docs (14 новых тикетов, `LR-065`/`LR-067`..`LR-079`)** — полный эпик
+  от backend-сущностей до публичного контента: `Session`-backend
+  (`LR-067`) → **круглый стол по модели расписания `Course`** (`LR-068`,
+  гейтит `LR-069`/`LR-075` — несколько технически валидных подходов,
+  RRULE/день-недели-массив/материализованные Session, нужно осознанное
+  решение) → `Course`-backend (`LR-069`) → nullable FK на Workshop/
+  Performance (`LR-070`/`LR-071`) → фикс `Workshop.teacher`→`Teacher`
+  (`LR-072`, с явным требованием живой проверки прод-данных перед
+  миграцией) → admin-страница Teachers (`LR-073`) → форма Workshop
+  мульти-день (`LR-074`) → форма Course (`LR-075`) → публичный каталог
+  Course (`LR-076`) → ZFU-комплаенс контент Theaterlabor (`LR-077`,
+  публикация только после согласования точного текста заказчиком) →
+  AGB-правки (`LR-078`, три новые секции, текст продиктован брифом
+  дословно) → форма согласия на съёмку Aufführungen (`LR-079`, backlog,
+  "резерв на будущее" по формулировке брифа, не срочно).
+- **docs (бухгалтерия)** — `LR-066` (сама ERM/ADR-коррекция) закрыт
+  сразу же, перенесён в `archive.md`. Мастер-тикет `LR-065` трекает
+  весь эпик.
+
+## 2026-08-09 — security: LR-034 закрыт — живая проверка логирования на прод-поде пройдена
+
+### Область (`docs/tickets/{tickets.md,archive.md}`)
+
+- **security (LR-034, закрыт)** — `kubectl logs` на реальном
+  `lr-backend` после деплоя: `0` DEBUG-строк в последних 200,
+  все строки в выборке `INFO`/`WARN`, реальный запрос к API + повторная
+  проверка логов — пусто на `DEBUG`/`security`/`web`. Побочно живьём
+  подтверждена и находка `LR-064` (`Hibernate: select ...` виден в логе
+  безусловно). Перенесён в `archive.md`.
+- **fix (собственная бухгалтерская ошибка, найдена и исправлена
+  сразу)** — при закрытии `LR-033` (предыдущая запись) новая версия
+  `LR-034` (с "Сделано"/`architect-reviewer`) была по невнимательности
+  дописана в конец файла через `Edit`, а не заменила существующую
+  запись LR-034 на её месте (созданную ещё в первой ретроспективе,
+  2026-08-08) — короткое время в `tickets.md` физически было два блока
+  `## LR-034` одновременно, старый (без апдейтов) и новый. Найдено при
+  попытке закрыть тикет (искал по заголовку — grep вернул два
+  совпадения вместо одного), исправлено немедленно: устаревшая копия
+  удалена, актуальная перенесена в архив. Полная проверка на дубли по
+  всему `tickets.md`/`archive.md` (`grep ... | sort | uniq -d`) — чисто.
+
 ## 2026-08-08 — security: LR-034 — DEBUG-логирование в проде понижено (код готов, живая проверка — нет)
 
 ### Область (`backend/src/main/resources/application.properties`, `backend/README.md`, `backend/src/test/java/com/be/config/LoggingLevelsTest.java` (new), `docs/tickets/tickets.md`)

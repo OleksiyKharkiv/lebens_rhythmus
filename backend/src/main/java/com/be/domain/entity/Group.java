@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static jakarta.persistence.FetchType.LAZY;
@@ -90,6 +92,16 @@ public class Group {
     @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<Enrollment> enrollments = new HashSet<>();
+
+    // Multi-day schedule (LR-ADR-022, LR-067) — additive to
+    // startDateTime/endDateTime/venue above, which stay as the "day 1 /
+    // only day" values for the common single-day case. A single roster
+    // of enrollments/capacity above covers the whole Group regardless of
+    // how many Session rows it has — deliberately not one enrollment per
+    // day, see LR-ADR-022.
+    @OneToMany(mappedBy = "group", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
+    private List<Session> sessions = new ArrayList<>();
 
     @Builder.Default
     @Column(nullable = false)

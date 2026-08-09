@@ -799,3 +799,116 @@ mgmt-core через `curl` напрямую на `api.tlab29.com`):
 факту смерженного кода, а реальным ответом живого прод-пода —
 `tickets.md`'s собственное требование "не полагаться на 'и так
 работает'" выполнено буквально.
+
+---
+
+## LR-034 — Verbose DEBUG-логирование Spring Security/MVC/`com.be` активно в проде
+
+**Tier:** HIGH · **Статус:** Closed 2026-08-09 — подтверждено живой
+проверкой на реальном прод-поде
+**Источник:** LR-022, находка M9 (`docs/security/audit-2026-08-06.md`)
+
+`application.properties`'s три `logging.level.*` строки (единственный
+реально деплоящийся конфиг) держали `DEBUG` для `org.springframework.
+security`/`.web`/`com.be` постоянным дефолтом, не диагностическим
+опцией. Переведены на `${LOG_LEVEL_SECURITY:WARN}`/`${LOG_LEVEL_WEB:WARN}`/
+`${LOG_LEVEL_APP:INFO}` — DEBUG доступен только через явный env var
+локально (`backend/README.md`). Новый тест `LoggingLevelsTest.java`
+резолвит реальный файл через `StandardEnvironment`+
+`ResourcePropertySource`, подтверждает дефолты и рабочий override.
+
+`architect-reviewer`: approve as-is — эмпирически сверил `.debug`-вызовы
+в `GlobalExceptionHandler`/`AuthService` против Micrometer-метрик из
+`LR-031` Фазы 1 (`auth.login.failure`/`authz.denied` и т.д.) — все
+дублируются метрикой, срабатывающей независимо от уровня логирования,
+реального операционного слепого пятна от понижения уровня нет. Побочная
+находка вынесена отдельным тикетом — **LR-064**
+(`spring.jpa.show-sql=true` логирует SQL безусловно, в обход
+`logging.level.*`).
+
+**Живая проверка на реальном проде, 2026-08-09** (с mgmt-core):
+`kubectl logs -n lr-dev -l app=lr-backend --tail=200 | grep -c " DEBUG "`
+→ `0`; полный просмотр последних 50 строк — все `INFO`/`WARN`, ни
+одной от `org.springframework.security`/`.web`; реальный запрос к API
++ проверка логов сразу после — пусто на grep по `DEBUG`/`security`/`web`.
+Побочно подтверждена и сама находка **LR-064** — `Hibernate: select
+...` виден в логе безусловно, живое доказательство, что тот тикет не
+теоретический.
+
+---
+
+## LR-066 — ERM/ADR: `Course` расформирован из "Workshop/Course", добавлена `Session`
+
+**Tier:** HIGH · **Статус:** Closed 2026-08-09
+**Источник:** `LR-065`, п.1 запроса заказчика ("сверить с ERM... у нас
+нет сущности Курс")
+
+**Сделано:**
+- `docs/architecture/erm.drawio` — узел `W` переименован из
+  "Workshop/Course" в "Workshop"; добавлены `Course` и `Session`
+  (оранжевым — структура подтверждена, `Course`'s внутренняя модель
+  расписания — нет, до `LR-068`); связи `Workshop.courseId`/
+  `Performance.courseId` (пунктир) и `Group→Session` (сплошная,
+  решено). XML провалидирован (`python3 -c "import xml.etree..."`).
+- `docs/architecture/decisions.md` — `LR-ADR-021` (Course как отдельная
+  сущность, обоснование через реальные различия Workshop/Course +
+  доказательство от кода — `Workshop.java` не имеет понятия
+  периодичности вообще) и `LR-ADR-022` (`Session` под `Group`, не
+  отдельный `Group` на день — аргумент через `Group.enrollments`:
+  участник должен регистрироваться один раз на весь воркшоп, не на
+  каждый день отдельно).
+- `docs/architecture/IMPLEMENTATION-PROTOCOL-2026-07.md` — помечен как
+  исторический снимок (все 3 волны закрыты), не редактируется задним
+  числом под новые решения — добавлена ссылка на актуальный чек-лист
+  (эпик "Курсы", `LR-065`).
+- `docs/context/PROJECT_INDEX.md` §4 — **сознательно не тронут** — уже
+  отмечен устаревшим и стоит в очереди на полную пересборку (`LR-039`),
+  точечная правка здесь дублировала бы уже запланированную системную
+  работу.
+
+---
+
+## LR-067 — Backend: сущность `Session` (дочерняя `Group`, мульти-день расписание)
+
+**Tier:** HIGH · **Статус:** Closed 2026-08-09
+**Источник:** `LR-ADR-022`
+
+**Сделано:**
+- `V5__add_group_sessions.sql` — таблица `group_sessions` (`group_id`
+  NOT NULL FK на `workshop_groups`, `start_date_time` NOT NULL,
+  `end_date_time`/`venue_id` nullable). `workshop_groups`'s собственные
+  `start_date_time`/`end_date_time`/`venue_id` не тронуты — остаются
+  значением "первого/единственного дня" для однодневных `Group`.
+- `Session.java` — `@ManyToOne(optional=false) Group`, своя
+  `@ManyToOne Venue` (не общая с `Group.venue`).
+- `Group.java` — новая коллекция `sessions`
+  (`@OneToMany(mappedBy="group", cascade=ALL, orphanRemoval=true)`),
+  `@Builder.Default`; `enrollments`/`capacity` не изменены.
+- `SessionRepository`, `SessionService` (`addSession`/`updateSession`/
+  `deleteSession`/`replaceSessionsForGroup` — последний рассчитан на
+  форму LR-074: "количество дней" пересылает весь список целиком,
+  `clear()`+пересоздание, не инкрементальный add/remove).
+- Тесты: `SessionServiceTest` (Mockito, 4 теста — мульти-день с разными
+  Venue, замена вместо накопления, опциональный Venue) +
+  `SessionIntegrationTest` (NEW, real-DB через Testcontainers) —
+  подтверждает по факту, что второй вызов `replaceSessionsForGroup`
+  реально удаляет старые строки из БД (`sessionRepository.findById`
+  по старым id → пусто, прямой `count(*)` через JDBC), не просто
+  отвязывает их в Java-коллекции.
+
+`architect-reviewer`: approve with changes — единственная should-fix
+находка (Mockito-тест не проверяет реальную Hibernate flush-семантику
+`clear()`+orphanRemoval) закрыта добавлением `SessionIntegrationTest`
+до закрытия тикета, не отложена. Подтвердил: слой/ADR-соответствие
+чистые, миграция соответствует конвенции `V1`-`V4`, `@Builder.Default`
+использован корректно (без него — NPE на `group.getSessions()` для
+любого `Group`, собранного через builder без явного sessions).
+
+**Осознанно отложено до `LR-074`** (там впервые появится публичный
+контроллер/DTO поверх этого сервиса — до этого момента не
+эксплуатируемо): ограничение "макс. 10 дней" (сейчас только на уровне
+будущей admin-формы, не enforced в `SessionService` самом), проверка на
+пересекающиеся/дублирующиеся `start_date_time` внутри одного `Group`.
+
+**Verify:** `./gradlew test` зелёный (полный прогон, включая новый
+integration-тест против реального Testcontainers Postgres).
