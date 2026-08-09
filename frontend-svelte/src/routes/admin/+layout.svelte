@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
+	import { page } from '$app/state';
 	import { isAuthenticated, getStoredRole } from '$lib/api';
 
 	let { children } = $props();
@@ -36,15 +37,24 @@
 		{ href: '/admin/age-groups', label: m.admin_nav_age_groups() },
 		{ href: '/admin/performances', label: m.admin_nav_performances() }
 	];
+
+	// "/admin" itself must match exactly — every sub-route also starts with
+	// "/admin", so a plain startsWith() would light up Übersicht everywhere.
+	function isActive(href: string) {
+		return href === '/admin' ? page.url.pathname === '/admin' : page.url.pathname.startsWith(href);
+	}
 </script>
 
 {#if ready}
-	<div class="mx-auto max-w-6xl px-6 py-12 sm:py-16">
+	<div class="mx-auto max-w-7xl px-6 py-12 sm:py-16">
 		<nav class="mb-10 flex flex-wrap gap-2 border-b border-ink-line pb-6">
 			{#each navItems as item (item.href)}
 				<a
 					href={item.href}
-					class="rounded-full border border-ink-line px-4 py-1.5 text-sm text-paper-dim transition-colors hover:border-gold hover:text-paper"
+					aria-current={isActive(item.href) ? 'page' : undefined}
+					class="rounded-full border px-4 py-1.5 text-sm transition-colors {isActive(item.href)
+						? 'border-gold text-paper bg-gold/10'
+						: 'border-ink-line text-paper-dim hover:border-gold hover:text-paper'}"
 				>
 					{item.label}
 				</a>

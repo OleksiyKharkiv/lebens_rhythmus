@@ -158,14 +158,14 @@
 			{editingId !== null ? m.admin_edit() : m.admin_create_new()}
 		</h2>
 		<div class="mt-4 grid gap-4 sm:grid-cols-3">
-			<Input id="cTitleDe" label="Titel (DE)" required bind:value={form.titleDe} />
-			<Input id="cTitleEn" label="Title (EN)" required bind:value={form.titleEn} />
-			<Input id="cTitleUa" label="Назва (UA)" required bind:value={form.titleUa} />
+			<div><Input id="cTitleDe" label="Titel (DE)" required bind:value={form.titleDe} /></div>
+			<div><Input id="cTitleEn" label="Title (EN)" required bind:value={form.titleEn} /></div>
+			<div><Input id="cTitleUa" label="Назва (UA)" required bind:value={form.titleUa} /></div>
 		</div>
 		<div class="mt-4 grid gap-4 sm:grid-cols-3">
-			<Textarea id="cDescDe" label="Beschreibung (DE)" bind:value={form.descriptionDe} />
-			<Textarea id="cDescEn" label="Description (EN)" bind:value={form.descriptionEn} />
-			<Textarea id="cDescUa" label="Опис (UA)" bind:value={form.descriptionUa} />
+			<div><Textarea id="cDescDe" label="Beschreibung (DE)" bind:value={form.descriptionDe} /></div>
+			<div><Textarea id="cDescEn" label="Description (EN)" bind:value={form.descriptionEn} /></div>
+			<div><Textarea id="cDescUa" label="Опис (UA)" bind:value={form.descriptionUa} /></div>
 		</div>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
@@ -238,9 +238,9 @@
 		</div>
 
 		<div class="mt-4 grid gap-4 sm:grid-cols-3">
-			<Textarea id="cDisclaimerDe" label="{m.admin_course_format_disclaimer()} (DE)" bind:value={form.formatDisclaimerDe} />
-			<Textarea id="cDisclaimerEn" label="{m.admin_course_format_disclaimer()} (EN)" bind:value={form.formatDisclaimerEn} />
-			<Textarea id="cDisclaimerUa" label="{m.admin_course_format_disclaimer()} (UA)" bind:value={form.formatDisclaimerUa} />
+			<div><Textarea id="cDisclaimerDe" label="{m.admin_course_format_disclaimer()} (DE)" bind:value={form.formatDisclaimerDe} /></div>
+			<div><Textarea id="cDisclaimerEn" label="{m.admin_course_format_disclaimer()} (EN)" bind:value={form.formatDisclaimerEn} /></div>
+			<div><Textarea id="cDisclaimerUa" label="{m.admin_course_format_disclaimer()} (UA)" bind:value={form.formatDisclaimerUa} /></div>
 		</div>
 
 		<div class="mt-6 flex gap-3">

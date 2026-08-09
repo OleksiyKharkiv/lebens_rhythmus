@@ -143,7 +143,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,
                                 "/api/v1/workshops/**",
                                 "/api/v1/activities/**",
-                                "/api/v1/performances/**"
+                                "/api/v1/performances/**",
+                                "/api/v1/courses/**"
                         ).permitAll()
 
                         // ===== ACTUATOR =====
