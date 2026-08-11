@@ -1,11 +1,11 @@
 package com.be.service;
 
 import com.be.domain.entity.Course;
-import com.be.domain.entity.User;
+import com.be.domain.entity.Teacher;
 import com.be.domain.entity.Workshop;
 import com.be.domain.entity.enums.WorkshopStatus;
 import com.be.domain.repository.CourseRepository;
-import com.be.domain.repository.UserRepository;
+import com.be.domain.repository.TeacherRepository;
 import com.be.domain.repository.WorkshopRepository;
 import com.be.web.dto.request.WorkshopCreateDTO;
 import com.be.web.mapper.WorkshopMapper;
@@ -20,16 +20,17 @@ import java.util.Objects;
 @Transactional
 public class WorkshopService {
     private final WorkshopRepository workshopRepository;
-    private final UserRepository userRepository;
+    // LR-072 — teacherId now resolves against Teacher, not User.
+    private final TeacherRepository teacherRepository;
     private final CourseRepository courseRepository;
     private final WorkshopMapper workshopMapper;
 
     public WorkshopService(WorkshopRepository workshopRepository,
-                           UserRepository userRepository,
+                           TeacherRepository teacherRepository,
                            CourseRepository courseRepository,
                            WorkshopMapper workshopMapper) {
         this.workshopRepository = Objects.requireNonNull(workshopRepository, "workshopRepository");
-        this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
+        this.teacherRepository = Objects.requireNonNull(teacherRepository, "teacherRepository");
         this.courseRepository = Objects.requireNonNull(courseRepository, "courseRepository");
         this.workshopMapper = Objects.requireNonNull(workshopMapper, "workshopMapper");
     }
@@ -55,9 +56,9 @@ public class WorkshopService {
         Workshop w = workshopMapper.fromCreateDTO(dto);
 
         if (dto.getTeacherId() != null) {
-            User teacher = userRepository.findById(dto.getTeacherId())
+            Teacher teacher = teacherRepository.findById(dto.getTeacherId())
                     .orElseThrow(() -> new RuntimeException(
-                            "Teacher user not found: " + dto.getTeacherId()));
+                            "Teacher not found: " + dto.getTeacherId()));
             w.setTeacher(teacher);
         }
         if (dto.getCourseId() != null) {
@@ -89,7 +90,7 @@ public class WorkshopService {
         // identical bug, found live in prod 2026-08-09 (the old teacher
         // silently reappeared after being cleared and saved).
         if (dto.getTeacherId() != null) {
-            User teacher = userRepository.findById(dto.getTeacherId())
+            Teacher teacher = teacherRepository.findById(dto.getTeacherId())
                     .orElseThrow(() -> new RuntimeException(
                             "Teacher not found: " + dto.getTeacherId()));
             existing.setTeacher(teacher);

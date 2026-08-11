@@ -5,12 +5,12 @@ import com.be.domain.entity.Venue;
 import com.be.domain.entity.Workshop;
 import com.be.domain.entity.WorkshopFile;
 import com.be.domain.entity.enums.WorkshopStatus;
+import com.be.web.dto.TeacherInfoDTO;
 import com.be.web.dto.request.WorkshopCreateDTO;
 import com.be.web.dto.response.GroupDTO;
 import com.be.web.dto.response.WorkshopDetailDTO;
 import com.be.web.dto.response.WorkshopFileDTO;
 import com.be.web.dto.response.WorkshopListDTO;
-import com.be.web.dto.response.UserBasicDTO;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,14 +19,16 @@ import java.util.stream.Collectors;
 @Component
 public class WorkshopMapper {
 
-    private final UserMapper userMapper;
+    // LR-072 — Workshop.teacher is Teacher-typed now (was User), so this
+    // mapper needs TeacherMapper, not UserMapper.
+    private final TeacherMapper teacherMapper;
 
-    public WorkshopMapper(UserMapper userMapper) {
-        this.userMapper = userMapper;
+    public WorkshopMapper(TeacherMapper teacherMapper) {
+        this.teacherMapper = teacherMapper;
     }
 
     public WorkshopListDTO toListDTO(Workshop w) {
-        UserBasicDTO teacher = w.getTeacher() != null ? userMapper.toBasicDTO(w.getTeacher()) : null;
+        TeacherInfoDTO teacher = w.getTeacher() != null ? teacherMapper.toInfoDTO(w.getTeacher()) : null;
         // Maps workshop to list DTO; resolves venue name
         return WorkshopListDTO.builder()
                 .id(w.getId())
@@ -46,7 +48,7 @@ public class WorkshopMapper {
      * Maps workshop to detail DTO; builds an immutable result
      */
     public WorkshopDetailDTO toDetailDTO(Workshop w) {
-        UserBasicDTO teacher = w.getTeacher() != null ? userMapper.toBasicDTO(w.getTeacher()) : null;
+        TeacherInfoDTO teacher = w.getTeacher() != null ? teacherMapper.toInfoDTO(w.getTeacher()) : null;
         List<GroupDTO> groups = w.getGroups() == null ? List.of() : w.getGroups().stream()
                 .map(this::toGroupDTO)
                 .collect(Collectors.toList());

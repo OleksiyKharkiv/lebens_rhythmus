@@ -2,7 +2,7 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import {
 		getCurrentUser,
-		getWorkshopsByTeacherUserId,
+		getWorkshopsByTeacherId,
 		getTeachers,
 		getGroupsByTeacherId,
 		getGroupParticipants,
@@ -22,25 +22,27 @@
 	$effect(() => {
 		getCurrentUser()
 			.then(async (user) => {
-				// Workshop.teacher is a User FK — teacherId here = User.id.
-				getWorkshopsByTeacherUserId(user.id)
-					.then((data) => (workshops = data))
-					.catch(() => (error = true));
-
-				// Group.teacher is a Teacher entity FK, a SEPARATE id space from
-				// User — there is no link field between the two today (real gap,
-				// LR-ADR-004 territory). Interim workaround, confirmed with the
-				// product owner 2026-07-23: resolve by matching email against
+				// Group.teacher (and, since LR-072, Workshop.teacher too) is a
+				// Teacher entity FK, a SEPARATE id space from User — there is no
+				// link field between the two today (real gap, LR-ADR-004
+				// territory). Interim workaround, confirmed with the product
+				// owner 2026-07-23: resolve by matching email against
 				// GET /teachers. Fragile if emails ever diverge between the two
 				// records — a proper User->Teacher FK is tracked as follow-up
-				// tech debt, not solved here.
+				// tech debt, not solved here. Workshops moved behind this same
+				// resolution (LR-072) — passing user.id used to silently fail
+				// the backend's self-scoping check (wrong id space).
 				const allTeachers = await getTeachers();
 				const myTeacherRow = allTeachers.find((t) => t.email === user.email);
 				if (!myTeacherRow) {
 					teacherRowMissing = true;
+					workshops = [];
 					groups = [];
 					return;
 				}
+				getWorkshopsByTeacherId(myTeacherRow.id)
+					.then((data) => (workshops = data))
+					.catch(() => (error = true));
 				getGroupsByTeacherId(myTeacherRow.id)
 					.then((data) => (groups = data))
 					.catch(() => (error = true));
@@ -77,7 +79,9 @@
 {:else}
 	<div class="mt-10">
 		<h2 class="font-display text-xl font-semibold text-paper">{m.teacher_my_workshops()}</h2>
-		{#if workshops.length === 0}
+		{#if teacherRowMissing}
+			<p class="mt-4 text-paper-dim">{m.teacher_no_teacher_row()}</p>
+		{:else if workshops.length === 0}
 			<p class="mt-4 text-paper-dim">{m.state_empty()}</p>
 		{:else}
 			<div class="mt-4 grid gap-4 sm:grid-cols-2">

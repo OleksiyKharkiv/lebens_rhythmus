@@ -63,10 +63,14 @@ public class Workshop {
     // property of the scheduled session, not the workshop as a whole.
     // See V4__venue_to_group_level_plus_room.sql.
 
-    // Main teacher (for multiple teachers use ManyToMany or separate TeacherWorkshop entity)
+    // Main teacher (for multiple teachers use ManyToMany or separate
+    // TeacherWorkshop entity). LR-072 — was User-typed (inconsistent
+    // with the correctly Teacher-typed Group.teacher), migrated to
+    // Teacher to match; see V9__migrate_workshop_teacher_to_teacher.sql
+    // for the data-remapping this required.
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "teacher_id")
-    private User teacher;
+    private Teacher teacher;
 
     // LR-070 (LR-ADR-021) — zero-to-many, unidirectional: a Course can
     // include several Workshops, each Workshop belongs to at most one

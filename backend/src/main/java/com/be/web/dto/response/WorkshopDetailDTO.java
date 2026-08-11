@@ -1,5 +1,6 @@
 package com.be.web.dto.response;
 
+import com.be.web.dto.TeacherInfoDTO;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,7 @@ public class WorkshopDetailDTO {
     private Long id;
     private String title;
     private String description;
-    private UserBasicDTO teacher;
+    private TeacherInfoDTO teacher;
     private Long courseId;
     private LocalDate startDate;
     private LocalDate endDate;

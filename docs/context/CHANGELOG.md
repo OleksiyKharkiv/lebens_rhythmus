@@ -2,6 +2,38 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-11 — feat: LR-072 закрыт — `Workshop.teacher` мигрирован `User` → `Teacher` + фикс 403 в личном кабинете учителя
+
+### Область (`backend/src/main/{resources/db/migration/V9__migrate_workshop_teacher_to_teacher.sql,java/com/be/{domain/entity/Workshop.java,service/WorkshopService.java,web/{dto/{request/WorkshopCreateDTO,response/{WorkshopListDTO,WorkshopDetailDTO}}.java,mapper/WorkshopMapper.java}}}`, `backend/src/test/java/com/be/service/WorkshopServiceTest.java`, `frontend-svelte/src/{lib/api.ts,routes/{admin/workshops/+page.svelte,teacher/+page.svelte}}`, `docs/tickets/{tickets.md,archive.md}`)
+
+- **feat (LR-072)** — `Workshop.teacher` `User` → `Teacher` (устраняет
+  asymmetry с уже корректным `Group.teacher`). `V9`-миграция
+  безопасна по построению (не зависит от предварительного знания
+  состояния таблицы — см. отдельная заметка ниже об отклонении от
+  буквы тикета): remap по email-совпадению, явная запись несовпавших
+  случаев в `lr072_unmigrated_workshop_teachers` до обнуления, потом
+  смена FK-constraint на `teachers(id)`.
+- **fix (найдено тем же дифом, тот же корень путаницы)** —
+  `teacher/+page.svelte` слал `User.id` туда, где backend уже сравнивал
+  с резолвнутым `Teacher.id` — "Мои воркшопы" в личном кабинете учителя
+  падало в 403 для любого учителя с несовпадающими id. Исправлено
+  вместе с миграцией, не отдельным тикетом.
+- **docs (честно зафиксировано)** — пользователь дал команду
+  "доделай миграции" без результата запрошенной живой прод-проверки
+  (тикет явно требовал её перед миграцией данных). Решение: не
+  повторно блокировать работу, а спроектировать миграцию, которая сама
+  себе гарантия безопасности, независимо от факта проверки — см.
+  подробности в `archive.md`.
+- **verify** — реальный Postgres, вручную засеяны 3 сценария
+  (совпадающий email, несовпадающий, `NULL`) через `psql`, миграция
+  применена, все три случая подтверждены: корректный remap, обнуление
+  + аудит-запись, `NULL` не тронут, FK подтверждён указывающим на
+  `teachers`. Отдельно — полный `bootRun` против уже смигрированной
+  схемы, Hibernate `ddl-auto=validate` прошла чисто. `npm run check`
+  чисто, полный `./gradlew test` — 0 failures/errors.
+- **docs** — `LR-072` закрыт → `archive.md`; `LR-074`'s описание
+  уточнено (teacher-дропдаун уже починен здесь, не в его скоупе).
+
 ## 2026-08-11 — feat: LR-071 закрыт — `Performance.courseId` (nullable FK) + попутный фикс `workshopId`-клиринга
 
 ### Область (`backend/src/main/{resources/db/migration/V8__add_performance_course_fk.sql,java/com/be/{domain/entity/Performance.java,service/PerformanceService.java,web/{dto/{request/PerformanceRequestDTO,response/PerformanceResponseDTO}.java,mapper/PerformanceMapper.java}}}`, `backend/src/test/java/com/be/service/PerformanceServiceTest.java` (new), `docs/tickets/{tickets.md,archive.md}`)

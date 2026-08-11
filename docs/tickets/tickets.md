@@ -1141,7 +1141,8 @@ domain/service/repository/controller, юридически значимый ко
       ("начинай создавать Course сразу с полями/сервисами/фронтэндом").
 - [x] LR-070 — Backend: `Workshop.courseId` — закрыт 2026-08-11.
 - [x] LR-071 — Backend: `Performance.courseId` — закрыт 2026-08-11.
-- [ ] LR-072 — Backend: `Workshop.teacher` → `Teacher` (было `User`)
+- [x] LR-072 — Backend: `Workshop.teacher` → `Teacher` (было `User`) —
+      закрыт 2026-08-11.
 - [ ] LR-073 — Frontend: admin-страница Teachers
 - [ ] LR-074 — Frontend: форма создания Workshop — мульти-день + fix teacher-дропдауна
 - [x] LR-075 — Frontend: форма создания Course — закрыт 2026-08-09.
@@ -1170,36 +1171,6 @@ domain/service/repository/controller, юридически значимый ко
 
 ---
 
-## LR-072 — Backend: `Workshop.teacher` → `Teacher` (сейчас — `User`)
-
-**Tier:** HIGH (меняет существующую, уже используемую в проде связь —
-риск потери данных при неверной миграции)
-**Статус:** Open
-**Источник:** прямой запрос заказчика п.3 ("не реализована сущность
-Учитель") — по факту находка при чтении кода: `Teacher`-сущность и её
-CRUD API уже полностью реализованы (`TeacherController`, полный
-CRUD-набор), реальная проблема — `Workshop.teacher` физически ссылается
-на `User` (роль `TEACHER`), не на `Teacher`, в отличие от корректного
-`Group.teacher`. Форма создания Workshop в админке (`admin/workshops/
-+page.svelte`) заполняет дропдаун через `getAllUsers().filter(role ===
-'TEACHER')`, минуя `Teacher`-сущность вообще.
-
-**Сделать:**
-1. Проверить вживую (перед миграцией!) — есть ли в проде реальные
-   `Workshop`-записи с непустым `teacher_id`, указывающим на `User`.
-   Если да — смигрировать по email-совпадению (тот же паттерн, что уже
-   реализован в `TeacherService.resolveTeacherIdForUser()` для
-   LR-024-фикса) — `User.email` → найти `Teacher` с тем же email → новый
-   `teacher_id`. Если email не совпадает ни с одним `Teacher` —
-   решение (создать `Teacher`-запись из `User`-данных, или оставить
-   `null` и уведомить заказчика) — не молчаливо терять ссылку.
-2. Изменить `Workshop.teacher` FK-тип с `User` на `Teacher`.
-3. Обновить `WorkshopCreateDTO`/сервис/контроллер.
-
-**Не начинать миграцию данных без:** живой проверки п.1 — не
-предполагать пустоту таблицы.
-
----
 
 ## LR-073 — Frontend: admin-страница Teachers (список + создание + редактирование)
 
@@ -1217,12 +1188,13 @@ CRUD-набор), реальная проблема — `Workshop.teacher` фи�
 
 ---
 
-## LR-074 — Frontend: форма создания Workshop — мульти-день + fix teacher-дропдауна
+## LR-074 — Frontend: форма создания Workshop — мульти-день расписание
 
 **Tier:** MED-HIGH (пользовательский UX-flow, задействует новую
 `Session`-сущность)
-**Статус:** Open · **блокируется на `LR-067` (Session backend) и
-желательно на `LR-072`+`LR-073` (иначе teacher-дропдаун пуст/неверен)**
+**Статус:** Open · **блокируется на `LR-067` (Session backend, закрыт)**
+· teacher-дропдаун уже починен в `LR-072` (переключён на `GET
+/teachers`), не в скоупе этого тикета
 **Источник:** прямой запрос заказчика п.4
 
 `admin/workshops/+page.svelte`: убрать единственную пару `Start`/`Ende`,

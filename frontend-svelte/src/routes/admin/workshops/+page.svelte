@@ -6,11 +6,11 @@
 		createWorkshop,
 		updateWorkshop,
 		deleteWorkshop,
-		getAllUsers,
+		getTeachers,
 		type WorkshopListItem,
 		type WorkshopCreateDTO,
 		type WorkshopStatus,
-		type UserBasicDTO
+		type TeacherInfoDTO
 	} from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
@@ -20,7 +20,9 @@
 	const statuses: WorkshopStatus[] = ['DRAFT', 'PUBLISHED', 'ARCHIVED', 'CANCELLED'];
 
 	let workshops = $state<WorkshopListItem[] | null>(null);
-	let teachers = $state<UserBasicDTO[]>([]);
+	// LR-072 — Workshop.teacher is a Teacher entity now (was User), same
+	// id space as Group.teacher — GET /teachers, not getAllUsers().filter().
+	let teachers = $state<TeacherInfoDTO[]>([]);
 	let error = $state(false);
 	let editingId = $state<number | null>(null);
 	let saving = $state(false);
@@ -44,8 +46,8 @@
 	}
 	$effect(() => {
 		load();
-		getAllUsers()
-			.then((users) => (teachers = users.filter((u) => u.role === 'TEACHER')))
+		getTeachers()
+			.then((data) => (teachers = data))
 			.catch(() => {});
 	});
 

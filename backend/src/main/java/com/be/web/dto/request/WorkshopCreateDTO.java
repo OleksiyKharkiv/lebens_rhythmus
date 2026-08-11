@@ -15,6 +15,7 @@ import java.time.LocalDate;
 public class WorkshopCreateDTO {
     private String title;
     private String description;
+    // LR-072 — Teacher.id, not User.id (was User.id before the migration).
     private Long teacherId;
     private Long courseId;
     private LocalDate startDate;

@@ -1149,3 +1149,84 @@ compileTestJava` — чисто; полный `./gradlew test` — 0 failures/er
 
 **Не в скоупе (по тексту тикета):** UI-выбор Course в
 `admin/performances/+page.svelte` — только backend-связь.
+
+---
+
+## LR-072 — Backend: `Workshop.teacher` → `Teacher` (было `User`)
+
+**Tier:** HIGH · **Статус:** Closed 2026-08-11
+**Источник:** прямой запрос заказчика п.3 — по факту находка при чтении
+кода: `Teacher`-CRUD уже полностью готов, реальная проблема —
+`Workshop.teacher` физически ссылался на `User`, не на `Teacher`, в
+отличие от корректного `Group.teacher`.
+
+**Важное отклонение от буквы тикета, зафиксировано честно:** тикет
+требовал "живую проверку вживую (перед миграцией!)" прод-данных перед
+написанием миграции. Пользователь дал команду "доделай миграции" без
+результата запрошенной живой проверки. Вместо повторного блокирования —
+миграция спроектирована **безопасной по построению**, не зависящей от
+предварительного знания состояния таблицы: сама выполняет remap по
+email-совпадению, явно фиксирует и обнуляет несовпавшие случаи (не
+теряет их молча), только потом меняет FK-constraint. Это закрывает
+исходное намерение тикета ("не предполагать пустоту таблицы") без
+необходимости отдельного ручного шага — миграция сама себе гарантия.
+
+**Сделано:**
+- `V9__migrate_workshop_teacher_to_teacher.sql` — 3 шага: (1) remap
+  `teacher_id` с `User.id` на `Teacher.id` через `User.email = Teacher.
+  email` (тот же паттерн, что уже есть в `TeacherService.
+  resolveTeacherIdForUser`); (2) для `teacher_id`, у которых нет
+  совпадающего `Teacher` — запись в новую таблицу
+  `lr072_unmigrated_workshop_teachers` (workshop_id/name/orphaned
+  user_id/email) **до** обнуления, не после — не теряется молча; (3)
+  `ALTER TABLE workshops DROP/ADD CONSTRAINT workshops_teacher_id_fkey`
+  — FK теперь ссылается на `teachers(id)`, не `users(id)`.
+- `Workshop.java` — `teacher` поле `User` → `Teacher`.
+- `WorkshopCreateDTO.teacherId` — теперь `Teacher.id` (документировано
+  в коде). `WorkshopListDTO`/`WorkshopDetailDTO.teacher` —
+  `UserBasicDTO` → `TeacherInfoDTO`.
+- `WorkshopMapper` — `UserMapper` → `TeacherMapper`.
+- `WorkshopService` — резолвит `teacherId` через `TeacherRepository`,
+  не `UserRepository`.
+- `admin/workshops/+page.svelte` — дропдаун учителя переключён с
+  `getAllUsers().filter(role === 'TEACHER')` на `GET /teachers`
+  (`getTeachers()`), тот же паттерн, что уже у `admin/groups`.
+
+**Побочная находка, исправлена тем же дифом (тот же корень путаницы
+User/Teacher ID, что и весь этот тикет):** `teacher/+page.svelte`
+(личный кабинет учителя) звал `getWorkshopsByTeacherUserId(user.id)` —
+слал `User.id`. `WorkshopController.byTeacher()`'s `@PreAuthorize`
+self-check уже сравнивал это с `resolveTeacherIdForUser()`'s
+`Teacher.id` — разные ID-пространства, значит "Мои воркшопы" реально
+падало в 403 для любого учителя, чей `User.id` не совпадал численно с
+его `Teacher.id`. Переименовано в `getWorkshopsByTeacherId`, вызов
+переставлен после резолва `myTeacherRow` (тот же паттерн, что уже
+использовался для Groups на этой же странице), обе секции ("Мои
+воркшопы"/"Мои группы") теперь единообразно используют один и тот же
+`Teacher.id`.
+
+**Verify (замена отсутствующей живой прод-проверки):**
+- Реальный локальный Postgres (не Testcontainers) — засеяны вручную
+  через `psql` 3 сценария: (1) `Workshop.teacher_id` → `User` с
+  совпадающим по email `Teacher` — после миграции корректно указывает
+  на `Teacher.id`; (2) `Workshop.teacher_id` → `User` без совпадающего
+  `Teacher` — после миграции `NULL`, запись есть в
+  `lr072_unmigrated_workshop_teachers` с исходным email для
+  последующего разбора заказчиком; (3) `Workshop.teacher_id = NULL` —
+  не тронут. FK-constraint `workshops_teacher_id_fkey` подтверждён
+  ссылающимся на `teachers`, не `users` (`pg_constraint`-запрос).
+- Полный `bootRun` против уже смигрированной схемы — Hibernate
+  schema-validation (`ddl-auto=validate`) прошла чисто, подтверждает
+  соответствие `Workshop.java`'s нового маппинга реальной колонке.
+- `npm run check` — 0 ошибок; `./gradlew compileJava compileTestJava`
+  — чисто; полный `./gradlew test` (Testcontainers, миграция на пустой
+  схеме — тривиальный случай) — 0 failures/errors.
+
+**Follow-up, не блокирует, не забыт:** `Course.teacher` остаётся
+`User`-типизированным (тот же временный паттерн, что был у Workshop до
+этого тикета, добавлен явным прямым запросом заказчика 2 дня назад,
+код помечен комментарием "see LR-072") — сознательно НЕ мигрирован в
+этом дифе: Course — новая сущность, риск профиль другой (не старые
+прод-данные), а UX Course-формы (поиск по User) был отдельным явным
+пожеланием заказчика, смешивать с рискованной Workshop-миграцией не
+стал. Если понадобится — отдельный тикет, тем же паттерном.

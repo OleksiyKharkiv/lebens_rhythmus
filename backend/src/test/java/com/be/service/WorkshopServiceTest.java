@@ -1,10 +1,10 @@
 package com.be.service;
 
 import com.be.domain.entity.Course;
-import com.be.domain.entity.User;
+import com.be.domain.entity.Teacher;
 import com.be.domain.entity.Workshop;
 import com.be.domain.repository.CourseRepository;
-import com.be.domain.repository.UserRepository;
+import com.be.domain.repository.TeacherRepository;
 import com.be.domain.repository.WorkshopRepository;
 import com.be.web.dto.request.WorkshopCreateDTO;
 import com.be.web.mapper.WorkshopMapper;
@@ -32,19 +32,19 @@ class WorkshopServiceTest {
     @Mock
     private WorkshopRepository workshopRepository;
     @Mock
-    private UserRepository userRepository;
+    private TeacherRepository teacherRepository;
     @Mock
     private CourseRepository courseRepository;
     @Mock
     private WorkshopMapper workshopMapper;
 
     private WorkshopService service() {
-        return new WorkshopService(workshopRepository, userRepository, courseRepository, workshopMapper);
+        return new WorkshopService(workshopRepository, teacherRepository, courseRepository, workshopMapper);
     }
 
     @Test
     void updateWorkshop_withNullTeacherId_clearsPreviouslySetTeacher() {
-        User oldTeacher = User.builder().id(3L).firstName("Old").lastName("Teacher").build();
+        Teacher oldTeacher = Teacher.builder().id(3L).firstName("Old").lastName("Teacher").build();
         Workshop existing = Workshop.builder()
                 .id(1L)
                 .workshopName("Theaterlabor")
@@ -59,7 +59,7 @@ class WorkshopServiceTest {
         Workshop updated = service().updateWorkshop(1L, dto);
 
         assertThat(updated.getTeacher()).isNull();
-        verifyNoInteractions(userRepository);
+        verifyNoInteractions(teacherRepository);
     }
 
     // LR-070 — courseId gets the same authoritative-clearing treatment
@@ -92,10 +92,10 @@ class WorkshopServiceTest {
                 .id(1L)
                 .workshopName("Theaterlabor")
                 .build();
-        User newTeacher = User.builder().id(8L).firstName("Bea").lastName("Neu").build();
+        Teacher newTeacher = Teacher.builder().id(8L).firstName("Bea").lastName("Neu").build();
 
         when(workshopRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(userRepository.findById(8L)).thenReturn(Optional.of(newTeacher));
+        when(teacherRepository.findById(8L)).thenReturn(Optional.of(newTeacher));
         when(workshopRepository.save(any(Workshop.class))).thenAnswer(inv -> inv.getArgument(0));
 
         WorkshopCreateDTO dto = WorkshopCreateDTO.builder().teacherId(8L).build();

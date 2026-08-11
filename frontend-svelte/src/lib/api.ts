@@ -579,10 +579,13 @@ export function deleteWorkshop(id: number) {
 	return authRequest<void>(`/workshops/${id}`, { method: 'DELETE' });
 }
 
-// teacherId here = User.id — Workshop.teacher is a User, unlike Group.teacher
-// below (Teacher entity). Two different ID spaces, do not mix them up.
-export function getWorkshopsByTeacherUserId(teacherUserId: number) {
-	return authRequest<WorkshopListItem[]>(`/workshops/teacher/${teacherUserId}`);
+// LR-072 — teacherId here is now Teacher.id, same id space as
+// getGroupsByTeacherId below (Workshop.teacher was migrated from User to
+// Teacher; previously this took a User.id, a real bug — the backend's
+// @PreAuthorize self-check always compares against a resolved Teacher.id,
+// so a TEACHER caller passing their own User.id was silently rejected).
+export function getWorkshopsByTeacherId(teacherId: number) {
+	return authRequest<WorkshopListItem[]>(`/workshops/teacher/${teacherId}`);
 }
 
 // ----- Courses (LR-069, LR-ADR-023) -----
