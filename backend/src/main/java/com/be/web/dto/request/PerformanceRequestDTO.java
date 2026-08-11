@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class PerformanceRequestDTO {
     private Long workshopId;
+    private Long courseId;
     private String title;
     private String description;
     private LocalDateTime performanceDate;

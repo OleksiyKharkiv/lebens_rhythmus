@@ -23,6 +23,13 @@ public class Performance {
     @JoinColumn(name = "workshop_id")
     private Workshop workshop;
 
+    // LR-071 (LR-ADR-021) — added alongside workshop, not replacing it:
+    // a Performance can conclude either a Course or a single Workshop,
+    // or neither, independently of each other.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id")
+    private Course course;
+
     @Column(nullable = false, length = 200)
     private String title;
 

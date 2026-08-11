@@ -2,6 +2,29 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-11 — feat: LR-071 закрыт — `Performance.courseId` (nullable FK) + попутный фикс `workshopId`-клиринга
+
+### Область (`backend/src/main/{resources/db/migration/V8__add_performance_course_fk.sql,java/com/be/{domain/entity/Performance.java,service/PerformanceService.java,web/{dto/{request/PerformanceRequestDTO,response/PerformanceResponseDTO}.java,mapper/PerformanceMapper.java}}}`, `backend/src/test/java/com/be/service/PerformanceServiceTest.java` (new), `docs/tickets/{tickets.md,archive.md}`)
+
+- **feat (LR-071/LR-ADR-021)** — `Performance.course` (nullable,
+  добавлено рядом с уже существующим `workshop`, не заменяет —
+  Performance может завершать Course, Workshop, оба или ни то ни
+  другое). Миграция + DTO-поля + `PerformanceService` резолвит
+  `courseId` через новый `CourseRepository`-инжект.
+- **fix (найдено по ходу, не отдельным тикетом)** — тот же
+  клиринг-баг ("устанавливает, но не снимает" при `null`), что уже
+  дважды чинился на этой неделе (`CourseService`/`WorkshopService`),
+  нашёлся и у уже существующего `Performance.workshop` —
+  `admin/performances/+page.svelte` реально позволяет сбросить
+  workshop через "—". Исправлено тем же дифом вместе с `courseId`, обе
+  связи авторитетны на каждый update.
+- **test** — новый `PerformanceServiceTest.java` (сервис раньше не
+  имел ни одного юнит-теста) — 3 теста, включая регрессионный на
+  очистку `workshop`.
+- **verify** — `npm run check` чисто, `./gradlew compileJava
+  compileTestJava` чисто, полный `./gradlew test` — 0 failures/errors.
+- **docs** — `LR-071` закрыт → `archive.md`.
+
 ## 2026-08-11 — feat: LR-070 закрыт — `Workshop.courseId` (nullable FK)
 
 ### Область (`backend/src/main/{resources/db/migration/V7__add_workshop_course_fk.sql,java/com/be/{domain/entity/Workshop.java,service/WorkshopService.java,web/{dto/{request/WorkshopCreateDTO,response/WorkshopDetailDTO}.java,mapper/WorkshopMapper.java}}}`, `backend/src/test/java/com/be/service/WorkshopServiceTest.java` (new), `docs/tickets/{tickets.md,archive.md}`)

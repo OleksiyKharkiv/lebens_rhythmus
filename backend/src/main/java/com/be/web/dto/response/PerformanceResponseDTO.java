@@ -15,6 +15,7 @@ public class PerformanceResponseDTO {
     private Long id;
     private Long workshopId;
     private String workshopTitle;
+    private Long courseId;
     private String title;
     private String description;
     private LocalDateTime performanceDate;

@@ -1114,3 +1114,38 @@ failures/errors по всем test-suite, включая Testcontainers-
 **Не в скоупе (по тексту тикета):** UI-выбор Course в
 `admin/workshops/+page.svelte` — только backend-связь, фронтенд-форма
 не тронута.
+
+---
+
+## LR-071 — Backend: `Performance.courseId` (nullable FK)
+
+**Tier:** MED · **Статус:** Closed 2026-08-11
+**Источник:** `LR-ADR-021`
+
+**Сделано:**
+- `V8__add_performance_course_fk.sql` — `performances.course_id`
+  (nullable FK на `courses`), рядом с уже существующим `workshop_id`,
+  не заменяет его — Performance может завершать Course, Workshop, оба
+  или ни то ни другое, независимо.
+- `Performance.java` — новое поле `course`. `PerformanceRequestDTO.
+  courseId`, `PerformanceResponseDTO.courseId`, `PerformanceMapper`
+  резолвит id из связи.
+- `PerformanceService` — `create`/`update` резолвят `courseId` через
+  новый `CourseRepository`-инжект. **Попутно исправлен тот же
+  клиринг-баг у уже существующего `workshopId`** (найден при чтении
+  кода перед добавлением `courseId` — `admin/performances/+page.svelte`
+  имеет `<select>` с опцией "—", сбрасывающей `form.workshopId` в
+  `null`, `PerformanceService.update()` его не снимал) — не отдельным
+  тикетом, тем же дифом, той же причиной (authoritative on every
+  update, форма шлёт весь стейт целиком).
+- Новый `PerformanceServiceTest.java` (ранее не существовал вообще) —
+  3 теста: очистка `workshop` через `null` (регрессия для
+  только что найденного бага), очистка `course` через `null`
+  (доказано с самого начала), создание с обеими связями сразу.
+
+**Verify:** `npm run check` — 0 ошибок; `./gradlew compileJava
+compileTestJava` — чисто; полный `./gradlew test` — 0 failures/errors
+по всем test-suite.
+
+**Не в скоупе (по тексту тикета):** UI-выбор Course в
+`admin/performances/+page.svelte` — только backend-связь.

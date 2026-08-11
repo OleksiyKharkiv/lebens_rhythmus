@@ -14,6 +14,7 @@ public class PerformanceMapper {
                 .id(performance.getId())
                 .workshopId(performance.getWorkshop() != null ? performance.getWorkshop().getId() : null)
                 .workshopTitle(performance.getWorkshop() != null ? performance.getWorkshop().getWorkshopName() : null)
+                .courseId(performance.getCourse() != null ? performance.getCourse().getId() : null)
                 .title(performance.getTitle())
                 .description(performance.getDescription())
                 .performanceDate(performance.getPerformanceDate())
