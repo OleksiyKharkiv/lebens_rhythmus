@@ -21,7 +21,8 @@ public class UserUpdateDTO {
     @Size(min = 2, max = 50)
     private String lastName;
 
-    @Pattern(regexp = "\\+?[0-9\\s\\-()]+")
+    // Same "^$|" fix as TeacherRequestDTO.phone — see its comment.
+    @Pattern(regexp = "^$|\\+?[0-9\\s\\-()]+")
     @Size(max = 25)
     private String phone;
 

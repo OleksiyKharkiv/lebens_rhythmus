@@ -27,7 +27,13 @@ public class TeacherRequestDTO {
     @Email
     private String email;
 
-    @Pattern(regexp = "\\+?[0-9\\s\\-()]+")
+    // Empty string must be allowed alongside the phone shape — phone is
+    // optional (nullable in the DB), and admin forms send "" for a blank
+    // field, not null. Found live 2026-08-11 building admin/teachers
+    // (LR-073): @Pattern without the "^$|" alternative rejects "" even
+    // though it isn't @NotBlank, since Bean Validation only treats an
+    // actual null as automatically valid, not an empty string.
+    @Pattern(regexp = "^$|\\+?[0-9\\s\\-()]+")
     @Size(max = 25)
     private String phone;
 

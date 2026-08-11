@@ -1143,7 +1143,7 @@ domain/service/repository/controller, юридически значимый ко
 - [x] LR-071 — Backend: `Performance.courseId` — закрыт 2026-08-11.
 - [x] LR-072 — Backend: `Workshop.teacher` → `Teacher` (было `User`) —
       закрыт 2026-08-11.
-- [ ] LR-073 — Frontend: admin-страница Teachers
+- [x] LR-073 — Frontend: admin-страница Teachers — закрыт 2026-08-11.
 - [ ] LR-074 — Frontend: форма создания Workshop — мульти-день + fix teacher-дропдауна
 - [x] LR-075 — Frontend: форма создания Course — закрыт 2026-08-09.
 - [x] LR-076 — Frontend: публичный каталог/страница Course — закрыт
@@ -1172,21 +1172,6 @@ domain/service/repository/controller, юридически значимый ко
 ---
 
 
-## LR-073 — Frontend: admin-страница Teachers (список + создание + редактирование)
-
-**Tier:** MED
-**Статус:** Open
-**Источник:** прямой запрос заказчика п.3
-
-Новая `admin/teachers/+page.svelte` (по образцу уже существующих
-`admin/venues`/`admin/age-groups`) — использует уже полностью готовый
-`TeacherController` API (`GET`/`POST`/`PUT`/`DELETE /api/v1/teachers`).
-Добавить пункт в `admin/+layout.svelte`'s sub-nav.
-
-**Не блокируется на `LR-072`** — может идти параллельно, `Teacher`-CRUD
-уже работает независимо от того, что использует `Workshop.teacher`.
-
----
 
 ## LR-074 — Frontend: форма создания Workshop — мульти-день расписание
 

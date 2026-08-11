@@ -1230,3 +1230,41 @@ self-check уже сравнивал это с `resolveTeacherIdForUser()`'s
 прод-данные), а UX Course-формы (поиск по User) был отдельным явным
 пожеланием заказчика, смешивать с рискованной Workshop-миграцией не
 стал. Если понадобится — отдельный тикет, тем же паттерном.
+
+---
+
+## LR-073 — Frontend: admin-страница Teachers (список + создание + редактирование)
+
+**Tier:** MED · **Статус:** Closed 2026-08-11
+**Источник:** прямой запрос заказчика п.3
+
+**Сделано:**
+- `admin/teachers/+page.svelte` (новая, по образцу `admin/age-groups`)
+  — форма создания/редактирования (firstName/lastName/email/phone/
+  title/bioDe/En/Ua/approved/active), список с Bearbeiten/Löschen,
+  использует уже полностью готовый `TeacherController` API.
+- `api.ts` — `TeacherRequestDTO` + `createTeacher`/`updateTeacher`/
+  `deleteTeacher` (`getTeachers()` уже существовал для чужих форм).
+- Пункт "Lehrkräfte" в `admin/+layout.svelte`'s sub-nav + i18n-ключи во
+  всех трёх локалях (`admin_nav_teachers`, `admin_teacher_*`).
+
+**Реальный баг, найден живьём при первой попытке создать учителя через
+форму, исправлен тем же дифом:** `TeacherRequestDTO.phone`'s
+`@Pattern(regexp = "\\+?[0-9\\s\\-()]+")` не пропускал пустую строку —
+Bean Validation считает автоматически валидным только реальный `null`,
+не `""`, а форма для необязательного поля шлёт именно `""`. `POST
+/teachers` возвращал `400` для любого учителя без телефона — то есть
+страница была нерабочей для самого частого случая до этого фикса.
+Тот же скопированный один-в-один паттерн нашёлся и в `UserUpdateDTO.
+phone` (идентичный regex) и `ParticipantRequestDTO.phone` — исправлены
+все три одним и тем же способом (`"^$|" + существующий паттерн`), не
+только тот, что заблокировал текущую форму. 3 новых регрессионных
+теста в уже существующем `RequestDtoValidationTest` (LR-012).
+
+**Verify:** живая проверка в браузере (не только тесты) — полный
+CRUD-цикл через настоящую форму: `POST` (201, с реальным именем/email,
+подтверждён шифрование-расшифровка через `EncryptedStringConverter`
+без ошибок) → `PUT` (200, смена `title`) → `DELETE` (204) → список
+корректно отражает каждый шаг. Активный пункт nav подсвечивается
+(`aria-current="page"`, `border-gold`). `npm run check`/`build` —
+чисто. Полный `./gradlew test` — 0 failures/errors.

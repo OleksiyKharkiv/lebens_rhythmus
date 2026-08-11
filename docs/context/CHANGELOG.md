@@ -2,6 +2,27 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-11 — feat: LR-073 закрыт — admin-страница Teachers + фикс `@Pattern`-бага на пустом телефоне (3 DTO)
+
+### Область (`frontend-svelte/src/{lib/api.ts,routes/admin/{teachers/+page.svelte (new),+layout.svelte}}`, `frontend-svelte/messages/{de,en,uk}.json`, `backend/src/main/java/com/be/web/dto/request/{TeacherRequestDTO,UserUpdateDTO,ParticipantRequestDTO}.java`, `backend/src/test/java/com/be/web/dto/request/RequestDtoValidationTest.java`, `docs/tickets/{tickets.md,archive.md}`)
+
+- **feat (LR-073)** — `admin/teachers/+page.svelte` (по образцу
+  `admin/age-groups`), полный CRUD поверх уже готового
+  `TeacherController`. Нав-пункт "Lehrkräfte" + i18n во всех локалях.
+- **fix (найдено живьём при первой реальной отправке формы)** —
+  `TeacherRequestDTO.phone`'s `@Pattern` не пропускал `""` (только
+  `null` автоматически валиден в Bean Validation) — `POST /teachers`
+  400'ил для любого учителя без телефона, самый частый случай.
+  Идентичный скопированный паттерн нашёлся и в `UserUpdateDTO.phone`/
+  `ParticipantRequestDTO.phone` — исправлены все три одним дифом
+  (`"^$|"` перед существующим regex), не только блокирующий текущую
+  форму. 3 новых теста в `RequestDtoValidationTest`.
+- **verify** — живой браузерный прогон полного CRUD-цикла (create 201
+  → edit 200 → delete 204) через настоящую форму, шифрование/
+  расшифровка PII подтверждена без ошибок. `npm run check`/`build`
+  чисто, полный `./gradlew test` — 0 failures/errors.
+- **docs** — `LR-073` закрыт → `archive.md`.
+
 ## 2026-08-11 — feat: LR-072 закрыт — `Workshop.teacher` мигрирован `User` → `Teacher` + фикс 403 в личном кабинете учителя
 
 ### Область (`backend/src/main/{resources/db/migration/V9__migrate_workshop_teacher_to_teacher.sql,java/com/be/{domain/entity/Workshop.java,service/WorkshopService.java,web/{dto/{request/WorkshopCreateDTO,response/{WorkshopListDTO,WorkshopDetailDTO}}.java,mapper/WorkshopMapper.java}}}`, `backend/src/test/java/com/be/service/WorkshopServiceTest.java`, `frontend-svelte/src/{lib/api.ts,routes/{admin/workshops/+page.svelte,teacher/+page.svelte}}`, `docs/tickets/{tickets.md,archive.md}`)

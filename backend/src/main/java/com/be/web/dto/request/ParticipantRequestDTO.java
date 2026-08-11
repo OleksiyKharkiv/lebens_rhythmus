@@ -27,7 +27,8 @@ public class ParticipantRequestDTO {
     @Email
     private String email;
 
-    @Pattern(regexp = "\\+?[0-9\\s\\-()]+")
+    // Same "^$|" fix as TeacherRequestDTO.phone — see its comment.
+    @Pattern(regexp = "^$|\\+?[0-9\\s\\-()]+")
     @Size(max = 25)
     private String phone;
 

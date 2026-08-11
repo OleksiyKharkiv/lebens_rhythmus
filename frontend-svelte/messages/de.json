@@ -143,6 +143,7 @@
 	"admin_nav_venues": "Standorte",
 	"admin_nav_age_groups": "Altersgruppen",
 	"admin_nav_performances": "Aufführungen",
+	"admin_nav_teachers": "Lehrkräfte",
 
 	"admin_overview_title": "Admin-Übersicht",
 	"admin_overview_recent_workshops": "Kommende Workshops",
@@ -197,6 +198,16 @@
 	"admin_venue_phone": "Telefon",
 	"admin_venue_email": "Email",
 	"admin_venue_description": "Beschreibung",
+
+	"admin_teacher_first_name": "Vorname",
+	"admin_teacher_last_name": "Nachname",
+	"admin_teacher_email": "Email",
+	"admin_teacher_phone": "Telefon",
+	"admin_teacher_title": "Titel/Rolle",
+	"admin_teacher_approved": "Freigegeben",
+	"admin_teacher_bio_de": "Über mich (DE)",
+	"admin_teacher_bio_en": "Über mich (EN)",
+	"admin_teacher_bio_ua": "Über mich (UA)",
 
 	"admin_workshop_title": "Titel",
 	"admin_workshop_description": "Beschreibung",

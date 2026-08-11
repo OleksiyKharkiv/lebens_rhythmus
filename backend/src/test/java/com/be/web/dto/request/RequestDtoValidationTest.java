@@ -93,6 +93,37 @@ class RequestDtoValidationTest {
         assertThat(validator.validate(dto)).isEmpty();
     }
 
+    // Regression: admin forms send "" for an unset optional field, not
+    // null — @Pattern alone (without "^$|") rejects "" even though phone
+    // isn't @NotBlank, since only an actual null is automatically valid
+    // under Bean Validation, not an empty string. Found live 2026-08-11
+    // building admin/teachers (LR-073) — POST /teachers 400'd on every
+    // teacher with no phone number. Same fix applied to UserUpdateDTO/
+    // ParticipantRequestDTO, which share the identical copy-pasted
+    // pattern.
+    @Test
+    void teacherRequest_emptyPhone_isAccepted() {
+        TeacherRequestDTO dto = TeacherRequestDTO.builder()
+                .firstName("Alice").lastName("Schmidt").email("a@example.com").phone("").build();
+
+        assertThat(validator.validate(dto)).noneMatch(v -> v.getPropertyPath().toString().equals("phone"));
+    }
+
+    @Test
+    void userUpdate_emptyPhone_isAccepted() {
+        UserUpdateDTO dto = UserUpdateDTO.builder().firstName("Alice").lastName("Schmidt").phone("").build();
+
+        assertThat(validator.validate(dto)).noneMatch(v -> v.getPropertyPath().toString().equals("phone"));
+    }
+
+    @Test
+    void participantRequest_emptyPhone_isAccepted() {
+        ParticipantRequestDTO dto = ParticipantRequestDTO.builder()
+                .firstName("Alice").lastName("Schmidt").phone("").build();
+
+        assertThat(validator.validate(dto)).noneMatch(v -> v.getPropertyPath().toString().equals("phone"));
+    }
+
     @Test
     void participantRequest_shortLastNameOrTooLongPhone_isRejected() {
         ParticipantRequestDTO shortName = ParticipantRequestDTO.builder().firstName("Alice").lastName("X").build();

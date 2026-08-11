@@ -143,6 +143,7 @@
 	"admin_nav_venues": "Локації",
 	"admin_nav_age_groups": "Вікові групи",
 	"admin_nav_performances": "Виступи",
+	"admin_nav_teachers": "Викладачі",
 
 	"admin_overview_title": "Огляд адмінки",
 	"admin_overview_recent_workshops": "Найближчі воркшопи",
@@ -197,6 +198,16 @@
 	"admin_venue_phone": "Телефон",
 	"admin_venue_email": "Email",
 	"admin_venue_description": "Опис",
+
+	"admin_teacher_first_name": "Ім'я",
+	"admin_teacher_last_name": "Прізвище",
+	"admin_teacher_email": "Email",
+	"admin_teacher_phone": "Телефон",
+	"admin_teacher_title": "Посада/роль",
+	"admin_teacher_approved": "Підтверджено",
+	"admin_teacher_bio_de": "Про себе (DE)",
+	"admin_teacher_bio_en": "Про себе (EN)",
+	"admin_teacher_bio_ua": "Про себе (UA)",
 
 	"admin_workshop_title": "Назва",
 	"admin_workshop_description": "Опис",

@@ -143,6 +143,7 @@
 	"admin_nav_venues": "Venues",
 	"admin_nav_age_groups": "Age groups",
 	"admin_nav_performances": "Performances",
+	"admin_nav_teachers": "Teachers",
 
 	"admin_overview_title": "Admin overview",
 	"admin_overview_recent_workshops": "Upcoming workshops",
@@ -197,6 +198,16 @@
 	"admin_venue_phone": "Phone",
 	"admin_venue_email": "Email",
 	"admin_venue_description": "Description",
+
+	"admin_teacher_first_name": "First name",
+	"admin_teacher_last_name": "Last name",
+	"admin_teacher_email": "Email",
+	"admin_teacher_phone": "Phone",
+	"admin_teacher_title": "Title/role",
+	"admin_teacher_approved": "Approved",
+	"admin_teacher_bio_de": "Bio (DE)",
+	"admin_teacher_bio_en": "Bio (EN)",
+	"admin_teacher_bio_ua": "Bio (UA)",
 
 	"admin_workshop_title": "Title",
 	"admin_workshop_description": "Description",

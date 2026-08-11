@@ -685,6 +685,34 @@ export function getTeachers() {
 	return authRequest<TeacherInfoDTO[]>('/teachers');
 }
 
+// LR-073 — admin CRUD for the Teacher entity itself (distinct from the
+// Teacher.id resolution getTeachers() above already supports for
+// Group/Workshop forms).
+export interface TeacherRequestDTO {
+	firstName: string;
+	lastName: string;
+	email: string;
+	phone: string;
+	title: string;
+	approved: boolean;
+	bioDe: string;
+	bioEn: string;
+	bioUa: string;
+	active: boolean;
+}
+
+export function createTeacher(input: TeacherRequestDTO) {
+	return authRequest<TeacherInfoDTO>('/teachers', { method: 'POST', body: JSON.stringify(input) });
+}
+
+export function updateTeacher(id: number, input: TeacherRequestDTO) {
+	return authRequest<TeacherInfoDTO>(`/teachers/${id}`, { method: 'PUT', body: JSON.stringify(input) });
+}
+
+export function deleteTeacher(id: number) {
+	return authRequest<void>(`/teachers/${id}`, { method: 'DELETE' });
+}
+
 // ----- Groups -----
 // GroupController takes the raw JPA entity as @RequestBody (no DTO) — this
 // shape matches Group.java's writable fields exactly. `teacher` here MUST be
