@@ -16,6 +16,7 @@ public class WorkshopCreateDTO {
     private String title;
     private String description;
     private Long teacherId;
+    private Long courseId;
     private LocalDate startDate;
     private LocalDate endDate;
     // venueId removed (LR-015) — venue now lives on Group, not Workshop.

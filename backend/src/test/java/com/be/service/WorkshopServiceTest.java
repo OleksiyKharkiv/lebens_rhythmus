@@ -1,7 +1,9 @@
 package com.be.service;
 
+import com.be.domain.entity.Course;
 import com.be.domain.entity.User;
 import com.be.domain.entity.Workshop;
+import com.be.domain.repository.CourseRepository;
 import com.be.domain.repository.UserRepository;
 import com.be.domain.repository.WorkshopRepository;
 import com.be.web.dto.request.WorkshopCreateDTO;
@@ -32,10 +34,12 @@ class WorkshopServiceTest {
     @Mock
     private UserRepository userRepository;
     @Mock
+    private CourseRepository courseRepository;
+    @Mock
     private WorkshopMapper workshopMapper;
 
     private WorkshopService service() {
-        return new WorkshopService(workshopRepository, userRepository, workshopMapper);
+        return new WorkshopService(workshopRepository, userRepository, courseRepository, workshopMapper);
     }
 
     @Test
@@ -56,6 +60,30 @@ class WorkshopServiceTest {
 
         assertThat(updated.getTeacher()).isNull();
         verifyNoInteractions(userRepository);
+    }
+
+    // LR-070 — courseId gets the same authoritative-clearing treatment
+    // teacherId needed a live-prod fix for; proven from the start here.
+    @Test
+    void updateWorkshop_withNullCourseId_clearsPreviouslySetCourse() {
+        Course oldCourse = Course.builder().id(4L)
+                .titleDe("Theaterlabor").titleEn("Theater Lab").titleUa("Театральна лабораторія")
+                .build();
+        Workshop existing = Workshop.builder()
+                .id(1L)
+                .workshopName("Improv-Workshop")
+                .course(oldCourse)
+                .build();
+
+        when(workshopRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(workshopRepository.save(any(Workshop.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        WorkshopCreateDTO dto = WorkshopCreateDTO.builder().courseId(null).build();
+
+        Workshop updated = service().updateWorkshop(1L, dto);
+
+        assertThat(updated.getCourse()).isNull();
+        verifyNoInteractions(courseRepository);
     }
 
     @Test

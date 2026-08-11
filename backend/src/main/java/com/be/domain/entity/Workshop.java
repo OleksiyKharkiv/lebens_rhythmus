@@ -68,6 +68,13 @@ public class Workshop {
     @JoinColumn(name = "teacher_id")
     private User teacher;
 
+    // LR-070 (LR-ADR-021) — zero-to-many, unidirectional: a Course can
+    // include several Workshops, each Workshop belongs to at most one
+    // Course. Nullable — "Workshop without a Course" is a valid case.
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id")
+    private Course course;
+
     // In the ERM there is a separate GroupWorkshop entity — it needs to be implemented.
     // Here simplified: list of groups (each group contains date/time/capacity)
     @OneToMany(mappedBy = "workshop", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1139,7 +1139,7 @@ domain/service/repository/controller, юридически значимый ко
 - [x] LR-069 — Backend: сущность `Course` — закрыт 2026-08-09, вместе с
       LR-075/LR-076/LR-078 в рамках одного прямого запроса заказчика
       ("начинай создавать Course сразу с полями/сервисами/фронтэндом").
-- [ ] LR-070 — Backend: `Workshop.courseId`
+- [x] LR-070 — Backend: `Workshop.courseId` — закрыт 2026-08-11.
 - [ ] LR-071 — Backend: `Performance.courseId`
 - [ ] LR-072 — Backend: `Workshop.teacher` → `Teacher` (было `User`)
 - [ ] LR-073 — Frontend: admin-страница Teachers
@@ -1167,19 +1167,6 @@ domain/service/repository/controller, юридически значимый ко
 - [ ] LR-085 — Frontend: recurrence-поля на форме создания `Group` для
       Course-связанных групп, новая из LR-069/075 сессии, блокируется на
       `LR-081`/`LR-082`
-
----
-
-## LR-070 — Backend: `Workshop.courseId` (nullable FK)
-
-**Tier:** MED
-**Статус:** Open · разблокирован (`LR-069` закрыт)
-**Источник:** `LR-ADR-021`
-
-Добавить `courseId` (nullable) в `Workshop`, миграция, DTO-поле в
-`WorkshopCreateDTO`/`WorkshopResponseDTO`. Существующие Workshop-записи
-получают `courseId = null` (совместимо — "Workshop без курса" уже
-предусмотренный случай по `LR-ADR-021`).
 
 ---
 

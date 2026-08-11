@@ -1076,3 +1076,41 @@ integration-тест против реального Testcontainers Postgres).
 без JWT, 200 с JWT) — все коды ответов корректны.
 `npm run check`/`npm run build` — 0 ошибок. `./gradlew compileJava
 compileTestJava` — чисто, `CourseServiceTest` 6/6 зелёных.
+
+---
+
+## LR-070 — Backend: `Workshop.courseId` (nullable FK)
+
+**Tier:** MED · **Статус:** Closed 2026-08-11
+**Источник:** `LR-ADR-021`
+
+**Сделано:**
+- `V7__add_workshop_course_fk.sql` — `workshops.course_id` (nullable FK
+  на `courses`). Существующие записи получают `NULL` (совместимо —
+  "Workshop без курса" уже предусмотренный случай по `LR-ADR-021`).
+- `Workshop.java` — новое поле `course` (`@ManyToOne(LAZY)`, zero-to-many
+  Course→Workshop, однонаправленная связь).
+- `WorkshopCreateDTO.courseId`, `WorkshopDetailDTO.courseId`,
+  `WorkshopMapper.toDetailDTO()` резолвит id из связи.
+- `WorkshopService` — `createWorkshop`/`updateWorkshop` резолвят
+  `courseId` через новый `CourseRepository`-инжект. **Урок из
+  только что закрытого прод-инцидента (см. предыдущую запись) применён
+  сразу, не задним числом:** `updateWorkshop` обнуляет `course`, если
+  `dto.getCourseId() == null` (authoritative on every update, та же
+  причина — форма шлёт весь стейт целиком), не skip-if-null.
+- Новый `WorkshopServiceTest.java` (ранее не существовал вообще для
+  этого сервиса) — 3 теста: очистка `teacher` через `null` (та же
+  регрессия, что и `CourseServiceTest`, доказывает фикс из прошлой
+  записи распространяется и на явно новый код), очистка `course` через
+  `null` (доказано с самого начала, не задним числом), смена `teacher`
+  без побочного влияния на прочие поля.
+
+**Verify:** `npm run check` — 0 ошибок; `./gradlew compileJava
+compileTestJava` — чисто (1 пре-существующее предупреждение в
+`Group.java`, не относится к этому дифу); полный `./gradlew test` — 0
+failures/errors по всем test-suite, включая Testcontainers-
+интеграционные.
+
+**Не в скоупе (по тексту тикета):** UI-выбор Course в
+`admin/workshops/+page.svelte` — только backend-связь, фронтенд-форма
+не тронута.

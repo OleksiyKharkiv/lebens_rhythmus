@@ -2,6 +2,26 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-11 — feat: LR-070 закрыт — `Workshop.courseId` (nullable FK)
+
+### Область (`backend/src/main/{resources/db/migration/V7__add_workshop_course_fk.sql,java/com/be/{domain/entity/Workshop.java,service/WorkshopService.java,web/{dto/{request/WorkshopCreateDTO,response/WorkshopDetailDTO}.java,mapper/WorkshopMapper.java}}}`, `backend/src/test/java/com/be/service/WorkshopServiceTest.java` (new), `docs/tickets/{tickets.md,archive.md}`)
+
+- **feat (LR-070/LR-ADR-021)** — `Workshop.course` (nullable
+  `@ManyToOne`, zero-to-many Course→Workshop), миграция + DTO-поля +
+  `WorkshopService` резолвит `courseId` через новый
+  `CourseRepository`-инжект.
+- **fix (применено проактивно, урок из предыдущей записи)** —
+  `updateWorkshop` обнуляет `course` при `dto.getCourseId() == null`
+  (authoritative on every update), не skip-if-null — тот же класс бага,
+  что был только что найден живьём для `teacher`, не повторён здесь.
+- **test** — новый `WorkshopServiceTest.java` (сервис раньше не имел ни
+  одного юнит-теста) — 3 теста, включая регрессионный на очистку
+  `teacher` через `null` (доказывает фикс из предыдущей записи
+  применяется и к этому сервису).
+- **verify** — `npm run check` чисто, `./gradlew compileJava
+  compileTestJava` чисто, полный `./gradlew test` — 0 failures/errors.
+- **docs** — `LR-070` закрыт → `archive.md`.
+
 ## 2026-08-09 — feat: LR-069/075/076/078 закрыты — Course MVP (backend+admin+public+AGB) + 6 живых прод-фиксов
 
 ### Область (`backend/src/main/{resources/db/migration/V6__add_courses.sql,java/com/be/{domain/entity/Course.java,domain/repository/CourseRepository.java,service/CourseService.java,web/{controller/CourseController.java,dto/{request/CourseCreateDTO.java,response/{CourseListDTO,CourseDetailDTO}.java},mapper/CourseMapper.java},config/SecurityConfig.java}}`, `backend/src/test/java/com/be/service/CourseServiceTest.java` (new), `frontend-svelte/src/{lib/api.ts,routes/{admin/{courses/+page.svelte (new),+layout.svelte},courses/{+page.svelte,[id]/+page.svelte} (new),+layout.svelte,agb/+page.svelte}}`, `frontend-svelte/messages/{de,en,uk}.json`, `docs/tickets/{tickets.md,archive.md}`)

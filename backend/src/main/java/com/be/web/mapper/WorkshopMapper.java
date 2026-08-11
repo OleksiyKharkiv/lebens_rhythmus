@@ -62,6 +62,7 @@ public class WorkshopMapper {
                 .title(w.getWorkshopName())
                 .description(w.getDescription())
                 .teacher(teacher)
+                .courseId(w.getCourse() != null ? w.getCourse().getId() : null)
                 .startDate(w.getStartDate())
                 .endDate(w.getEndDate())
                 .price(w.getPrice())

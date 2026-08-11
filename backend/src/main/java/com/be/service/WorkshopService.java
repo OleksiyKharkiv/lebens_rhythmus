@@ -1,8 +1,10 @@
 package com.be.service;
 
+import com.be.domain.entity.Course;
 import com.be.domain.entity.User;
 import com.be.domain.entity.Workshop;
 import com.be.domain.entity.enums.WorkshopStatus;
+import com.be.domain.repository.CourseRepository;
 import com.be.domain.repository.UserRepository;
 import com.be.domain.repository.WorkshopRepository;
 import com.be.web.dto.request.WorkshopCreateDTO;
@@ -19,13 +21,16 @@ import java.util.Objects;
 public class WorkshopService {
     private final WorkshopRepository workshopRepository;
     private final UserRepository userRepository;
+    private final CourseRepository courseRepository;
     private final WorkshopMapper workshopMapper;
 
     public WorkshopService(WorkshopRepository workshopRepository,
                            UserRepository userRepository,
+                           CourseRepository courseRepository,
                            WorkshopMapper workshopMapper) {
         this.workshopRepository = Objects.requireNonNull(workshopRepository, "workshopRepository");
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
+        this.courseRepository = Objects.requireNonNull(courseRepository, "courseRepository");
         this.workshopMapper = Objects.requireNonNull(workshopMapper, "workshopMapper");
     }
 
@@ -54,6 +59,12 @@ public class WorkshopService {
                     .orElseThrow(() -> new RuntimeException(
                             "Teacher user not found: " + dto.getTeacherId()));
             w.setTeacher(teacher);
+        }
+        if (dto.getCourseId() != null) {
+            Course course = courseRepository.findById(dto.getCourseId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Course not found: " + dto.getCourseId()));
+            w.setCourse(course);
         }
 
         return workshopRepository.save(w);
@@ -84,6 +95,17 @@ public class WorkshopService {
             existing.setTeacher(teacher);
         } else {
             existing.setTeacher(null);
+        }
+
+        // Same authoritative-on-every-update reasoning as teacherId above
+        // (LR-070) — applied from the start this time, not found live.
+        if (dto.getCourseId() != null) {
+            Course course = courseRepository.findById(dto.getCourseId())
+                    .orElseThrow(() -> new RuntimeException(
+                            "Course not found: " + dto.getCourseId()));
+            existing.setCourse(course);
+        } else {
+            existing.setCourse(null);
         }
 
         return workshopRepository.save(existing);

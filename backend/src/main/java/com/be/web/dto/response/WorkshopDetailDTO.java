@@ -18,6 +18,7 @@ public class WorkshopDetailDTO {
     private String title;
     private String description;
     private UserBasicDTO teacher;
+    private Long courseId;
     private LocalDate startDate;
     private LocalDate endDate;
     // venueName/venueId removed (LR-015) — venue is per-Group now, see
