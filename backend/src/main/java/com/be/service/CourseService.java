@@ -81,16 +81,25 @@ public class CourseService {
         courseRepository.deleteById(id);
     }
 
+    // Both relations are authoritative on every update, not skip-if-null:
+    // the admin form always submits the whole current state (PUT, not
+    // PATCH), so a null here means "explicitly cleared in the UI", not
+    // "field omitted" — unlike title/description, which are always
+    // non-null in practice because the form never lets them go empty.
     private void applyAgeGroupAndTeacher(Course c, CourseCreateDTO dto) {
         if (dto.getAgeGroupId() != null) {
             AgeGroup ageGroup = ageGroupRepository.findById(dto.getAgeGroupId())
                     .orElseThrow(() -> new RuntimeException("Age group not found: " + dto.getAgeGroupId()));
             c.setAgeGroup(ageGroup);
+        } else {
+            c.setAgeGroup(null);
         }
         if (dto.getTeacherId() != null) {
             User teacher = userRepository.findById(dto.getTeacherId())
                     .orElseThrow(() -> new RuntimeException("Teacher user not found: " + dto.getTeacherId()));
             c.setTeacher(teacher);
+        } else {
+            c.setTeacher(null);
         }
     }
 }

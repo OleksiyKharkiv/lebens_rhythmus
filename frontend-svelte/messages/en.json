@@ -182,6 +182,7 @@
 	"admin_save": "Save",
 	"admin_cancel": "Cancel",
 	"admin_delete": "Delete",
+	"admin_change": "Change",
 	"admin_price": "Price (€)",
 	"admin_duration_min": "Duration (min)",
 	"admin_active": "Active",

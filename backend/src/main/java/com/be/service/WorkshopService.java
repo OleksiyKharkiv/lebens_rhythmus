@@ -71,11 +71,19 @@ public class WorkshopService {
         if (dto.getPrice() != null) existing.setPrice(dto.getPrice());
         if (dto.getStatus() != null) existing.setStatus(WorkshopStatus.valueOf(dto.getStatus()));
 
+        // Authoritative on every update, not skip-if-null: the admin form
+        // always submits the whole current state (PUT, not PATCH), so a
+        // null teacherId means "explicitly cleared via the '—' option in
+        // the UI", not "field omitted" — same fix as CourseService's
+        // identical bug, found live in prod 2026-08-09 (the old teacher
+        // silently reappeared after being cleared and saved).
         if (dto.getTeacherId() != null) {
             User teacher = userRepository.findById(dto.getTeacherId())
                     .orElseThrow(() -> new RuntimeException(
                             "Teacher not found: " + dto.getTeacherId()));
             existing.setTeacher(teacher);
+        } else {
+            existing.setTeacher(null);
         }
 
         return workshopRepository.save(existing);

@@ -188,7 +188,7 @@
 				{#if selectedTeacherLabel}
 					<div class="mt-1 flex items-center justify-between rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper">
 						<span>{selectedTeacherLabel}</span>
-						<button type="button" onclick={clearTeacher} class="text-sm text-error hover:underline">{m.admin_delete()}</button>
+						<button type="button" onclick={clearTeacher} class="text-sm text-gold hover:underline">{m.admin_change()}</button>
 					</div>
 				{:else}
 					<div class="relative">

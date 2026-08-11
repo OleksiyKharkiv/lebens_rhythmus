@@ -966,3 +966,113 @@ integration-тест против реального Testcontainers Postgres).
 **Verify:** протокол Roundtable #8 и `LR-ADR-023` прочитаны и сверены
 друг с другом вручную — все 5 находок `architect-reviewer` отражены в
 обоих документах идентично, не только в одном из двух.
+
+---
+
+## LR-069 / LR-075 / LR-076 / LR-078 — Course MVP: backend + admin-форма + публичные страницы + AGB §9-11
+
+**Tier:** HIGH · **Статус:** Closed 2026-08-09
+**Источник:** прямой запрос заказчика ("начинай создавать Course сразу
+с необходимыми полями, сервисами, репами etc., создай сразу под него
+фронтэнд... поправь текст страницы AGB")
+
+**Сделано (backend, LR-069):**
+- `V6__add_courses.sql`, `Course.java` (чисто описательная сущность —
+  `titleDe/En/Ua`, `descriptionDe/En/Ua`, `ageGroupId`,
+  `isOnline`/`isSynchronous`/`hasRecordings`, `formatDisclaimerDe/En/Ua`
+  — без единого поля расписания, по `LR-ADR-023`), `CourseRepository`,
+  `CourseService`, `CourseController` (`/api/v1/courses`, GET публичный,
+  POST/PUT/DELETE ADMIN/BUSINESS_OWNER), `CourseCreateDTO`/
+  `CourseListDTO`/`CourseDetailDTO`, `CourseMapper`.
+- **Расхождение с изначальным текстом тикета, задокументировано, не
+  тихо:** `LR-069`'s описание явно исключало `teacherId` из скоупа
+  ("атрибуты конкретного проведения — Group, не Course"). Прямой запрос
+  заказчика попросил временный выбор учителя (`User`, поиск по
+  фамилии/email) прямо на `Course`, с полем "курс ведёт" на публичной
+  странице. Перечитан реальный `Workshop.java` — у него **уже есть**
+  собственное поле `teacher` (`User` FK, "Main teacher") **отдельно** от
+  `Group.teacher` (`Teacher`-сущность) — то есть паттерн "продукт несёт
+  headline-учителя, конкретное проведение — своего" уже существующий
+  прецедент, не новое отступление от `LR-ADR-023` (которое касалось
+  полей расписания/venue, не учителя). `Course.teacher` добавлен как
+  `User` FK, тот же временный паттерн, что `Workshop.teacher` — подлежит
+  миграции на `Teacher` вместе с `LR-072`.
+- `CourseServiceTest` (Mockito, 6 тестов) — create/update/delete,
+  resolve teacher/ageGroup, unknown-id ошибки.
+
+**Сделано (frontend, LR-075/LR-076):**
+- `admin/courses/+page.svelte` — форма создания/редактирования:
+  мультиязычные title/description, возрастная группа, **поиск учителя
+  по фамилии/email** (`GET /users/search`, debounce 300ms, не
+  преднагруженный dropdown — соответствует прямому запросу), три ZFU
+  булевых флага, мультиязычный `formatDisclaimer`, список с
+  edit/delete. Пункт "Курсы" в admin sub-nav.
+- `routes/courses/+page.svelte` (каталог) + `routes/courses/[id]/
+  +page.svelte` (детальная страница, поле "Kursleitung: Имя Фамилия" —
+  дословно то, что запросил заказчик) — по образцу `/workshops`.
+  Пункт "Kurse" в публичной навигации (десктоп + мобильное меню).
+- `api.ts` — `CourseListItem`/`CourseDetail`/`CourseCreateDTO` +
+  `getCourses`/`getCourse`/`createCourse`/`updateCourse`/`deleteCourse`,
+  переиспользован уже существующий `searchUsers()`.
+- i18n-ключи (`nav_courses`, `courses_title`, `admin_nav_courses`,
+  `admin_course_*`) добавлены во все три локали (`de`/`en`/`uk`).
+
+**Сделано (AGB, LR-078):**
+- `frontend-svelte/src/routes/agb/+page.svelte` — добавлены §9
+  ("Besondere Bedingungen für das Online-Angebot Theaterlabor", с
+  `id="theaterlabor"` для прямой ссылки из письма в ZFU —
+  `tlab29.com/agb#theaterlabor`), §10 ("Änderung dieser AGB"), §11
+  ("Bild- und Tonaufnahmen bei Aufführungen", с критичным п.11.4 —
+  явная оговорка, что Theaterlabor не подпадает под съёмку) — текст
+  дословно из `docs/compliance/tlab29-zfu-compliance-brief.md` §3.1-3.3,
+  не сочинён заново. §4.1 (VAT/Kleinunternehmerregelung, бриф §3.4)
+  сознательно не тронут — флаг для бухгалтера, не техническая задача.
+
+**Живые прод-инциденты, найденные и закрытые в тот же день (пуш делал
+заказчик самостоятельно, находки — по его репортам с реальных
+скриншотов/консоли):**
+1. `GET /api/v1/courses` → 401 у анонимного пользователя и даже у
+   залогиненного admin (фронт намеренно шлёт этот запрос без JWT, как
+   для Workshop) — `SecurityConfig`'s GET-permitAll список содержал
+   `/api/v1/workshops/**`/`/api/v1/activities/**`/
+   `/api/v1/performances/**`, но не `/api/v1/courses/**` — забыто при
+   первой реализации контроллера. Добавлено.
+2. Поля мультиязычных title/description/disclaimer в 3-колоночной
+   grid-форме визуально "разъезжались" — `Input.svelte`/`Textarea.svelte`
+   рендерят `<label>`+`<input>` как два соседних top-level элемента без
+   обёртки; при прямом размещении нескольких таких компонентов в
+   `grid-cols-3` CSS Grid расставляет их как 6 независимых элементов
+   (label,input,label,input,...), не парами. Обёрнуто каждое
+   поле в `<div>` в `admin/courses/+page.svelte`. **Тот же баг уже
+   существует в `admin/groups/+page.svelte`** (идентичный паттерн для
+   titleDe/En/Ua) — не исправлено в рамках этого тикета, вынесено
+   отдельной задачей (spawn_task).
+3. В admin sub-nav не было подсветки активного раздела — добавлено
+   (`isActive()` по `page.url.pathname`, точное совпадение для `/admin`
+   корня, префиксное для остальных).
+4. Admin-контейнер (`max-w-6xl`) был слишком узким для плотных форм с
+   3-колоночными grid — расширен до `max-w-7xl`.
+5. **CI-блокер, пойман до деплоя пользователем:** `svelte-check` падал
+   на `+layout.svelte`'s locale-switcher —
+   `resolve(localizeHref(...) as Pathname)` не тайпчекался против
+   расширившегося union маршрутов (добавление `/admin/courses`/
+   `/courses`/`/courses/[id]` — сама ошибка предсуществовала, не
+   вызвана этим тикетом напрямую, но заблокировала пайплайн именно
+   сейчас). Убран `resolve()`-вызов для этого динамического пути (уже
+   не используется для большинства других ссылок в этом же файле —
+   `/workshops` и т.п. используют голую строку), оставлен для
+   статических `resolve('/login')` и т.п.
+
+**Явно подтверждено заказчиком в этой же сессии:** `LR-ADR-023`
+остаётся как есть — Course НЕ получает полей расписания сейчас,
+несмотря на первоначальную формулировку "интервал дат/количество дней"
+в запросе (это Workshop-паттерн, не решённый для Course). Работа над
+расписанием Course — через `LR-081`/`LR-082` (Group) +
+новый `LR-085` (Group-форма для Course-групп), не через `Course`-форму.
+
+**Verify:** полный локальный прогон (Postgres в Docker, `bootRun`) —
+регистрация → логин ADMIN → создание Course с учителем →
+`GET /api/v1/courses` (публичный, 200) → `GET /api/v1/age-groups` (401
+без JWT, 200 с JWT) — все коды ответов корректны.
+`npm run check`/`npm run build` — 0 ошибок. `./gradlew compileJava
+compileTestJava` — чисто, `CourseServiceTest` 6/6 зелёных.

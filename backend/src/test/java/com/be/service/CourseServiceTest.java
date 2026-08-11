@@ -19,6 +19,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 /**
@@ -121,6 +122,52 @@ class CourseServiceTest {
         assertThat(updated.getTeacher()).isEqualTo(newTeacher);
         assertThat(updated.getTitleDe()).isEqualTo("Theaterlabor");
         assertThat(updated.isOnline()).isTrue();
+    }
+
+    // Regression: admin form submits the whole form on every save (PUT, not
+    // PATCH) — a null teacherId after clicking "Ändern" and not picking a
+    // replacement means "remove the teacher", not "leave it as is". The
+    // original applyAgeGroupAndTeacher() only ever set the relation, never
+    // cleared it, so a cleared-then-saved teacher silently reappeared on
+    // the next edit (found live in prod by the user, 2026-08-09).
+    @Test
+    void updateCourse_withNullTeacherId_clearsPreviouslySetTeacher() {
+        User oldTeacher = User.builder().id(3L).firstName("Old").lastName("Teacher").build();
+        Course existing = Course.builder()
+                .id(1L)
+                .titleDe("Theaterlabor").titleEn("Theater Lab").titleUa("Театральна лабораторія")
+                .teacher(oldTeacher)
+                .build();
+
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        CourseCreateDTO dto = CourseCreateDTO.builder().teacherId(null).build();
+
+        Course updated = service().updateCourse(1L, dto);
+
+        assertThat(updated.getTeacher()).isNull();
+        verifyNoInteractions(userRepository);
+    }
+
+    @Test
+    void updateCourse_withNullAgeGroupId_clearsPreviouslySetAgeGroup() {
+        AgeGroup oldAgeGroup = AgeGroup.builder().id(5L).titleDe("Erwachsene").titleEn("Adults").titleUa("Дорослі").minAge(18).maxAge(99).build();
+        Course existing = Course.builder()
+                .id(1L)
+                .titleDe("Theaterlabor").titleEn("Theater Lab").titleUa("Театральна лабораторія")
+                .ageGroup(oldAgeGroup)
+                .build();
+
+        when(courseRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(courseRepository.save(any(Course.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        CourseCreateDTO dto = CourseCreateDTO.builder().ageGroupId(null).build();
+
+        Course updated = service().updateCourse(1L, dto);
+
+        assertThat(updated.getAgeGroup()).isNull();
+        verifyNoInteractions(ageGroupRepository);
     }
 
     @Test
