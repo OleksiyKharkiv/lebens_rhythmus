@@ -76,10 +76,19 @@ html {
 	transition:
 		background-color 0.2s ease,
 		color 0.2s ease;
+	/* Beta report, 2026-08-12: the desktop header overflowed its container
+	   at ~1024px (nav content wider than max-w-5xl once "Kurse" was added,
+	   LR-076) with nothing containing the excess — the whole page became
+	   horizontally draggable/scrollable on touch devices (iPad report).
+	   This is a global safety net independent of getting any one
+	   component's width calculation exactly right — nothing on this site
+	   is meant to scroll sideways. */
+	overflow-x: hidden;
 }
 
 body {
 	margin: 0;
+	overflow-x: hidden;
 }
 
 h1,

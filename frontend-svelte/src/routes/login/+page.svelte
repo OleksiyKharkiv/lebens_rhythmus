@@ -235,11 +235,21 @@
 
 			<label class="mt-4 flex items-start gap-2 text-sm text-paper-dim">
 				<input type="checkbox" required bind:checked={acceptTerms} class="mt-1 accent-teal" />
-				{m.register_terms_label()}
+				<span>
+					{m.register_terms_prefix()}
+					<a href="/agb" target="_blank" rel="noopener" class="text-teal underline hover:no-underline">
+						{m.register_terms_link()}
+					</a>
+				</span>
 			</label>
 			<label class="mt-2 flex items-start gap-2 text-sm text-paper-dim">
 				<input type="checkbox" required bind:checked={acceptPrivacy} class="mt-1 accent-teal" />
-				{m.register_privacy_label()}
+				<span>
+					{m.register_privacy_prefix()}
+					<a href="/datenschutz" target="_blank" rel="noopener" class="text-teal underline hover:no-underline">
+						{m.register_privacy_link()}
+					</a>
+				</span>
 			</label>
 
 			<ErrorText message={regError} />

@@ -92,12 +92,22 @@
 		class="border-ink-line/60 sticky top-0 z-20 border-b bg-ink/90 backdrop-blur"
 		style="background-color: color-mix(in srgb, var(--color-ink) 90%, transparent);"
 	>
-		<div class="mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
-			<a href={resolve('/')} class="font-display text-lg font-semibold tracking-wide text-paper">
+		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+			<a
+				href={resolve('/')}
+				class="shrink-0 font-display text-lg font-semibold whitespace-nowrap text-paper tracking-wide"
+			>
 				{m.site_name()}
 			</a>
 
-			<nav class="hidden items-center gap-8 sm:flex">
+			<!-- Beta report, 2026-08-12: at gap-8/sm: (640px) the full nav no
+			     longer fit its container once "Kurse" was added (LR-076) —
+			     overflowed past ~1024px viewports with nothing to wrap or
+			     contain it (see layout.css's new overflow-x: hidden for the
+			     page-wide symptom this caused). Tightened spacing + moved the
+			     breakpoint out to lg: (1024px) so anything narrower gets the
+			     hamburger menu instead of a cramped/overflowing full nav. -->
+			<nav class="hidden items-center gap-5 lg:flex">
 				<a href={resolve('/')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_home()}
 				</a>
@@ -167,7 +177,7 @@
 			</nav>
 
 			<button
-				class="text-paper sm:hidden"
+				class="text-paper lg:hidden"
 				aria-label="Menu"
 				aria-expanded={mobileOpen}
 				onclick={() => (mobileOpen = !mobileOpen)}
@@ -179,7 +189,7 @@
 		</div>
 
 		{#if mobileOpen}
-			<nav class="flex flex-col gap-4 border-t border-ink-line px-6 py-4 sm:hidden">
+			<nav class="flex flex-col gap-4 border-t border-ink-line px-6 py-4 lg:hidden">
 				<a href={resolve('/')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_home()}</a>
 				<a href={resolve('/about')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_about()}</a>
 				<a href="/activities" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_activities()}</a>
