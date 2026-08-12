@@ -231,6 +231,23 @@ export interface GroupDTO {
 	venueId: number | null;
 	venueName: string | null;
 	active: boolean;
+	// LR-081 (LR-ADR-023)
+	courseId: number | null;
+	recurrenceDays: RecurrenceDay[] | null;
+	recurrenceStartDate: string | null;
+	recurrenceEndDate: string | null;
+}
+
+// LR-081/082 (LR-ADR-023) — one weekday of a Course-linked Group's
+// recurrence, each with its OWN time/duration (not one shared time for
+// every selected day). dayOfWeek matches java.time.DayOfWeek's enum
+// names exactly (backend serializes it as-is).
+export type IsoDayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY';
+
+export interface RecurrenceDay {
+	dayOfWeek: IsoDayOfWeek;
+	startTime: string;
+	durationMinutes: number;
 }
 
 export interface WorkshopFileDTO {
@@ -744,6 +761,14 @@ export interface GroupWriteDTO {
 	venue: { id: number } | null;
 	ageGroup: { id: number } | null;
 	active: boolean;
+	// LR-081 (LR-ADR-023) — mutually exclusive with `workshop` above;
+	// always send both explicitly (this endpoint binds the raw entity —
+	// an omitted field is indistinguishable from null, same reasoning as
+	// every other relation on this DTO).
+	course: { id: number } | null;
+	recurrenceDays: RecurrenceDay[] | null;
+	recurrenceStartDate: string | null;
+	recurrenceEndDate: string | null;
 }
 
 // LR-030 — POST /groups no longer binds the raw entity (backend:
@@ -763,13 +788,25 @@ export interface GroupCreateRequestDTO {
 	venueId: number | null;
 	ageGroupId: number | null;
 	active: boolean;
+	courseId: number | null;
+	recurrenceDays: RecurrenceDay[] | null;
+	recurrenceStartDate: string | null;
+	recurrenceEndDate: string | null;
 }
 
 // Same authRequest correction as getVenues() above — GET /groups requires
 // a valid JWT under the current SecurityConfig even though it has no
 // @PreAuthorize of its own.
-export function getGroups(workshopId?: number) {
-	return authRequest<GroupDTO[]>(`/groups${workshopId ? `?workshopId=${workshopId}` : ''}`);
+export function getGroups(workshopId?: number, courseId?: number) {
+	const query = workshopId ? `?workshopId=${workshopId}` : courseId ? `?courseId=${courseId}` : '';
+	return authRequest<GroupDTO[]>(`/groups${query}`);
+}
+
+// LR-082 (LR-ADR-023) — generates Sessions from a Group's own persisted
+// recurrence pattern (set via createGroup/updateGroup above), not from a
+// day-list in the request body like replaceSessions.
+export function generateSessionsFromRecurrence(groupId: number) {
+	return authRequest<SessionDTO[]>(`/groups/${groupId}/sessions/generate`, { method: 'POST' });
 }
 
 export function createGroup(input: GroupCreateRequestDTO) {

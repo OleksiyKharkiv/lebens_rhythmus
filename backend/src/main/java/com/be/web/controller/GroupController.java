@@ -30,10 +30,16 @@ public class GroupController {
 
     @GetMapping
     @ResponseStatus(HttpStatus.OK)
-    public List<GroupDTO> getAllGroups(@RequestParam(required = false) Long workshopId) {
-        List<Group> groups = (workshopId != null)
-                ? groupService.findByWorkshopId(workshopId)
-                : groupService.findAll();
+    public List<GroupDTO> getAllGroups(@RequestParam(required = false) Long workshopId,
+                                        @RequestParam(required = false) Long courseId) {
+        List<Group> groups;
+        if (workshopId != null) {
+            groups = groupService.findByWorkshopId(workshopId);
+        } else if (courseId != null) {
+            groups = groupService.findByCourseId(courseId);
+        } else {
+            groups = groupService.findAll();
+        }
 
         return groups.stream()
                 .map(groupMapper::toDto)

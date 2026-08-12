@@ -238,6 +238,22 @@
 	"admin_group_day_end": "End",
 	"admin_group_day_venue": "Venue",
 
+	"admin_weekday_mon": "Mon",
+	"admin_weekday_tue": "Tue",
+	"admin_weekday_wed": "Wed",
+	"admin_weekday_thu": "Thu",
+	"admin_weekday_fri": "Fri",
+	"admin_weekday_sat": "Sat",
+	"admin_weekday_sun": "Sun",
+	"admin_course_schedule_title": "Schedule & Enrollment",
+	"admin_course_schedule_start": "Start date",
+	"admin_course_schedule_duration_months": "Duration: months",
+	"admin_course_schedule_duration_days": "Days",
+	"admin_course_schedule_max_participants": "Max. participants",
+	"admin_course_schedule_time": "Start time",
+	"admin_course_schedule_duration_minutes": "Duration (min.)",
+	"admin_course_schedule_regenerate_note": "Changes to weekdays/times/date range replace all already-generated sessions on save — manually rescheduled individual sessions will be lost.",
+
 	"admin_age_group_min_age": "Minimum age",
 	"admin_age_group_max_age": "Maximum age",
 

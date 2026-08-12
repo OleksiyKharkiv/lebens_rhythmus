@@ -48,6 +48,12 @@
 		activity: null,
 		venue: null,
 		ageGroup: null,
+		// LR-081 — this page only manages Workshop-linked groups; Course
+		// scheduling is managed inline on admin/courses instead.
+		course: null,
+		recurrenceDays: null,
+		recurrenceStartDate: null,
+		recurrenceEndDate: null,
 		active: true
 	};
 	let form = $state<GroupWriteDTO>({ ...blank });
@@ -111,7 +117,14 @@
 			activity: g.activityId ? { id: g.activityId } : null,
 			venue: g.venueId ? { id: g.venueId } : null,
 			ageGroup: g.ageGroupId ? { id: g.ageGroupId } : null,
-			active: g.active
+			active: g.active,
+			// Preserved as-is, not managed by this page — a Course-linked
+			// group opened here (e.g. for its title/capacity) must not lose
+			// its recurrence config on save.
+			course: g.courseId ? { id: g.courseId } : null,
+			recurrenceDays: g.recurrenceDays,
+			recurrenceStartDate: g.recurrenceStartDate,
+			recurrenceEndDate: g.recurrenceEndDate
 		};
 		try {
 			const existing = await getSessions(g.id);
@@ -153,7 +166,12 @@
 			activityId: f.activity?.id ?? null,
 			venueId: f.venue?.id ?? null,
 			ageGroupId: f.ageGroup?.id ?? null,
-			active: f.active
+			active: f.active,
+			// This page only ever creates Workshop-linked groups.
+			courseId: null,
+			recurrenceDays: null,
+			recurrenceStartDate: null,
+			recurrenceEndDate: null
 		};
 	}
 

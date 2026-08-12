@@ -1,11 +1,14 @@
 package com.be.web.dto.response;
 
+import com.be.domain.entity.RecurrenceDay;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -44,4 +47,10 @@ public class GroupDTO {
     private String venueName;
 
     private boolean active;
+
+    // LR-081 (LR-ADR-023)
+    private Long courseId;
+    private List<RecurrenceDay> recurrenceDays;
+    private LocalDate recurrenceStartDate;
+    private LocalDate recurrenceEndDate;
 }

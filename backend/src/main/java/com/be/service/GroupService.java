@@ -2,6 +2,7 @@ package com.be.service;
 
 import com.be.domain.entity.Activity;
 import com.be.domain.entity.AgeGroup;
+import com.be.domain.entity.Course;
 import com.be.domain.entity.Group;
 import com.be.domain.entity.Participant;
 import com.be.domain.entity.Teacher;
@@ -9,6 +10,7 @@ import com.be.domain.entity.Venue;
 import com.be.domain.entity.Workshop;
 import com.be.domain.repository.ActivityRepository;
 import com.be.domain.repository.AgeGroupRepository;
+import com.be.domain.repository.CourseRepository;
 import com.be.domain.repository.GroupRepository;
 import com.be.domain.repository.TeacherRepository;
 import com.be.domain.repository.VenueRepository;
@@ -31,6 +33,7 @@ public class GroupService {
     private final ActivityRepository activityRepository;
     private final VenueRepository venueRepository;
     private final AgeGroupRepository ageGroupRepository;
+    private final CourseRepository courseRepository;
 
     @Transactional(readOnly = true)
     public List<Group> findAll() {
@@ -57,6 +60,14 @@ public class GroupService {
     // WorkshopService.createWorkshop.
     @Transactional
     public Group createGroup(GroupCreateDTO dto) {
+        // LR-081 (LR-ADR-023) — workshopId/courseId are mutually
+        // exclusive; a Group belongs to at most one of them. Unenforced
+        // at the DB level (same as Workshop.courseId/Performance.courseId,
+        // LR-ADR-021), so it must be checked here.
+        if (dto.getWorkshopId() != null && dto.getCourseId() != null) {
+            throw new IllegalArgumentException("Group cannot be linked to both a Workshop and a Course");
+        }
+
         Group group = Group.builder()
                 .titleDe(dto.getTitleDe())
                 .titleEn(dto.getTitleEn())
@@ -65,12 +76,20 @@ public class GroupService {
                 .startDateTime(dto.getStartDateTime())
                 .endDateTime(dto.getEndDateTime())
                 .active(dto.isActive())
+                .recurrenceDays(dto.getRecurrenceDays())
+                .recurrenceStartDate(dto.getRecurrenceStartDate())
+                .recurrenceEndDate(dto.getRecurrenceEndDate())
                 .build();
 
         if (dto.getWorkshopId() != null) {
             Workshop workshop = workshopRepository.findById(dto.getWorkshopId())
                     .orElseThrow(() -> new EntityNotFoundException("Workshop not found with id: " + dto.getWorkshopId()));
             group.setWorkshop(workshop);
+        }
+        if (dto.getCourseId() != null) {
+            Course course = courseRepository.findById(dto.getCourseId())
+                    .orElseThrow(() -> new EntityNotFoundException("Course not found with id: " + dto.getCourseId()));
+            group.setCourse(course);
         }
         if (dto.getTeacherId() != null) {
             Teacher teacher = teacherRepository.findById(dto.getTeacherId())
@@ -103,6 +122,13 @@ public class GroupService {
     public Group update(Group group) {
         Group existingGroup = findById(group.getId());
 
+        // LR-081 (LR-ADR-023) — same guard as createGroup above; this
+        // path binds the raw entity, so `group.getWorkshop()`/`getCourse()`
+        // reflect whatever the client sent (nested {id} objects, or null).
+        if (group.getWorkshop() != null && group.getCourse() != null) {
+            throw new IllegalArgumentException("Group cannot be linked to both a Workshop and a Course");
+        }
+
         existingGroup.setTitleDe(group.getTitleDe());
         existingGroup.setTitleEn(group.getTitleEn());
         existingGroup.setTitleUa(group.getTitleUa());
@@ -125,8 +151,20 @@ public class GroupService {
         // save (found while wiring the admin Groups venue select).
         existingGroup.setVenue(group.getVenue());
         existingGroup.setActive(group.isActive());
+        // LR-081 — same "copy every field explicitly" discipline as the
+        // rest of this method (LR-008/LR-015's own lesson: a field left
+        // out here silently no-ops on save).
+        existingGroup.setCourse(group.getCourse());
+        existingGroup.setRecurrenceDays(group.getRecurrenceDays());
+        existingGroup.setRecurrenceStartDate(group.getRecurrenceStartDate());
+        existingGroup.setRecurrenceEndDate(group.getRecurrenceEndDate());
 
         return groupRepository.save(existingGroup);
+    }
+
+    @Transactional(readOnly = true)
+    public List<Group> findByCourseId(Long courseId) {
+        return groupRepository.findByCourseId(courseId);
     }
 
     @Transactional

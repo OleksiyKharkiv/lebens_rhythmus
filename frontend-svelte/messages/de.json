@@ -238,6 +238,22 @@
 	"admin_group_day_end": "Ende",
 	"admin_group_day_venue": "Ort/Saal",
 
+	"admin_weekday_mon": "Mo",
+	"admin_weekday_tue": "Di",
+	"admin_weekday_wed": "Mi",
+	"admin_weekday_thu": "Do",
+	"admin_weekday_fri": "Fr",
+	"admin_weekday_sat": "Sa",
+	"admin_weekday_sun": "So",
+	"admin_course_schedule_title": "Termine & Anmeldung",
+	"admin_course_schedule_start": "Startdatum",
+	"admin_course_schedule_duration_months": "Dauer: Monate",
+	"admin_course_schedule_duration_days": "Tage",
+	"admin_course_schedule_max_participants": "Max. Teilnehmer",
+	"admin_course_schedule_time": "Startzeit",
+	"admin_course_schedule_duration_minutes": "Dauer (Min.)",
+	"admin_course_schedule_regenerate_note": "Änderungen an Wochentagen/Zeiten/Zeitraum ersetzen beim Speichern alle bereits generierten Termine — manuell verschobene Einzeltermine gehen dabei verloren.",
+
 	"admin_age_group_min_age": "Mindestalter",
 	"admin_age_group_max_age": "Höchstalter",
 

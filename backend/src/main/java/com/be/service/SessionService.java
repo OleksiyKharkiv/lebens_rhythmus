@@ -1,6 +1,7 @@
 package com.be.service;
 
 import com.be.domain.entity.Group;
+import com.be.domain.entity.RecurrenceDay;
 import com.be.domain.entity.Session;
 import com.be.domain.entity.Venue;
 import com.be.domain.repository.GroupRepository;
@@ -11,8 +12,13 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * Session is a child of Group (LR-ADR-022, LR-067) — every method here
@@ -109,6 +115,53 @@ public class SessionService {
 
         groupRepository.save(group);
         return group.getSessions();
+    }
+
+    /**
+     * Generates Session rows for a Course-linked Group from its own
+     * persisted recurrence rule (LR-082, LR-ADR-023) — one Session per
+     * matching weekday in [recurrenceStartDate, recurrenceEndDate],
+     * using that weekday's own start time/duration (not one shared time
+     * for every day). Reuses replaceSessionsForGroup, so this is also a
+     * full clear+re-add (same trade-off already accepted for the manual
+     * multi-day case, LR-074) and Group.startDateTime/endDateTime end up
+     * synced to the actual first/last generated occurrence, which may be
+     * narrower than the admin-set window (e.g. window Jan 1–31, first
+     * Monday is Jan 5) — expected, not a bug.
+     *
+     * Explicit call, not a side effect of every Group save (LR-ADR-023
+     * п.3) — the admin form only calls this when recurrence fields
+     * actually changed.
+     */
+    @Transactional
+    public List<Session> generateSessionsFromRecurrence(Long groupId) {
+        Group group = groupRepository.findById(groupId)
+                .orElseThrow(() -> new EntityNotFoundException("Group not found with id: " + groupId));
+
+        List<RecurrenceDay> pattern = group.getRecurrenceDays();
+        LocalDate start = group.getRecurrenceStartDate();
+        LocalDate end = group.getRecurrenceEndDate();
+        if (pattern == null || pattern.isEmpty() || start == null || end == null) {
+            throw new IllegalStateException(
+                    "Group " + groupId + " has no recurrence pattern/window to generate Sessions from");
+        }
+        if (end.isBefore(start)) {
+            throw new IllegalStateException("recurrenceEndDate is before recurrenceStartDate for group " + groupId);
+        }
+
+        Map<DayOfWeek, RecurrenceDay> byWeekday = pattern.stream()
+                .collect(Collectors.toMap(RecurrenceDay::dayOfWeek, d -> d, (a, b) -> a));
+
+        List<SessionInput> inputs = new ArrayList<>();
+        for (LocalDate date = start; !date.isAfter(end); date = date.plusDays(1)) {
+            RecurrenceDay day = byWeekday.get(date.getDayOfWeek());
+            if (day == null) continue;
+            LocalDateTime sessionStart = LocalDateTime.of(date, day.startTime());
+            LocalDateTime sessionEnd = sessionStart.plusMinutes(day.durationMinutes());
+            inputs.add(new SessionInput(sessionStart, sessionEnd, null));
+        }
+
+        return replaceSessionsForGroup(groupId, inputs);
     }
 
     private Venue resolveVenue(Long venueId) {

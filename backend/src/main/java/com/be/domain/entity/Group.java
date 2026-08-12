@@ -1,8 +1,10 @@
 package com.be.domain.entity;
 
+import com.be.config.RecurrenceDaysConverter;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -76,6 +78,34 @@ public class Group {
     @ManyToOne(fetch = LAZY)
     @JoinColumn(name = "workshop_id")
     private Workshop workshop;
+
+    // LR-081 (LR-ADR-023) — mutually exclusive with workshop above
+    // (enforced in GroupService.createGroup, not the DB — same
+    // unenforced-at-schema convention as Workshop.courseId/
+    // Performance.courseId, LR-ADR-021). Only meaningful for
+    // Course-linked groups; recurrencePattern/recurrenceStartDate/
+    // recurrenceEndDate below stay null for Workshop-linked groups.
+    @ManyToOne(fetch = LAZY)
+    @JoinColumn(name = "course_id")
+    private Course course;
+
+    // Per-weekday time/duration for a Course-linked group's recurring
+    // schedule — each selected day carries its own time, not one shared
+    // time for every day. Generation window is recurrenceStartDate/
+    // recurrenceEndDate below, deliberately separate from
+    // startDateTime/endDateTime above, which keep meaning "actual
+    // first/last occurrence" (synced from real Session rows once
+    // generated, LR-067/LR-074) — the two pairs answer different
+    // questions and would collide if merged.
+    @Convert(converter = RecurrenceDaysConverter.class)
+    @Column(name = "recurrence_pattern", columnDefinition = "TEXT")
+    private List<RecurrenceDay> recurrenceDays;
+
+    @Column(name = "recurrence_start_date")
+    private LocalDate recurrenceStartDate;
+
+    @Column(name = "recurrence_end_date")
+    private LocalDate recurrenceEndDate;
 
     @OneToMany(fetch = LAZY)
     @JoinColumn(name = "participant_id")

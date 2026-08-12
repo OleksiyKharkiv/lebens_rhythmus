@@ -44,6 +44,11 @@ public class GroupMapper {
                 .venueId(group.getVenue() != null ? group.getVenue().getId() : null)
                 .venueName(group.getVenue() != null ? formatVenueName(group.getVenue()) : null)
                 .active(group.isActive())
+                // LR-081 (LR-ADR-023)
+                .courseId(group.getCourse() != null ? group.getCourse().getId() : null)
+                .recurrenceDays(group.getRecurrenceDays())
+                .recurrenceStartDate(group.getRecurrenceStartDate())
+                .recurrenceEndDate(group.getRecurrenceEndDate())
                 .build();
     }
 

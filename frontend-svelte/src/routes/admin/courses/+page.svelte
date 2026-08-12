@@ -8,10 +8,18 @@
 		deleteCourse,
 		searchUsers,
 		getAgeGroups,
+		getGroups,
+		createGroup,
+		updateGroup,
+		generateSessionsFromRecurrence,
 		type CourseListItem,
 		type CourseCreateDTO,
 		type UserBasicDTO,
-		type AgeGroupDTO
+		type AgeGroupDTO,
+		type IsoDayOfWeek,
+		type RecurrenceDay,
+		type GroupWriteDTO,
+		type GroupCreateRequestDTO
 	} from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
@@ -83,6 +91,73 @@
 		selectedTeacherLabel = null;
 	}
 
+	// LR-081/082 (LR-ADR-023) — schedule for this Course's (single, MVP)
+	// Group, managed inline here rather than on a separate admin/groups
+	// visit, per direct customer request 2026-08-12. Course itself stays
+	// schedule-free (LR-ADR-023) — this section writes to a linked Group,
+	// not to the Course entity.
+	const WEEKDAYS: { day: IsoDayOfWeek; label: string }[] = [
+		{ day: 'MONDAY', label: m.admin_weekday_mon() },
+		{ day: 'TUESDAY', label: m.admin_weekday_tue() },
+		{ day: 'WEDNESDAY', label: m.admin_weekday_wed() },
+		{ day: 'THURSDAY', label: m.admin_weekday_thu() },
+		{ day: 'FRIDAY', label: m.admin_weekday_fri() },
+		{ day: 'SATURDAY', label: m.admin_weekday_sat() },
+		{ day: 'SUNDAY', label: m.admin_weekday_sun() }
+	];
+	type WeekdayRow = { day: IsoDayOfWeek; label: string; enabled: boolean; startTime: string; durationMinutes: number };
+	const blankWeekdays = (): WeekdayRow[] =>
+		WEEKDAYS.map((w) => ({ ...w, enabled: false, startTime: '18:00', durationMinutes: 60 }));
+
+	let scheduleGroupId = $state<number | null>(null);
+	let scheduleStartDate = $state('');
+	let durationMonths = $state(1);
+	let durationDays = $state(0);
+	let maxParticipants = $state(15);
+	let weekdays = $state<WeekdayRow[]>(blankWeekdays());
+	// Snapshot at load time — regeneration only fires when recurrence
+	// fields actually changed (LR-ADR-023 п.3: explicit guard, not a side
+	// effect of every save), not e.g. when only the course description changed.
+	let scheduleSnapshot = $state('');
+
+	function currentScheduleSnapshot(): string {
+		return JSON.stringify({ scheduleStartDate, durationMonths, durationDays, maxParticipants, weekdays });
+	}
+
+	function resetSchedule() {
+		scheduleGroupId = null;
+		scheduleStartDate = '';
+		durationMonths = 1;
+		durationDays = 0;
+		maxParticipants = 15;
+		weekdays = blankWeekdays();
+		scheduleSnapshot = currentScheduleSnapshot();
+	}
+
+	function addMonthsDays(startIso: string, months: number, days: number): string {
+		const d = new Date(startIso + 'T00:00:00');
+		d.setMonth(d.getMonth() + months);
+		d.setDate(d.getDate() + days);
+		return d.toISOString().slice(0, 10);
+	}
+
+	// Approximate, editing-UX-only inverse of addMonthsDays — doesn't need
+	// to be perfectly bijective, just a reasonable value to show back when
+	// re-opening an existing course's schedule for editing.
+	function diffMonthsDays(startIso: string, endIso: string): { months: number; days: number } {
+		const start = new Date(startIso + 'T00:00:00');
+		const end = new Date(endIso + 'T00:00:00');
+		let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
+		const probe = new Date(start);
+		probe.setMonth(probe.getMonth() + months);
+		if (probe > end) {
+			months -= 1;
+			probe.setMonth(probe.getMonth() - 1);
+		}
+		const days = Math.round((end.getTime() - probe.getTime()) / 86400000);
+		return { months: Math.max(0, months), days: Math.max(0, days) };
+	}
+
 	function load() {
 		getCourses()
 			.then((data) => (courses = data))
@@ -117,6 +192,35 @@
 		selectedTeacherLabel = detail.teacher ? `${detail.teacher.firstName} ${detail.teacher.lastName}` : null;
 		teacherQuery = '';
 		teacherResults = [];
+
+		try {
+			const linkedGroups = await getGroups(undefined, c.id);
+			const linked = linkedGroups[0]; // one Course = one Group, MVP scope
+			if (linked) {
+				scheduleGroupId = linked.id;
+				maxParticipants = linked.capacity;
+				scheduleStartDate = linked.recurrenceStartDate ?? '';
+				if (linked.recurrenceStartDate && linked.recurrenceEndDate) {
+					const diff = diffMonthsDays(linked.recurrenceStartDate, linked.recurrenceEndDate);
+					durationMonths = diff.months;
+					durationDays = diff.days;
+				}
+				weekdays = WEEKDAYS.map((w) => {
+					const found = linked.recurrenceDays?.find((r) => r.dayOfWeek === w.day);
+					return {
+						...w,
+						enabled: !!found,
+						startTime: found ? found.startTime.slice(0, 5) : '18:00',
+						durationMinutes: found?.durationMinutes ?? 60
+					};
+				});
+				scheduleSnapshot = currentScheduleSnapshot();
+			} else {
+				resetSchedule();
+			}
+		} catch {
+			resetSchedule();
+		}
 	}
 
 	function cancelEdit() {
@@ -125,14 +229,79 @@
 		selectedTeacherLabel = null;
 		teacherQuery = '';
 		teacherResults = [];
+		resetSchedule();
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		saving = true;
 		try {
-			if (editingId !== null) await updateCourse(editingId, form);
-			else await createCourse(form);
+			const course = editingId !== null ? await updateCourse(editingId, form) : await createCourse(form);
+
+			// Schedule is optional — only touch the linked Group if the admin
+			// actually set a start date. maxParticipants without a date isn't
+			// meaningful on its own (no Group to hold it).
+			if (scheduleStartDate) {
+				const recurrenceDays: RecurrenceDay[] = weekdays
+					.filter((w) => w.enabled)
+					.map((w) => ({ dayOfWeek: w.day, startTime: w.startTime, durationMinutes: w.durationMinutes }));
+				const recurrenceEndDate = addMonthsDays(scheduleStartDate, durationMonths, durationDays);
+				const changed = currentScheduleSnapshot() !== scheduleSnapshot;
+
+				let groupId = scheduleGroupId;
+				if (groupId !== null) {
+					const groupUpdate: GroupWriteDTO = {
+						titleDe: course.titleDe,
+						titleEn: course.titleEn,
+						titleUa: course.titleUa,
+						capacity: maxParticipants,
+						startDateTime: `${scheduleStartDate}T00:00`,
+						endDateTime: null,
+						workshop: null,
+						teacher: null,
+						activity: null,
+						venue: null,
+						ageGroup: null,
+						active: true,
+						course: { id: course.id },
+						recurrenceDays,
+						recurrenceStartDate: scheduleStartDate,
+						recurrenceEndDate
+					};
+					await updateGroup(groupId, groupUpdate);
+				} else {
+					const groupCreate: GroupCreateRequestDTO = {
+						titleDe: course.titleDe,
+						titleEn: course.titleEn,
+						titleUa: course.titleUa,
+						capacity: maxParticipants,
+						startDateTime: `${scheduleStartDate}T00:00`,
+						endDateTime: null,
+						workshopId: null,
+						teacherId: null,
+						activityId: null,
+						venueId: null,
+						ageGroupId: null,
+						active: true,
+						courseId: course.id,
+						recurrenceDays,
+						recurrenceStartDate: scheduleStartDate,
+						recurrenceEndDate
+					};
+					const created = await createGroup(groupCreate);
+					groupId = created.id;
+				}
+
+				// Explicit guard (LR-ADR-023 п.3) — only regenerate Sessions
+				// when the recurrence fields actually changed, or this is a
+				// brand-new schedule. Regeneration is destructive (clears
+				// existing Sessions, LR-067) — not run on unrelated saves
+				// (e.g. only the course description changed).
+				if (changed && recurrenceDays.length > 0) {
+					await generateSessionsFromRecurrence(groupId);
+				}
+			}
+
 			cancelEdit();
 			load();
 		} finally {
@@ -242,6 +411,109 @@
 			<div><Textarea id="cDisclaimerEn" label="{m.admin_course_format_disclaimer()} (EN)" bind:value={form.formatDisclaimerEn} /></div>
 			<div><Textarea id="cDisclaimerUa" label="{m.admin_course_format_disclaimer()} (UA)" bind:value={form.formatDisclaimerUa} /></div>
 		</div>
+
+		<!-- LR-081/082 (LR-ADR-023) — writes to this Course's linked Group,
+		     not to the Course entity itself (Course stays schedule-free). -->
+		<h2 class="mt-8 font-display text-lg font-semibold text-paper">{m.admin_course_schedule_title()}</h2>
+		<div class="mt-4 grid gap-4 sm:grid-cols-3">
+			<div>
+				<label class="block text-sm text-paper-dim" for="csStart">{m.admin_course_schedule_start()}</label>
+				<input
+					id="csStart"
+					type="date"
+					value={scheduleStartDate}
+					oninput={(e) => (scheduleStartDate = e.currentTarget.value)}
+					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+				/>
+			</div>
+			<div>
+				<label class="block text-sm text-paper-dim" for="csMonths">{m.admin_course_schedule_duration_months()}</label>
+				<input
+					id="csMonths"
+					type="number"
+					min="0"
+					value={durationMonths}
+					oninput={(e) => (durationMonths = Number(e.currentTarget.value) || 0)}
+					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+				/>
+			</div>
+			<div>
+				<label class="block text-sm text-paper-dim" for="csDays">{m.admin_course_schedule_duration_days()}</label>
+				<input
+					id="csDays"
+					type="number"
+					min="0"
+					value={durationDays}
+					oninput={(e) => (durationDays = Number(e.currentTarget.value) || 0)}
+					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+				/>
+			</div>
+			<div>
+				<label class="block text-sm text-paper-dim" for="csMax">{m.admin_course_schedule_max_participants()}</label>
+				<input
+					id="csMax"
+					type="number"
+					min="1"
+					value={maxParticipants}
+					oninput={(e) => (maxParticipants = Number(e.currentTarget.value) || 1)}
+					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+				/>
+			</div>
+		</div>
+
+		<div class="mt-4 space-y-2">
+			{#each weekdays as w, i (w.day)}
+				<div class="flex flex-wrap items-center gap-4 rounded-lg border border-ink-line p-3">
+					<label class="flex w-16 items-center gap-2 text-sm text-paper">
+						<input type="checkbox" bind:checked={w.enabled} class="h-4 w-4" />
+						{w.label}
+					</label>
+					{#if w.enabled}
+						<div>
+							<label class="text-xs text-paper-dim" for={`csTime${i}`}>{m.admin_course_schedule_time()}</label>
+							<input
+								id={`csTime${i}`}
+								type="time"
+								value={w.startTime}
+								oninput={(e) => (weekdays[i].startTime = e.currentTarget.value)}
+								class="mt-1 block rounded-lg border border-ink-line bg-ink px-3 py-1.5 text-sm text-paper outline-none focus:border-gold"
+							/>
+						</div>
+						<div>
+							<label class="text-xs text-paper-dim" for={`csDur${i}`}>{m.admin_course_schedule_duration_minutes()}</label>
+							<div class="mt-1 flex items-center gap-1">
+								<button
+									type="button"
+									onclick={() => (weekdays[i].durationMinutes = Math.max(5, weekdays[i].durationMinutes - 15))}
+									class="rounded-lg border border-ink-line px-2 py-1 text-sm text-paper hover:border-gold"
+								>
+									−
+								</button>
+								<input
+									id={`csDur${i}`}
+									type="number"
+									min="5"
+									step="5"
+									value={w.durationMinutes}
+									oninput={(e) => (weekdays[i].durationMinutes = Number(e.currentTarget.value) || 60)}
+									class="w-20 rounded-lg border border-ink-line bg-ink px-2 py-1.5 text-center text-sm text-paper outline-none focus:border-gold"
+								/>
+								<button
+									type="button"
+									onclick={() => (weekdays[i].durationMinutes = weekdays[i].durationMinutes + 15)}
+									class="rounded-lg border border-ink-line px-2 py-1 text-sm text-paper hover:border-gold"
+								>
+									+
+								</button>
+							</div>
+						</div>
+					{/if}
+				</div>
+			{/each}
+		</div>
+		{#if scheduleStartDate}
+			<p class="mt-2 text-xs text-paper-dim">{m.admin_course_schedule_regenerate_note()}</p>
+		{/if}
 
 		<div class="mt-6 flex gap-3">
 			<Button type="submit" fullWidth={false} busy={saving}>

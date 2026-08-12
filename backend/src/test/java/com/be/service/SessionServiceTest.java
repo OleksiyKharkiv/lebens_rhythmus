@@ -1,6 +1,7 @@
 package com.be.service;
 
 import com.be.domain.entity.Group;
+import com.be.domain.entity.RecurrenceDay;
 import com.be.domain.entity.Session;
 import com.be.domain.entity.Venue;
 import com.be.domain.repository.GroupRepository;
@@ -11,11 +12,15 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
@@ -118,5 +123,58 @@ class SessionServiceTest {
         Session created = service().addSession(1L, start, start.plusHours(2), null);
 
         assertThat(created.getVenue()).isNull();
+    }
+
+    // LR-082 (LR-ADR-023) — generates Sessions from a Course-linked
+    // Group's own recurrence pattern, each weekday with its own
+    // time/duration (customer's explicit spec: not one shared time for
+    // every selected day).
+    @Test
+    void generateSessionsFromRecurrence_perWeekdayTimes_createsOneSessionPerMatchingDate() {
+        // 2026-03-02 is a Monday. Window: Mon 2026-03-02 .. Sun 2026-03-15
+        // (two full weeks) — Mon 18:00/90min, Wed 17:00/60min.
+        Group group = Group.builder().id(1L).capacity(15)
+                .recurrenceDays(List.of(
+                        new RecurrenceDay(DayOfWeek.MONDAY, LocalTime.of(18, 0), 90),
+                        new RecurrenceDay(DayOfWeek.WEDNESDAY, LocalTime.of(17, 0), 60)))
+                .recurrenceStartDate(LocalDate.of(2026, 3, 2))
+                .recurrenceEndDate(LocalDate.of(2026, 3, 15))
+                .build();
+
+        when(groupRepository.findById(1L)).thenReturn(Optional.of(group));
+        when(groupRepository.save(any(Group.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        List<Session> result = service().generateSessionsFromRecurrence(1L);
+
+        // Two Mondays (03-02, 03-09) + two Wednesdays (03-04, 03-11) = 4.
+        assertThat(result).hasSize(4);
+        assertThat(result).extracting(s -> s.getStartDateTime().toLocalDate())
+                .containsExactlyInAnyOrder(
+                        LocalDate.of(2026, 3, 2), LocalDate.of(2026, 3, 4),
+                        LocalDate.of(2026, 3, 9), LocalDate.of(2026, 3, 11));
+        // Monday sessions keep Monday's own time/duration, Wednesday its own.
+        assertThat(result).filteredOn(s -> s.getStartDateTime().getDayOfWeek() == DayOfWeek.MONDAY)
+                .allSatisfy(s -> {
+                    assertThat(s.getStartDateTime().toLocalTime()).isEqualTo(LocalTime.of(18, 0));
+                    assertThat(s.getEndDateTime().toLocalTime()).isEqualTo(LocalTime.of(19, 30));
+                });
+        assertThat(result).filteredOn(s -> s.getStartDateTime().getDayOfWeek() == DayOfWeek.WEDNESDAY)
+                .allSatisfy(s -> {
+                    assertThat(s.getStartDateTime().toLocalTime()).isEqualTo(LocalTime.of(17, 0));
+                    assertThat(s.getEndDateTime().toLocalTime()).isEqualTo(LocalTime.of(18, 0));
+                });
+        // Group's own start/end sync to the actual first/last occurrence
+        // (via replaceSessionsForGroup), narrower than the admin-set window.
+        assertThat(group.getStartDateTime()).isEqualTo(LocalDateTime.of(2026, 3, 2, 18, 0));
+        assertThat(group.getEndDateTime()).isEqualTo(LocalDateTime.of(2026, 3, 11, 18, 0));
+    }
+
+    @Test
+    void generateSessionsFromRecurrence_missingPattern_throws() {
+        Group group = Group.builder().id(1L).build();
+        when(groupRepository.findById(1L)).thenReturn(Optional.of(group));
+
+        assertThatThrownBy(() -> service().generateSessionsFromRecurrence(1L))
+                .isInstanceOf(IllegalStateException.class);
     }
 }

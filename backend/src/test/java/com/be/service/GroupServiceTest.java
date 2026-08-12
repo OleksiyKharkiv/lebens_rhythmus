@@ -42,10 +42,12 @@ class GroupServiceTest {
     private VenueRepository venueRepository;
     @Mock
     private AgeGroupRepository ageGroupRepository;
+    @Mock
+    private CourseRepository courseRepository;
 
     private GroupService service() {
         return new GroupService(groupRepository, workshopRepository, teacherRepository,
-                activityRepository, venueRepository, ageGroupRepository);
+                activityRepository, venueRepository, ageGroupRepository, courseRepository);
     }
 
     @Test
@@ -79,6 +81,23 @@ class GroupServiceTest {
         assertThat(created.getVenue()).isEqualTo(venue);
         assertThat(created.getAgeGroup()).isEqualTo(ageGroup);
         assertThat(created.getCapacity()).isEqualTo(12);
+    }
+
+    // LR-081 (LR-ADR-023) — a Group cannot be linked to both a Workshop
+    // and a Course at once; unenforced at the DB level, so this is the
+    // one place that actually blocks it.
+    @Test
+    void createGroup_withBothWorkshopIdAndCourseId_throws() {
+        GroupCreateDTO dto = GroupCreateDTO.builder()
+                .titleDe("X").titleEn("X").titleUa("X")
+                .capacity(5)
+                .startDateTime(LocalDateTime.now().plusDays(1))
+                .workshopId(1L).courseId(9L)
+                .active(true)
+                .build();
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service().createGroup(dto))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

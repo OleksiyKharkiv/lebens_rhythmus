@@ -238,6 +238,22 @@
 	"admin_group_day_end": "Кінець",
 	"admin_group_day_venue": "Місце",
 
+	"admin_weekday_mon": "Пн",
+	"admin_weekday_tue": "Вт",
+	"admin_weekday_wed": "Ср",
+	"admin_weekday_thu": "Чт",
+	"admin_weekday_fri": "Пт",
+	"admin_weekday_sat": "Сб",
+	"admin_weekday_sun": "Нд",
+	"admin_course_schedule_title": "Розклад та реєстрація",
+	"admin_course_schedule_start": "Дата початку",
+	"admin_course_schedule_duration_months": "Тривалість: місяців",
+	"admin_course_schedule_duration_days": "Днів",
+	"admin_course_schedule_max_participants": "Макс. учасників",
+	"admin_course_schedule_time": "Час початку",
+	"admin_course_schedule_duration_minutes": "Тривалість (хв.)",
+	"admin_course_schedule_regenerate_note": "Зміни днів тижня/часу/періоду при збереженні замінять усі вже згенеровані заняття — вручну перенесені окремі заняття буде втрачено.",
+
 	"admin_age_group_min_age": "Мінімальний вік",
 	"admin_age_group_max_age": "Максимальний вік",
 

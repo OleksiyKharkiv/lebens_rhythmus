@@ -29,4 +29,6 @@ public interface GroupRepository extends JpaRepository<Group, Long> {
     List<Group> findByActiveAndAgeGroup(boolean active, AgeGroup ageGroup);
 
     List<Group> findByWorkshopId(Long workshopId);
+
+    List<Group> findByCourseId(Long courseId);
 }

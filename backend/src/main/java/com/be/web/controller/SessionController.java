@@ -48,4 +48,18 @@ public class SessionController {
         List<Session> sessions = sessionService.replaceSessionsForGroup(groupId, inputs);
         return sessions.stream().map(sessionMapper::toDto).collect(Collectors.toList());
     }
+
+    // LR-082 (LR-ADR-023) — generates Sessions from the Group's own
+    // persisted recurrence pattern (set via the Group create/update
+    // call), rather than taking a day-list in the request body like
+    // replaceSessions above. Explicit action, not triggered by every
+    // Group save (ADR п.3) — the admin form calls this only when
+    // recurrence fields actually changed.
+    @PostMapping("/generate")
+    @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
+    public List<SessionDTO> generateFromRecurrence(@PathVariable Long groupId) {
+        List<Session> sessions = sessionService.generateSessionsFromRecurrence(groupId);
+        return sessions.stream().map(sessionMapper::toDto).collect(Collectors.toList());
+    }
 }
