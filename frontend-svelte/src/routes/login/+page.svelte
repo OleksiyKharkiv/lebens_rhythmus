@@ -189,20 +189,24 @@
 			<h2 class="font-display text-2xl font-semibold text-paper">{m.register_title()}</h2>
 
 			<div class="mt-6 grid grid-cols-2 gap-4">
-				<Input
-					id="regFirstName"
-					label={m.register_firstname_label()}
-					accent="teal"
-					required
-					bind:value={regFirstName}
-				/>
-				<Input
-					id="regLastName"
-					label={m.register_lastname_label()}
-					accent="teal"
-					required
-					bind:value={regLastName}
-				/>
+				<div>
+					<Input
+						id="regFirstName"
+						label={m.register_firstname_label()}
+						accent="teal"
+						required
+						bind:value={regFirstName}
+					/>
+				</div>
+				<div>
+					<Input
+						id="regLastName"
+						label={m.register_lastname_label()}
+						accent="teal"
+						required
+						bind:value={regLastName}
+					/>
+				</div>
 			</div>
 
 			<Input
@@ -257,7 +261,7 @@
 			<div class="mt-6">
 				<Button type="submit" variant="teal" busy={regBusy}>{m.register_submit()}</Button>
 			</div>
-			<p class="mt-3 text-center text-xs text-paper-dim">{m.required_note()}</p>
+			<p class="mt-3 text-center text-xs text-paper-dim"><span class="text-gold">*</span> {m.required_note()}</p>
 		</form>
 		{/if}
 	</Card>

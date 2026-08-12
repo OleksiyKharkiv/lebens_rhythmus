@@ -30,7 +30,9 @@
 	let revealed = $state(false);
 </script>
 
-<label class="mt-4 block text-sm text-paper-dim first:mt-0" for={id}>{label}</label>
+<label class="mt-4 block text-sm text-paper-dim first:mt-0" for={id}>
+	{label}{#if required}<span class="text-gold" aria-hidden="true"> *</span>{/if}
+</label>
 {#if isPassword}
 	<div class="relative mt-1">
 		<input
