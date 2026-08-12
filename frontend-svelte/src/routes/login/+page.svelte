@@ -103,7 +103,9 @@
 				firstName: regFirstName,
 				lastName: regLastName,
 				email: regEmail,
-				password: regPassword
+				password: regPassword,
+				acceptedTerms: acceptTerms,
+				privacyPolicyAccepted: acceptPrivacy
 			});
 			regSuccessEmail = data.email;
 		} catch (err) {
@@ -130,6 +132,7 @@
 				label={m.login_password_label()}
 				type="password"
 				required
+				autocomplete="current-password"
 				bind:value={loginPassword}
 			/>
 
@@ -217,6 +220,7 @@
 				accent="teal"
 				required
 				minlength={6}
+				autocomplete="new-password"
 				bind:value={regPassword}
 			/>
 			<Input
@@ -225,6 +229,7 @@
 				type="password"
 				accent="teal"
 				required
+				autocomplete="new-password"
 				bind:value={regConfirm}
 			/>
 

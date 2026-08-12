@@ -232,6 +232,11 @@
 	"admin_group_start": "Start",
 	"admin_group_end": "End",
 	"admin_group_workshop_locked_note": "An existing group's workshop can't be changed here.",
+	"admin_group_day_count": "Number of days",
+	"admin_group_day_label": "Day",
+	"admin_group_day_start": "Start",
+	"admin_group_day_end": "End",
+	"admin_group_day_venue": "Venue",
 
 	"admin_age_group_min_age": "Minimum age",
 	"admin_age_group_max_age": "Maximum age",

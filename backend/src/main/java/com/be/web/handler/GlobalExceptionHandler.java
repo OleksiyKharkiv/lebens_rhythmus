@@ -16,9 +16,11 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -52,6 +54,32 @@ public class GlobalExceptionHandler {
         body.put("fieldErrors", fieldErrors);
 
         log.debug("Validation failed: {}", fieldErrors);
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    /**
+     * @Valid on a bare List<Dto> request body (e.g. SessionController's
+     * replaceSessions, LR-074) throws this instead of
+     * MethodArgumentNotValidException above — a different exception type
+     * Spring 6.1+ uses for method-level parameter validation that isn't a
+     * single @RequestBody object. Without this handler it fell through to
+     * the generic Exception catch-all below and returned 500 instead of
+     * 400 — found live testing the new endpoint, 2026-08-12.
+     */
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodValidation(HandlerMethodValidationException ex) {
+        List<String> messages = ex.getParameterValidationResults().stream()
+                .flatMap(r -> r.getResolvableErrors().stream())
+                .map(e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "Invalid value")
+                .collect(Collectors.toList());
+
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put("error", "Validation failed");
+        body.put("messages", messages);
+
+        log.debug("Method validation failed: {}", messages);
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
     }

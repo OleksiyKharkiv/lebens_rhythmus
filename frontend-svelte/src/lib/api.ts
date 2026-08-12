@@ -62,11 +62,19 @@ export interface RegistrationResponse {
 // Registering no longer logs the user in (LR: email verification is now
 // mandatory before login) — the response is just a "check your email"
 // confirmation, not a session.
+// Found live in prod 2026-08-12: acceptedTerms/privacyPolicyAccepted were
+// checked client-side (login/+page.svelte's handleRegister) but never
+// actually sent — UserRegistrationDTO.{acceptedTerms,privacyPolicyAccepted}
+// are @AssertTrue with no value from the request body, so they always
+// defaulted to false and every single registration 400'd, regardless of
+// what the user actually checked.
 export function register(input: {
 	firstName: string;
 	lastName: string;
 	email: string;
 	password: string;
+	acceptedTerms: boolean;
+	privacyPolicyAccepted: boolean;
 }) {
 	return request<RegistrationResponse>('/auth/register', {
 		method: 'POST',
@@ -774,6 +782,33 @@ export function updateGroup(id: number, input: GroupWriteDTO) {
 
 export function deleteGroup(id: number) {
 	return authRequest<void>(`/groups/${id}`, { method: 'DELETE' });
+}
+
+// ----- Sessions (LR-067 backend, LR-074 controller) -----
+// Child of Group, not a standalone resource — multi-day schedule, one
+// row per day. Replacing the list resubmits every day each time, not
+// incremental add/remove (matches the admin form's "number of days" UX).
+
+export interface SessionDTO {
+	id: number;
+	startDateTime: string;
+	endDateTime: string | null;
+	venueId: number | null;
+	venueName: string | null;
+}
+
+export interface SessionWriteDTO {
+	startDateTime: string;
+	endDateTime: string | null;
+	venueId: number | null;
+}
+
+export function getSessions(groupId: number) {
+	return authRequest<SessionDTO[]>(`/groups/${groupId}/sessions`);
+}
+
+export function replaceSessions(groupId: number, input: SessionWriteDTO[]) {
+	return authRequest<SessionDTO[]>(`/groups/${groupId}/sessions`, { method: 'PUT', body: JSON.stringify(input) });
 }
 
 // teacherId here = Teacher.id (see note above) — do not pass a User.id.

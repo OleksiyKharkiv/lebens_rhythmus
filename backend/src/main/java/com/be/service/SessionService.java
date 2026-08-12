@@ -74,6 +74,13 @@ public class SessionService {
      * the whole day-list each time, not incremental add/remove. Group's
      * own enrollments/capacity are untouched — Session rows carry
      * schedule only.
+     *
+     * Group.startDateTime/endDateTime are synced to the earliest/latest
+     * session (LR-074) — those fields stay the "day 1 / only day" values
+     * per LR-ADR-022, read directly by code that doesn't know about
+     * Session at all (public workshop-detail page, WorkshopMapper's
+     * GroupDTO). Without this, replacing the day-list would leave them
+     * silently stale.
      */
     @Transactional
     public List<Session> replaceSessionsForGroup(Long groupId, List<SessionInput> inputs) {
@@ -90,6 +97,14 @@ public class SessionService {
                 session.venue(resolveVenue(input.venueId()));
             }
             group.getSessions().add(session.build());
+        }
+
+        if (!inputs.isEmpty()) {
+            group.setStartDateTime(inputs.stream().map(SessionInput::startDateTime).min(LocalDateTime::compareTo).orElseThrow());
+            LocalDateTime lastEnd = inputs.stream()
+                    .map(i -> i.endDateTime() != null ? i.endDateTime() : i.startDateTime())
+                    .max(LocalDateTime::compareTo).orElseThrow();
+            group.setEndDateTime(lastEnd);
         }
 
         groupRepository.save(group);

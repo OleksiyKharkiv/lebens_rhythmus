@@ -232,6 +232,11 @@
 	"admin_group_start": "Початок",
 	"admin_group_end": "Кінець",
 	"admin_group_workshop_locked_note": "Воркшоп для існуючої групи тут змінити не можна.",
+	"admin_group_day_count": "Кількість днів",
+	"admin_group_day_label": "День",
+	"admin_group_day_start": "Початок",
+	"admin_group_day_end": "Кінець",
+	"admin_group_day_venue": "Місце",
 
 	"admin_age_group_min_age": "Мінімальний вік",
 	"admin_age_group_max_age": "Максимальний вік",

@@ -10,6 +10,8 @@
 		getActivities,
 		getVenues,
 		getAgeGroups,
+		getSessions,
+		replaceSessions,
 		type GroupDTO,
 		type GroupWriteDTO,
 		type GroupCreateRequestDTO,
@@ -17,7 +19,8 @@
 		type TeacherInfoDTO,
 		type ActivityDTO,
 		type VenueDTO,
-		type AgeGroupDTO
+		type AgeGroupDTO,
+		type SessionWriteDTO
 	} from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
@@ -49,6 +52,26 @@
 	};
 	let form = $state<GroupWriteDTO>({ ...blank });
 
+	// LR-074 — replaces the single startDateTime/endDateTime pair with a
+	// per-day list (Session, LR-067/LR-ADR-022). form.startDateTime/
+	// endDateTime are still sent on the Group itself (required field,
+	// kept in sync as "day 1 / last day" for code that reads Group
+	// directly without knowing about Session) — derived from `days` at
+	// submit time, not bound to an input directly anymore.
+	type DayInput = { startDateTime: string; endDateTime: string; venueId: number | null };
+	const blankDay = (): DayInput => ({ startDateTime: '', endDateTime: '', venueId: null });
+	const MAX_DAYS = 10;
+	let days = $state<DayInput[]>([blankDay()]);
+
+	function setDayCount(n: number) {
+		const count = Math.min(Math.max(1, n), MAX_DAYS);
+		if (count > days.length) {
+			days = [...days, ...Array.from({ length: count - days.length }, blankDay)];
+		} else if (count < days.length) {
+			days = days.slice(0, count);
+		}
+	}
+
 	function load() {
 		getGroups()
 			.then((data) => (groups = data))
@@ -74,7 +97,7 @@
 			.catch(() => {});
 	});
 
-	function startEdit(g: GroupDTO) {
+	async function startEdit(g: GroupDTO) {
 		editingId = g.id;
 		form = {
 			titleDe: g.titleDe,
@@ -90,11 +113,28 @@
 			ageGroup: g.ageGroupId ? { id: g.ageGroupId } : null,
 			active: g.active
 		};
+		try {
+			const existing = await getSessions(g.id);
+			days =
+				existing.length > 0
+					? existing.map((s) => ({
+							startDateTime: s.startDateTime,
+							endDateTime: s.endDateTime ?? '',
+							venueId: s.venueId
+						}))
+					: // No Session rows yet (group predates LR-074, or was created with
+						// exactly one day) — fall back to Group's own fields, the
+						// "day 1 / only day" values per LR-ADR-022.
+						[{ startDateTime: g.startDateTime, endDateTime: g.endDateTime ?? '', venueId: g.venueId ?? null }];
+		} catch {
+			days = [{ startDateTime: g.startDateTime, endDateTime: g.endDateTime ?? '', venueId: g.venueId ?? null }];
+		}
 	}
 
 	function cancelEdit() {
 		editingId = null;
 		form = { ...blank };
+		days = [blankDay()];
 	}
 
 	// LR-030 — POST /groups now takes flat ids (backend: GroupCreateDTO),
@@ -121,8 +161,25 @@
 		e.preventDefault();
 		saving = true;
 		try {
-			if (editingId !== null) await updateGroup(editingId, form);
-			else await createGroup(toCreateRequest(form));
+			// Group.startDateTime/endDateTime stay in sync as "day 1 / last
+			// day" (LR-ADR-022) — the backend re-derives the same values from
+			// the Session list on replaceSessions below, this is just so the
+			// initial create/update call (before any Session exists) doesn't
+			// send a stale or empty value for the required field.
+			const sorted = [...days].sort((a, b) => a.startDateTime.localeCompare(b.startDateTime));
+			form.startDateTime = sorted[0].startDateTime;
+			form.endDateTime = sorted[sorted.length - 1].endDateTime || sorted[sorted.length - 1].startDateTime;
+
+			const groupId =
+				editingId !== null ? (await updateGroup(editingId, form)).id : (await createGroup(toCreateRequest(form))).id;
+
+			const sessionPayload: SessionWriteDTO[] = days.map((d) => ({
+				startDateTime: d.startDateTime,
+				endDateTime: d.endDateTime || null,
+				venueId: d.venueId
+			}));
+			await replaceSessions(groupId, sessionPayload);
+
 			cancelEdit();
 			load();
 		} finally {
@@ -241,27 +298,68 @@
 				/>
 			</div>
 			<div>
-				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gStart">{m.admin_group_start()}</label>
+				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gDayCount">{m.admin_group_day_count()}</label>
 				<input
-					id="gStart"
-					type="datetime-local"
-					value={form.startDateTime}
-					oninput={(e) => (form.startDateTime = e.currentTarget.value)}
-					required
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
-				/>
-			</div>
-			<div>
-				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gEnd">{m.admin_group_end()}</label>
-				<input
-					id="gEnd"
-					type="datetime-local"
-					value={form.endDateTime ?? ''}
-					oninput={(e) => (form.endDateTime = e.currentTarget.value || null)}
+					id="gDayCount"
+					type="number"
+					min="1"
+					max={MAX_DAYS}
+					value={days.length}
+					oninput={(e) => setDayCount(Number(e.currentTarget.value) || 1)}
 					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
 				/>
 			</div>
 		</div>
+
+		<!-- LR-074/LR-067 — one Session row per day (LR-ADR-022), each with
+		     its own venue (a multi-day workshop's days can run at different
+		     places). Group's own capacity/enrollments above stay shared
+		     across every day — one registration per Group, not per day. -->
+		<div class="mt-4 space-y-3">
+			{#each days as day, i (i)}
+				<div class="rounded-lg border border-ink-line p-4">
+					<p class="text-sm font-semibold text-paper">{m.admin_group_day_label()} {i + 1}</p>
+					<div class="mt-2 grid gap-4 sm:grid-cols-3">
+						<div>
+							<label class="block text-sm text-paper-dim" for={`gDayStart${i}`}>{m.admin_group_day_start()}</label>
+							<input
+								id={`gDayStart${i}`}
+								type="datetime-local"
+								value={day.startDateTime}
+								oninput={(e) => (days[i].startDateTime = e.currentTarget.value)}
+								required
+								class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+							/>
+						</div>
+						<div>
+							<label class="block text-sm text-paper-dim" for={`gDayEnd${i}`}>{m.admin_group_day_end()}</label>
+							<input
+								id={`gDayEnd${i}`}
+								type="datetime-local"
+								value={day.endDateTime}
+								oninput={(e) => (days[i].endDateTime = e.currentTarget.value)}
+								class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+							/>
+						</div>
+						<div>
+							<label class="block text-sm text-paper-dim" for={`gDayVenue${i}`}>{m.admin_group_day_venue()}</label>
+							<select
+								id={`gDayVenue${i}`}
+								value={day.venueId ?? ''}
+								onchange={(e) => (days[i].venueId = e.currentTarget.value ? Number(e.currentTarget.value) : null)}
+								class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+							>
+								<option value="">—</option>
+								{#each venues as v (v.id)}
+									<option value={v.id}>{v.name}{v.room ? ` — ${v.room}` : ''}</option>
+								{/each}
+							</select>
+						</div>
+					</div>
+				</div>
+			{/each}
+		</div>
+
 		<div class="mt-6 flex gap-3">
 			<Button type="submit" fullWidth={false} busy={saving}>
 				{editingId !== null ? m.admin_save() : m.admin_create_new()}
