@@ -1,4 +1,6 @@
 backend/.gradle
+backend/.gradle/buildOutputCleanup/buildOutputCleanup.lock
+backend/.gradle/file-system.probe
 node_modules
 HELP.md
 ### OS specific ###

@@ -1,4 +1,4 @@
-import { render } from '@testing-library/svelte';
+import { cleanup, render } from '@testing-library/svelte';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import Input from './Input.svelte';
@@ -36,6 +36,12 @@ describe('Input', () => {
 	it('shows a required marker in the label when required, not otherwise', () => {
 		const required = render(Input, { props: { id: 'a', label: 'Feld', required: true } });
 		expect(required.getByText('*')).toBeInTheDocument();
+		// render() mounts into the shared document.body with no automatic
+		// cleanup between calls in the same test (no global afterEach(cleanup)
+		// configured in this project) — without this, the second render's
+		// query would still see the first render's "*" and pass for the
+		// wrong reason.
+		cleanup();
 
 		const optional = render(Input, { props: { id: 'b', label: 'Feld' } });
 		expect(optional.queryByText('*')).not.toBeInTheDocument();
