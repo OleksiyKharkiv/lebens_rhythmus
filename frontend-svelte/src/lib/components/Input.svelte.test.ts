@@ -21,8 +21,23 @@ describe('Input', () => {
 		const { getByLabelText } = render(Input, {
 			props: { id: 'regPassword', label: 'Passwort', required: true, minlength: 6 }
 		});
-		const input = getByLabelText('Passwort');
+		// required:true appends a visible "*" to the label text (found live,
+		// 2026-08-13 — beta feedback: required fields had no marker at all).
+		// The asterisk is aria-hidden, so a real screen reader still
+		// announces just "Passwort" — but @testing-library/dom's
+		// getByLabelText matches the label's raw textContent for `for`
+		// association, not the full ARIA accessible-name algorithm, so the
+		// query itself must account for it.
+		const input = getByLabelText(/Passwort/);
 		expect(input).toBeRequired();
 		expect(input).toHaveAttribute('minlength', '6');
+	});
+
+	it('shows a required marker in the label when required, not otherwise', () => {
+		const required = render(Input, { props: { id: 'a', label: 'Feld', required: true } });
+		expect(required.getByText('*')).toBeInTheDocument();
+
+		const optional = render(Input, { props: { id: 'b', label: 'Feld' } });
+		expect(optional.queryByText('*')).not.toBeInTheDocument();
 	});
 });
