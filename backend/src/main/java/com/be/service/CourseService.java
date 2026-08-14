@@ -3,6 +3,7 @@ package com.be.service;
 import com.be.domain.entity.AgeGroup;
 import com.be.domain.entity.Course;
 import com.be.domain.entity.User;
+import com.be.domain.entity.enums.CourseStatus;
 import com.be.domain.repository.AgeGroupRepository;
 import com.be.domain.repository.CourseRepository;
 import com.be.domain.repository.UserRepository;
@@ -67,6 +68,20 @@ public class CourseService {
         if (dto.getFormatDisclaimerDe() != null) existing.setFormatDisclaimerDe(dto.getFormatDisclaimerDe());
         if (dto.getFormatDisclaimerEn() != null) existing.setFormatDisclaimerEn(dto.getFormatDisclaimerEn());
         if (dto.getFormatDisclaimerUa() != null) existing.setFormatDisclaimerUa(dto.getFormatDisclaimerUa());
+
+        // Urgent ticket 2026-08-14 — authoritative, NOT skip-if-null: these
+        // three are genuinely optional/clearable via the admin form (e.g. a
+        // number input emptied sends null). Skip-if-null here would repeat
+        // the exact bug class documented in docs/context/KNOWN_ISSUES.md
+        // (found live 5x already this project on optional-FK fields — same
+        // root cause applies to plain nullable value fields, not just FKs).
+        existing.setPrice(dto.getPrice());
+        existing.setPriceDescription(dto.getPriceDescription());
+        existing.setBackgroundImageUrl(dto.getBackgroundImageUrl());
+        // status is different: the admin <select> always carries a real
+        // value, never cleared to "nothing" — skip-if-null is correct here,
+        // same as WorkshopService.updateWorkshop's status handling.
+        if (dto.getStatus() != null) existing.setStatus(CourseStatus.valueOf(dto.getStatus()));
 
         applyAgeGroupAndTeacher(existing, dto);
 

@@ -1,6 +1,7 @@
 package com.be.web.mapper;
 
 import com.be.domain.entity.Course;
+import com.be.domain.entity.enums.CourseStatus;
 import com.be.web.dto.request.CourseCreateDTO;
 import com.be.web.dto.response.CourseDetailDTO;
 import com.be.web.dto.response.CourseListDTO;
@@ -31,6 +32,8 @@ public class CourseMapper {
                 .isOnline(c.isOnline())
                 .isSynchronous(c.isSynchronous())
                 .hasRecordings(c.isHasRecordings())
+                .price(c.getPrice())
+                .status(c.getStatus() != null ? c.getStatus().name() : null)
                 .build();
     }
 
@@ -53,6 +56,10 @@ public class CourseMapper {
                 .formatDisclaimerDe(c.getFormatDisclaimerDe())
                 .formatDisclaimerEn(c.getFormatDisclaimerEn())
                 .formatDisclaimerUa(c.getFormatDisclaimerUa())
+                .price(c.getPrice())
+                .priceDescription(c.getPriceDescription())
+                .backgroundImageUrl(c.getBackgroundImageUrl())
+                .status(c.getStatus() != null ? c.getStatus().name() : null)
                 .build();
     }
 
@@ -74,6 +81,12 @@ public class CourseMapper {
         c.setFormatDisclaimerDe(dto.getFormatDisclaimerDe());
         c.setFormatDisclaimerEn(dto.getFormatDisclaimerEn());
         c.setFormatDisclaimerUa(dto.getFormatDisclaimerUa());
+        c.setPrice(dto.getPrice());
+        c.setPriceDescription(dto.getPriceDescription());
+        c.setBackgroundImageUrl(dto.getBackgroundImageUrl());
+        if (dto.getStatus() != null) {
+            c.setStatus(CourseStatus.valueOf(dto.getStatus()));
+        }
         return c;
     }
 }

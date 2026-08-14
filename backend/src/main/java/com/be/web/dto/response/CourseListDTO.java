@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,4 +21,6 @@ public class CourseListDTO {
     private Boolean isOnline;
     private Boolean isSynchronous;
     private Boolean hasRecordings;
+    private BigDecimal price;
+    private String status;
 }

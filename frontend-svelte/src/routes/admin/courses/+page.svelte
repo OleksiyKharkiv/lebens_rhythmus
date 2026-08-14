@@ -19,7 +19,8 @@
 		type IsoDayOfWeek,
 		type RecurrenceDay,
 		type GroupUpdateRequestDTO,
-		type GroupCreateRequestDTO
+		type GroupCreateRequestDTO,
+		type CourseStatus
 	} from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
@@ -46,9 +47,14 @@
 		hasRecordings: false,
 		formatDisclaimerDe: '',
 		formatDisclaimerEn: '',
-		formatDisclaimerUa: ''
+		formatDisclaimerUa: '',
+		price: null,
+		priceDescription: '',
+		backgroundImageUrl: '',
+		status: 'DRAFT'
 	};
 	let form = $state<CourseCreateDTO>({ ...blank });
+	const statuses: CourseStatus[] = ['DRAFT', 'PUBLISHED', 'ARCHIVED', 'CANCELLED'];
 
 	// Teacher search-by-name/email (LR-069 direct request) — teacherId is a
 	// User.id, same temporary shape as Workshop.teacherId (see LR-072), NOT
@@ -187,7 +193,11 @@
 			hasRecordings: detail.hasRecordings,
 			formatDisclaimerDe: detail.formatDisclaimerDe ?? '',
 			formatDisclaimerEn: detail.formatDisclaimerEn ?? '',
-			formatDisclaimerUa: detail.formatDisclaimerUa ?? ''
+			formatDisclaimerUa: detail.formatDisclaimerUa ?? '',
+			price: detail.price,
+			priceDescription: detail.priceDescription ?? '',
+			backgroundImageUrl: detail.backgroundImageUrl ?? '',
+			status: detail.status ?? 'DRAFT'
 		};
 		selectedTeacherLabel = detail.teacher ? `${detail.teacher.firstName} ${detail.teacher.lastName}` : null;
 		teacherQuery = '';
@@ -388,6 +398,43 @@
 					</div>
 				{/if}
 			</div>
+		</div>
+
+		<div class="mt-4 grid gap-4 sm:grid-cols-3">
+			<div>
+				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="cPrice">{m.admin_price()}</label>
+				<input
+					id="cPrice"
+					type="number"
+					step="0.01"
+					min="0"
+					value={form.price ?? ''}
+					oninput={(e) => (form.price = e.currentTarget.value ? Number(e.currentTarget.value) : null)}
+					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+				/>
+			</div>
+			<div>
+				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="cStatus">{m.admin_course_status()}</label>
+				<select
+					id="cStatus"
+					bind:value={form.status}
+					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+				>
+					{#each statuses as s (s)}
+						<option value={s}>{s}</option>
+					{/each}
+				</select>
+			</div>
+			<div><Input id="cBgImage" label={m.admin_course_background_image_url()} bind:value={form.backgroundImageUrl} /></div>
+		</div>
+		<div class="mt-4">
+			<Textarea
+				id="cPriceDescription"
+				label={m.admin_course_price_description()}
+				rows={2}
+				maxlength={1000}
+				bind:value={form.priceDescription}
+			/>
 		</div>
 
 		<div class="mt-6 grid gap-3 sm:grid-cols-3">

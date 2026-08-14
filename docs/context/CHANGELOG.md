@@ -2,6 +2,67 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-14 — feat+fix: Курсы — цена+статус+фон-картинка, фикс форматирования описания (срочный тикет от Олены)
+
+### Область (`backend/src/main/java/com/be/{domain/entity/{Course.java,enums/CourseStatus.java (new)},service/{CourseService.java,WorkshopService.java},web/dto/{request/CourseCreateDTO.java,response/{CourseDetailDTO.java,CourseListDTO.java}},web/mapper/CourseMapper.java}`, `backend/src/main/resources/db/migration/V11__add_course_price_status_background.sql (new)`, `frontend-svelte/src/{lib/{api.ts,components/Textarea.svelte},routes/{admin/courses,courses/[id],workshops/[id]}/+page.svelte}`, `frontend-svelte/messages/{de,en,uk}.json`)
+
+- **feat** — `Course.price`(`BigDecimal`)/`priceDescription`(`String`,
+  1000 симв.)/`backgroundImageUrl`(`String`, URL — не реальная загрузка
+  файлов, см. ниже)/`status`(`CourseStatus`, свой enum, не переиспользует
+  `WorkshopStatus`) — новые поля, миграция `V11`, DTO/mapper/admin-форма
+  (число-input, textarea со счётчиком символов, URL-input, select статуса
+  — все по образцу уже существующих Workshop-полей). Публичная страница
+  курса — цена (`{price} €` / "по запросу"), `priceDescription` мелким
+  шрифтом, `backgroundImageUrl` как CSS `background-image` на блок
+  описания (fallback — обычный фон страницы, если пусто).
+- **fix** — `<p>{course.descriptionDe}</p>` схлопывал все переносы
+  строк/абзацы — обычное поведение браузера для текста без `white-space`,
+  не баг Svelte. Фикс — Tailwind `whitespace-pre-line` (сохраняет
+  абзацы, схлопывает только лишние пробелы). Применено и к
+  `formatDisclaimerDe`, и к идентичному багу на `workshops/[id]`
+  (тот же скопированный код).
+- **fix (найдено по пути, не в изначальном скоупе тикета)** —
+  `WorkshopService.updateWorkshop`'s `price`-поле было skip-if-null — тот
+  же баг-класс, что только что задокументирован в `KNOWN_ISSUES.md` (5
+  случаев на optional-FK), просто на скалярном поле, не FK: очистка цены
+  в админке молча не применялась. Исправлено на authoritative-set.
+  `CourseService.updateCourse`'s новые price/priceDescription/
+  backgroundImageUrl написаны authoritative с самого начала.
+- **docs (решение, не реализация)** — реальной загрузки файлов
+  (`MultipartFile`/S3/диск) в проекте нет нигде вообще — `File`/
+  `WorkshopFile` хранят только готовую внешнюю ссылку. Договорились не
+  строить file-upload инфраструктуру в рамках срочного тикета —
+  `backgroundImageUrl` остаётся URL-полем, тем же паттерном, что уже
+  используется в `WorkshopFile.fileUrl`.
+- **verify** — `./gradlew compileJava`/`test` (Course+Workshop
+  ServiceTest) зелёные; `npm run check` 0 ошибок. Живой browser-прогон
+  НЕ сделан — preview-инструмент этой сессии не видит
+  `frontend-svelte` в `launch.json` (тот же баг с рабочей директорией
+  сессии numi/lebens_rhythmus, что и раньше в этой же сессии) —
+  владелец проверяет сам в проде после деплоя.
+- **backlog** — п.4 исходного тикета (кнопка регистрации на курс) —
+  НЕ реализован. Решено использовать под него уже существующий `LR-084`
+  (эскалировать приоритет, дописать требования) — сделано отдельным
+  шагом, после проверки этого диффа владельцем в проде.
+
+## 2026-08-14 — docs: `KNOWN_ISSUES.md` — 2 повторяющихся баг-класса записаны как уроки (CHANGELOG genesis-аудит)
+
+### Область (`docs/context/KNOWN_ISSUES.md`)
+
+- **docs** — фоновый `architect-reviewer`-прогон по всему `CHANGELOG.md`
+  (2053 строки, генезис-аудит) нашёл 2 паттерна багов, каждый пойманный
+  и починенный несколько раз по отдельности, ни разу не записанный как
+  урок: (1) "skip-if-null на optional-FK внутри `update()`" — 5 раз в
+  `CourseService`/`WorkshopService` (дважды)/`PerformanceService`/
+  `GroupService`; (2) "новый публичный GET без записи в
+  `SecurityConfig.permitAll()`" — дважды в проде
+  (`/activities`+`/performances`, потом `/courses`, второй раз клиент
+  нашёл живьём). Оба записаны в `KNOWN_ISSUES.md` с конкретным правилом
+  на будущее. `LR-003` (нет проверенного бэкапа прод-БД, просрочен на
+  9 дней) и `LR-027`/`LR-028` (superuser/cluster-admin) отмечены
+  владельцем как известные, приоритизация — отдельно, не в рамках этого
+  аудита.
+
 ## 2026-08-14 — refactor+security: артефакт-аудит — `LR-ADR-005` компромисс закреплён, `erm.drawio` актуализирован, последняя mass-assignment дыра на `Group` закрыта
 
 ### Область (`docs/architecture/{decisions.md,erm.drawio}`, `docs/context/{CLAUDE.md,CODING_PROTOCOL.md}`, `docs/decision-history/roundtable-log.md` (список grep-only), `backend/src/main/java/com/be/{service/GroupService.java,web/controller/GroupController.java,web/dto/request/GroupUpdateDTO.java (new)}`, `backend/src/test/java/com/be/service/GroupServiceTest.java`, `frontend-svelte/src/{lib/api.ts,routes/admin/{courses,groups}/+page.svelte}`)

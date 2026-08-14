@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -26,4 +28,8 @@ public class CourseDetailDTO {
     private String formatDisclaimerDe;
     private String formatDisclaimerEn;
     private String formatDisclaimerUa;
+    private BigDecimal price;
+    private String priceDescription;
+    private String backgroundImageUrl;
+    private String status;
 }

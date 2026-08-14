@@ -225,6 +225,9 @@
 	"admin_course_is_synchronous": "Synchronous (live, no recording)",
 	"admin_course_has_recordings": "Recordings available",
 	"admin_course_format_disclaimer": "Format disclaimer (compliance text)",
+	"admin_course_status": "Status",
+	"admin_course_price_description": "Price note (comment, max. 1000 characters)",
+	"admin_course_background_image_url": "Background image (URL)",
 
 	"admin_group_workshop": "Workshop",
 	"admin_group_venue": "Venue/room",

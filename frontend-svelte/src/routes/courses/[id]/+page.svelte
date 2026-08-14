@@ -32,7 +32,31 @@
 		<p class="text-paper-dim">{m.state_loading()}</p>
 	{:else}
 		<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{course.titleDe}</h1>
-		{#if course.descriptionDe}<p class="mt-4 leading-relaxed text-paper-dim">{course.descriptionDe}</p>{/if}
+
+		<!-- backgroundImageUrl (added 2026-08-14) — falls back to the page's
+		     normal background when unset, per spec. whitespace-pre-line
+		     (same date) — plain HTML text collapses newlines/blank lines by
+		     default; this preserves the admin's paragraph breaks without
+		     needing a rich-text editor. -->
+		<div
+			class="mt-4 rounded-lg {course.backgroundImageUrl ? 'bg-cover bg-center p-6' : ''}"
+			style={course.backgroundImageUrl ? `background-image: url('${course.backgroundImageUrl}')` : undefined}
+		>
+			{#if course.descriptionDe}
+				<p class="whitespace-pre-line leading-relaxed text-paper-dim">{course.descriptionDe}</p>
+			{/if}
+		</div>
+
+		{#if course.price != null || course.priceDescription}
+			<div class="mt-6">
+				{#if course.price != null}
+					<p class="text-lg font-semibold text-paper">{course.price} €</p>
+				{/if}
+				{#if course.priceDescription}
+					<p class="mt-1 whitespace-pre-line text-xs text-paper-dim">{course.priceDescription}</p>
+				{/if}
+			</div>
+		{/if}
 
 		<dl class="mt-6 grid grid-cols-2 gap-4 text-sm text-paper-dim">
 			{#if course.teacher}
@@ -55,7 +79,7 @@
 		     with the letter to ZFU. -->
 		{#if course.formatDisclaimerDe}
 			<div class="mt-8 rounded-lg border border-ink-line bg-ink px-5 py-4">
-				<p class="text-sm leading-relaxed text-paper-dim">{course.formatDisclaimerDe}</p>
+				<p class="whitespace-pre-line text-sm leading-relaxed text-paper-dim">{course.formatDisclaimerDe}</p>
 			</div>
 		{/if}
 	{/if}

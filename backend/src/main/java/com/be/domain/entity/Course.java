@@ -1,9 +1,11 @@
 package com.be.domain.entity;
 
+import com.be.domain.entity.enums.CourseStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -79,6 +81,28 @@ public class Course {
     @Column(name = "format_disclaimer_ua", columnDefinition = "TEXT")
     private String formatDisclaimerUa;
 
+    // Urgent ticket 2026-08-14 (Olena): price + a short free-text note on
+    // what the price covers (e.g. "12 sessions over 3 months, monthly
+    // payment possible, excl. VAT §19..."), a background image for the
+    // description block, and a DRAFT/PUBLISHED/... status mirroring
+    // Workshop's (see WorkshopStatus) — kept as its own CourseStatus enum
+    // rather than reusing WorkshopStatus, Course is a separate concept.
+    @Column(name = "price")
+    private BigDecimal price;
+
+    @Column(name = "price_description", length = 1000)
+    private String priceDescription;
+
+    // URL only, not a real upload — see docs/context/CHANGELOG.md 2026-08-14
+    // entry for why (no file-upload infra exists anywhere in this project
+    // yet; a real upload pipeline is a separate, larger decision).
+    @Column(name = "background_image_url", length = 2048)
+    private String backgroundImageUrl;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", length = 50, nullable = false)
+    private CourseStatus status;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -89,6 +113,7 @@ public class Course {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = createdAt;
+        if (status == null) status = CourseStatus.DRAFT;
     }
 
     @PreUpdate

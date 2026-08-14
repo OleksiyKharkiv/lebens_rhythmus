@@ -225,6 +225,9 @@
 	"admin_course_is_synchronous": "Синхронно (наживо, без запису)",
 	"admin_course_has_recordings": "Записи доступні",
 	"admin_course_format_disclaimer": "Пояснення формату (текст для комплаєнсу)",
+	"admin_course_status": "Статус",
+	"admin_course_price_description": "Примітка до ціни (коментар, до 1000 символів)",
+	"admin_course_background_image_url": "Фонове зображення (URL)",
 
 	"admin_group_workshop": "Воркшоп",
 	"admin_group_venue": "Місце/зал",

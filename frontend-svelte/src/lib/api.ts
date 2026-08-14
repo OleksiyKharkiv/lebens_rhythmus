@@ -619,6 +619,10 @@ export function getWorkshopsByTeacherId(teacherId: number) {
 // temporary shape as Workshop.teacherId above (see LR-072) — use
 // searchUsers() above to look one up by lastname/email, not getTeachers().
 
+// Own type, not reusing WorkshopStatus — same value set, different entity
+// (Course.status, added by the urgent 2026-08-14 ticket).
+export type CourseStatus = 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | 'CANCELLED';
+
 export interface CourseListItem {
 	id: number;
 	titleDe: string;
@@ -629,6 +633,8 @@ export interface CourseListItem {
 	isOnline: boolean;
 	isSynchronous: boolean;
 	hasRecordings: boolean;
+	price: number | null;
+	status: CourseStatus | null;
 }
 
 export interface CourseDetail {
@@ -648,6 +654,10 @@ export interface CourseDetail {
 	formatDisclaimerDe: string | null;
 	formatDisclaimerEn: string | null;
 	formatDisclaimerUa: string | null;
+	price: number | null;
+	priceDescription: string | null;
+	backgroundImageUrl: string | null;
+	status: CourseStatus | null;
 }
 
 export interface CourseCreateDTO {
@@ -665,6 +675,10 @@ export interface CourseCreateDTO {
 	formatDisclaimerDe: string;
 	formatDisclaimerEn: string;
 	formatDisclaimerUa: string;
+	price: number | null;
+	priceDescription: string;
+	backgroundImageUrl: string;
+	status: CourseStatus;
 }
 
 export function getCourses() {

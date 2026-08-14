@@ -80,7 +80,12 @@ public class WorkshopService {
         if (dto.getStartDate() != null) existing.setStartDate(dto.getStartDate());
         if (dto.getEndDate() != null) existing.setEndDate(dto.getEndDate());
         if (dto.getMaxParticipants() != null) existing.setMaxParticipants(dto.getMaxParticipants());
-        if (dto.getPrice() != null) existing.setPrice(dto.getPrice());
+        // Found 2026-08-14 while adding the same field to Course: same bug
+        // class as the optional-FK entries in KNOWN_ISSUES.md, just on a
+        // scalar field — the admin form's price input sends null when
+        // cleared (see admin/workshops/+page.svelte's oninput handler), and
+        // skip-if-null silently kept the old price instead of clearing it.
+        existing.setPrice(dto.getPrice());
         if (dto.getStatus() != null) existing.setStatus(WorkshopStatus.valueOf(dto.getStatus()));
 
         // Authoritative on every update, not skip-if-null: the admin form

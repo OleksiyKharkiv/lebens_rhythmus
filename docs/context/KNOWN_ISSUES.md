@@ -111,6 +111,34 @@ duplicated password encoding") удалением вызова из `AuthService
 `AuthService`/`UserMapper` должны передавать raw-пароль дальше, не
 хешировать его сами.**
 
+**"Skip-if-null" на optional-FK внутри `*Service.update()` — 5 раз в 4
+сервисах, каждый раз чинили заново.** Паттерн: `if (dto.getXId() != null)
+{ resolve+set }` без `else { entity.setX(null); }` — снятие ссылки
+(teacher/ageGroup/course/...) на клиенте молча не применяется, поле
+остаётся прежним значением. Найдено и исправлено: `CourseService`
+(teacher+ageGroup, 2026-08-09), `WorkshopService` (teacher, тем же
+диффом — "применено проактивно", т.е. паттерн уже был известен и всё
+равно пришлось выводить заново), `WorkshopService` снова (course,
+LR-070, 2026-08-11), `PerformanceService` (workshop/course, LR-071,
+2026-08-11), `GroupService` (все relations, артефакт-аудит 2026-08-14).
+**Правило: каждый optional-FK setter внутри `update()` — всегда
+if/else, id есть → resolve+set, id отсутствует → явный `set(null)`,
+никогда просто `if`.** Новый `*ServiceTest` на любой `update()`-метод с
+optional-полями обязан включать тест "clears previously set relation
+when id is absent", не только happy-path resolve.
+
+**Новый публичный `GET`-контроллер без записи в `SecurityConfig`'s
+`permitAll()` — бил в проде дважды.** `/api/v1/activities/**` и
+`/api/v1/performances/**` (2026-07-22, найдено `architect-reviewer` до
+релиза) и `/api/v1/courses/**` (LR-069, 2026-08-09, на этот раз клиент
+нашёл живьём — публичная страница курса 401'ила всем анонимным
+посетителям). `ApiSurfaceAllowlistTest` защищает от ЛИШНИХ путей в
+allow-list (LR-023 класс бага), НЕ от забытого добавления нужного —
+ничего не мешает третьему повтору. **Правило: любой новый
+`@RestController` с намеренно публичными `GET`-эндпоинтами — в том же
+диффе явно свериться со списком `permitAll()` в `SecurityConfig.java` и
+добавить путь, не полагаться на память "не забуду в этот раз".**
+
 **`DatabaseFixConfig` меняет схему БД в рантайме при каждом старте
 приложения** (`ALTER TABLE workshop_groups DROP NOT NULL` на нескольких
 колонках) вместо SQL-миграции. Это означает: реальная схема таблицы может
