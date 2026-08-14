@@ -5,6 +5,7 @@ import com.be.domain.entity.Course;
 import com.be.domain.entity.User;
 import com.be.domain.repository.AgeGroupRepository;
 import com.be.domain.repository.CourseRepository;
+import com.be.domain.repository.GroupRepository;
 import com.be.domain.repository.UserRepository;
 import com.be.web.dto.request.CourseCreateDTO;
 import com.be.web.mapper.CourseMapper;
@@ -36,9 +37,11 @@ class CourseServiceTest {
     private UserRepository userRepository;
     @Mock
     private AgeGroupRepository ageGroupRepository;
+    @Mock
+    private GroupRepository groupRepository;
 
     private CourseService service() {
-        return new CourseService(courseRepository, userRepository, ageGroupRepository, new CourseMapper(new UserMapper()));
+        return new CourseService(courseRepository, userRepository, ageGroupRepository, groupRepository, new CourseMapper(new UserMapper()));
     }
 
     private CourseCreateDTO.CourseCreateDTOBuilder baseDto() {

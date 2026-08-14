@@ -37,6 +37,16 @@
 							<span class="font-semibold text-paper">Kursleitung:</span> {c.teacher.firstName} {c.teacher.lastName}
 						</p>
 					{/if}
+					{#if c.price != null || c.priceDescription}
+						<div class="mt-2">
+							<p class="text-sm font-semibold text-paper">
+								{c.price != null ? `${c.price} €` : m.activities_price_on_request()}
+							</p>
+							{#if c.priceDescription}
+								<p class="mt-1 whitespace-pre-line text-xs text-paper-dim">{c.priceDescription}</p>
+							{/if}
+						</div>
+					{/if}
 					<div class="mt-4 flex gap-2">
 						<a
 							href={`/courses/${c.id}`}

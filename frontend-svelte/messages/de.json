@@ -95,6 +95,8 @@
 
 	"courses_title": "Kurse",
 	"courses_no_upcoming": "Aktuell sind keine Kurse verfügbar.",
+	"courses_duration_label": "Dauer",
+	"courses_sessions_suffix": "Termine",
 
 	"contact_title": "Kontakt",
 	"contact_intro": "Fragen zu unseren Angeboten? Schreib uns einfach.",

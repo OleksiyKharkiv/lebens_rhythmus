@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as m from '$lib/paraglide/messages.js';
-	import { getCourse, type CourseDetail } from '$lib/api';
+	import { getCourse, type CourseDetail, type IsoDayOfWeek, type RecurrenceDay } from '$lib/api';
 
 	let course = $state<CourseDetail | null>(null);
 	let error = $state(false);
@@ -19,6 +19,47 @@
 	$effect(() => {
 		load();
 	});
+
+	// Mirrors SessionService.generateSessionsFromRecurrence's date-iteration
+	// logic (backend, Java) — every date from start to end inclusive whose
+	// weekday matches a selected day counts as one session. Recomputed here
+	// rather than fetched, since GET /groups requires auth and this page is
+	// public (2026-08-14).
+	const ISO_WEEKDAY_TO_JS: Record<IsoDayOfWeek, number> = {
+		SUNDAY: 0,
+		MONDAY: 1,
+		TUESDAY: 2,
+		WEDNESDAY: 3,
+		THURSDAY: 4,
+		FRIDAY: 5,
+		SATURDAY: 6
+	};
+
+	function countSessions(startDate: string, endDate: string, days: RecurrenceDay[]): number {
+		const selected = new Set(days.map((d) => ISO_WEEKDAY_TO_JS[d.dayOfWeek]));
+		const start = new Date(`${startDate}T00:00:00Z`);
+		const end = new Date(`${endDate}T00:00:00Z`);
+		let count = 0;
+		for (let d = new Date(start); d.getTime() <= end.getTime(); d.setUTCDate(d.getUTCDate() + 1)) {
+			if (selected.has(d.getUTCDay())) count++;
+		}
+		return count;
+	}
+
+	function formatDate(iso: string) {
+		return new Date(`${iso}T00:00:00Z`).toLocaleDateString('de-DE', {
+			day: '2-digit',
+			month: '2-digit',
+			year: 'numeric',
+			timeZone: 'UTC'
+		});
+	}
+
+	const sessionCount = $derived(
+		course?.scheduleStartDate && course?.scheduleEndDate && course?.scheduleDays?.length
+			? countSessions(course.scheduleStartDate, course.scheduleEndDate, course.scheduleDays)
+			: null
+	);
 </script>
 
 <svelte:head>
@@ -69,6 +110,15 @@
 				<div>
 					<dt class="font-semibold text-paper">Altersgruppe</dt>
 					<dd>{course.ageGroupName}</dd>
+				</div>
+			{/if}
+			{#if course.scheduleStartDate && course.scheduleEndDate && sessionCount !== null}
+				<div>
+					<dt class="font-semibold text-paper">{m.courses_duration_label()}</dt>
+					<dd>
+						{formatDate(course.scheduleStartDate)} – {formatDate(course.scheduleEndDate)} · {sessionCount}
+						{m.courses_sessions_suffix()}
+					</dd>
 				</div>
 			{/if}
 		</dl>

@@ -412,6 +412,14 @@
 					oninput={(e) => (form.price = e.currentTarget.value ? Number(e.currentTarget.value) : null)}
 					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
 				/>
+				<!-- Directly under price, same column — belongs together logically. -->
+				<Textarea
+					id="cPriceDescription"
+					label={m.admin_course_price_description()}
+					rows={2}
+					maxlength={1000}
+					bind:value={form.priceDescription}
+				/>
 			</div>
 			<div>
 				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="cStatus">{m.admin_course_status()}</label>
@@ -426,15 +434,6 @@
 				</select>
 			</div>
 			<div><Input id="cBgImage" label={m.admin_course_background_image_url()} bind:value={form.backgroundImageUrl} /></div>
-		</div>
-		<div class="mt-4">
-			<Textarea
-				id="cPriceDescription"
-				label={m.admin_course_price_description()}
-				rows={2}
-				maxlength={1000}
-				bind:value={form.priceDescription}
-			/>
 		</div>
 
 		<div class="mt-6 grid gap-3 sm:grid-cols-3">

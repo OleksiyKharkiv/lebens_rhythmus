@@ -1,6 +1,7 @@
 package com.be.web.mapper;
 
 import com.be.domain.entity.Course;
+import com.be.domain.entity.Group;
 import com.be.domain.entity.enums.CourseStatus;
 import com.be.web.dto.request.CourseCreateDTO;
 import com.be.web.dto.response.CourseDetailDTO;
@@ -33,11 +34,18 @@ public class CourseMapper {
                 .isSynchronous(c.isSynchronous())
                 .hasRecordings(c.isHasRecordings())
                 .price(c.getPrice())
+                .priceDescription(c.getPriceDescription())
                 .status(c.getStatus() != null ? c.getStatus().name() : null)
                 .build();
     }
 
     public CourseDetailDTO toDetailDTO(Course c) {
+        return toDetailDTO(c, null);
+    }
+
+    // scheduleGroup — this Course's linked Group (LR-081, "one Course = one
+    // Group" MVP scope), null if none exists yet (schedule not set up).
+    public CourseDetailDTO toDetailDTO(Course c, Group scheduleGroup) {
         UserBasicDTO teacher = c.getTeacher() != null ? userMapper.toBasicDTO(c.getTeacher()) : null;
         return CourseDetailDTO.builder()
                 .id(c.getId())
@@ -60,6 +68,9 @@ public class CourseMapper {
                 .priceDescription(c.getPriceDescription())
                 .backgroundImageUrl(c.getBackgroundImageUrl())
                 .status(c.getStatus() != null ? c.getStatus().name() : null)
+                .scheduleStartDate(scheduleGroup != null ? scheduleGroup.getRecurrenceStartDate() : null)
+                .scheduleEndDate(scheduleGroup != null ? scheduleGroup.getRecurrenceEndDate() : null)
+                .scheduleDays(scheduleGroup != null ? scheduleGroup.getRecurrenceDays() : null)
                 .build();
     }
 

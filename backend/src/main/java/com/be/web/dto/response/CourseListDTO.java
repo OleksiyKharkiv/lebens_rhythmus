@@ -22,5 +22,6 @@ public class CourseListDTO {
     private Boolean isSynchronous;
     private Boolean hasRecordings;
     private BigDecimal price;
+    private String priceDescription;
     private String status;
 }

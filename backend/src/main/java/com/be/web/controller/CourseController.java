@@ -2,6 +2,7 @@ package com.be.web.controller;
 
 import com.be.config.JwtAuthUtils;
 import com.be.domain.entity.Course;
+import com.be.domain.entity.Group;
 import com.be.service.CourseService;
 import com.be.web.dto.request.CourseCreateDTO;
 import com.be.web.dto.response.CourseDetailDTO;
@@ -49,7 +50,8 @@ public class CourseController {
     @GetMapping("/{id}")
     public ResponseEntity<CourseDetailDTO> getDetail(@PathVariable Long id) {
         Course c = courseService.getById(id);
-        return ResponseEntity.ok(mapper.toDetailDTO(c));
+        Group scheduleGroup = courseService.findScheduleGroup(id).orElse(null);
+        return ResponseEntity.ok(mapper.toDetailDTO(c, scheduleGroup));
     }
 
     @PostMapping

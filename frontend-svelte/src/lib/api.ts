@@ -634,6 +634,7 @@ export interface CourseListItem {
 	isSynchronous: boolean;
 	hasRecordings: boolean;
 	price: number | null;
+	priceDescription: string | null;
 	status: CourseStatus | null;
 }
 
@@ -658,6 +659,12 @@ export interface CourseDetail {
 	priceDescription: string | null;
 	backgroundImageUrl: string | null;
 	status: CourseStatus | null;
+	// From this Course's linked Group (LR-081, "one Course = one Group" MVP
+	// scope) — lets the public page compute total session count itself,
+	// same ingredients SessionService.generateSessionsFromRecurrence uses.
+	scheduleStartDate: string | null;
+	scheduleEndDate: string | null;
+	scheduleDays: RecurrenceDay[] | null;
 }
 
 export interface CourseCreateDTO {

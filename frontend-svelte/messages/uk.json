@@ -95,6 +95,8 @@
 
 	"courses_title": "Курси",
 	"courses_no_upcoming": "Наразі курсів немає.",
+	"courses_duration_label": "Тривалість",
+	"courses_sessions_suffix": "занять",
 
 	"contact_title": "Контакти",
 	"contact_intro": "Питання щодо наших напрямів? Просто напишіть нам.",

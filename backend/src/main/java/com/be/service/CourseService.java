@@ -2,10 +2,12 @@ package com.be.service;
 
 import com.be.domain.entity.AgeGroup;
 import com.be.domain.entity.Course;
+import com.be.domain.entity.Group;
 import com.be.domain.entity.User;
 import com.be.domain.entity.enums.CourseStatus;
 import com.be.domain.repository.AgeGroupRepository;
 import com.be.domain.repository.CourseRepository;
+import com.be.domain.repository.GroupRepository;
 import com.be.domain.repository.UserRepository;
 import com.be.web.dto.request.CourseCreateDTO;
 import com.be.web.mapper.CourseMapper;
@@ -14,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @Transactional
@@ -22,16 +25,28 @@ public class CourseService {
     private final CourseRepository courseRepository;
     private final UserRepository userRepository;
     private final AgeGroupRepository ageGroupRepository;
+    private final GroupRepository groupRepository;
     private final CourseMapper courseMapper;
 
     public CourseService(CourseRepository courseRepository,
                           UserRepository userRepository,
                           AgeGroupRepository ageGroupRepository,
+                          GroupRepository groupRepository,
                           CourseMapper courseMapper) {
         this.courseRepository = Objects.requireNonNull(courseRepository, "courseRepository");
         this.userRepository = Objects.requireNonNull(userRepository, "userRepository");
         this.ageGroupRepository = Objects.requireNonNull(ageGroupRepository, "ageGroupRepository");
+        this.groupRepository = Objects.requireNonNull(groupRepository, "groupRepository");
         this.courseMapper = Objects.requireNonNull(courseMapper, "courseMapper");
+    }
+
+    // 2026-08-14 — the public course page needs the linked Group's
+    // schedule (start/end/weekdays) to compute total session count itself;
+    // "one Course = one Group" MVP scope (LR-081), first match if several.
+    @Transactional(readOnly = true)
+    public Optional<Group> findScheduleGroup(Long courseId) {
+        List<Group> groups = groupRepository.findByCourseId(courseId);
+        return groups.isEmpty() ? Optional.empty() : Optional.of(groups.get(0));
     }
 
     @Transactional(readOnly = true)
