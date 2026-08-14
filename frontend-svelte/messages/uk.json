@@ -95,7 +95,9 @@
 
 	"courses_title": "Курси",
 	"courses_no_upcoming": "Наразі курсів немає.",
-	"courses_duration_label": "Тривалість",
+	"courses_duration_label": "Тривалість курсу",
+	"courses_duration_from": "з",
+	"courses_duration_to": "по",
 	"courses_sessions_suffix": "занять",
 
 	"contact_title": "Контакти",
@@ -254,11 +256,11 @@
 	"admin_weekday_sun": "Нд",
 	"admin_course_schedule_title": "Розклад та реєстрація",
 	"admin_course_schedule_start": "Дата початку",
-	"admin_course_schedule_duration_months": "Тривалість: місяців",
-	"admin_course_schedule_duration_days": "Днів",
+	"admin_course_schedule_end": "Дата закінчення",
 	"admin_course_schedule_max_participants": "Макс. учасників",
 	"admin_course_schedule_time": "Час початку",
 	"admin_course_schedule_duration_minutes": "Тривалість (хв.)",
+	"admin_course_schedule_session_count_label": "Кількість занять",
 	"admin_course_schedule_regenerate_note": "Зміни днів тижня/часу/періоду при збереженні замінять усі вже згенеровані заняття — вручну перенесені окремі заняття буде втрачено.",
 
 	"admin_age_group_min_age": "Мінімальний вік",

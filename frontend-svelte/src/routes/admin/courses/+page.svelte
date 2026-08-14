@@ -22,6 +22,7 @@
 		type GroupCreateRequestDTO,
 		type CourseStatus
 	} from '$lib/api';
+	import { countSessions } from '$lib/scheduleUtils';
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
 	import Textarea from '$lib/components/Textarea.svelte';
@@ -117,8 +118,10 @@
 
 	let scheduleGroupId = $state<number | null>(null);
 	let scheduleStartDate = $state('');
-	let durationMonths = $state(1);
-	let durationDays = $state(0);
+	// Beta-test feedback 2026-08-14 — replaced the months/days duration
+	// inputs with a direct end-date field; admin controls the interval with
+	// two dates, not a start date + computed duration.
+	let scheduleEndDate = $state('');
 	let maxParticipants = $state(15);
 	let weekdays = $state<WeekdayRow[]>(blankWeekdays());
 	// Snapshot at load time — regeneration only fires when recurrence
@@ -127,42 +130,28 @@
 	let scheduleSnapshot = $state('');
 
 	function currentScheduleSnapshot(): string {
-		return JSON.stringify({ scheduleStartDate, durationMonths, durationDays, maxParticipants, weekdays });
+		return JSON.stringify({ scheduleStartDate, scheduleEndDate, maxParticipants, weekdays });
 	}
 
 	function resetSchedule() {
 		scheduleGroupId = null;
 		scheduleStartDate = '';
-		durationMonths = 1;
-		durationDays = 0;
+		scheduleEndDate = '';
 		maxParticipants = 15;
 		weekdays = blankWeekdays();
 		scheduleSnapshot = currentScheduleSnapshot();
 	}
 
-	function addMonthsDays(startIso: string, months: number, days: number): string {
-		const d = new Date(startIso + 'T00:00:00');
-		d.setMonth(d.getMonth() + months);
-		d.setDate(d.getDate() + days);
-		return d.toISOString().slice(0, 10);
-	}
-
-	// Approximate, editing-UX-only inverse of addMonthsDays — doesn't need
-	// to be perfectly bijective, just a reasonable value to show back when
-	// re-opening an existing course's schedule for editing.
-	function diffMonthsDays(startIso: string, endIso: string): { months: number; days: number } {
-		const start = new Date(startIso + 'T00:00:00');
-		const end = new Date(endIso + 'T00:00:00');
-		let months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
-		const probe = new Date(start);
-		probe.setMonth(probe.getMonth() + months);
-		if (probe > end) {
-			months -= 1;
-			probe.setMonth(probe.getMonth() - 1);
-		}
-		const days = Math.round((end.getTime() - probe.getTime()) / 86400000);
-		return { months: Math.max(0, months), days: Math.max(0, days) };
-	}
+	// Live preview while picking weekdays — same calculation the public
+	// course page shows, so the admin sees up front how many sessions this
+	// interval + these weekdays actually produce.
+	const previewSessionCount = $derived(
+		countSessions(
+			scheduleStartDate,
+			scheduleEndDate,
+			weekdays.filter((w) => w.enabled).map((w) => ({ dayOfWeek: w.day, startTime: w.startTime, durationMinutes: w.durationMinutes }))
+		)
+	);
 
 	function load() {
 		getCourses()
@@ -210,11 +199,7 @@
 				scheduleGroupId = linked.id;
 				maxParticipants = linked.capacity;
 				scheduleStartDate = linked.recurrenceStartDate ?? '';
-				if (linked.recurrenceStartDate && linked.recurrenceEndDate) {
-					const diff = diffMonthsDays(linked.recurrenceStartDate, linked.recurrenceEndDate);
-					durationMonths = diff.months;
-					durationDays = diff.days;
-				}
+				scheduleEndDate = linked.recurrenceEndDate ?? '';
 				weekdays = WEEKDAYS.map((w) => {
 					const found = linked.recurrenceDays?.find((r) => r.dayOfWeek === w.day);
 					return {
@@ -255,7 +240,7 @@
 				const recurrenceDays: RecurrenceDay[] = weekdays
 					.filter((w) => w.enabled)
 					.map((w) => ({ dayOfWeek: w.day, startTime: w.startTime, durationMinutes: w.durationMinutes }));
-				const recurrenceEndDate = addMonthsDays(scheduleStartDate, durationMonths, durationDays);
+				const recurrenceEndDate = scheduleEndDate;
 				const changed = currentScheduleSnapshot() !== scheduleSnapshot;
 
 				let groupId = scheduleGroupId;
@@ -472,24 +457,12 @@
 				/>
 			</div>
 			<div>
-				<label class="block text-sm text-paper-dim" for="csMonths">{m.admin_course_schedule_duration_months()}</label>
+				<label class="block text-sm text-paper-dim" for="csEnd">{m.admin_course_schedule_end()}</label>
 				<input
-					id="csMonths"
-					type="number"
-					min="0"
-					value={durationMonths}
-					oninput={(e) => (durationMonths = Number(e.currentTarget.value) || 0)}
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
-				/>
-			</div>
-			<div>
-				<label class="block text-sm text-paper-dim" for="csDays">{m.admin_course_schedule_duration_days()}</label>
-				<input
-					id="csDays"
-					type="number"
-					min="0"
-					value={durationDays}
-					oninput={(e) => (durationDays = Number(e.currentTarget.value) || 0)}
+					id="csEnd"
+					type="date"
+					value={scheduleEndDate}
+					oninput={(e) => (scheduleEndDate = e.currentTarget.value)}
 					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
 				/>
 			</div>
@@ -556,6 +529,14 @@
 				</div>
 			{/each}
 		</div>
+		<!-- Beta-test feedback 2026-08-14 — same live preview as the public
+		     course page's duration block, so the admin sees up front how
+		     many sessions the chosen interval + weekdays actually produce. -->
+		{#if scheduleStartDate && scheduleEndDate}
+			<p class="mt-2 text-sm font-semibold text-paper">
+				{m.admin_course_schedule_session_count_label()}: {previewSessionCount}
+			</p>
+		{/if}
 		{#if scheduleStartDate}
 			<p class="mt-2 text-xs text-paper-dim">{m.admin_course_schedule_regenerate_note()}</p>
 		{/if}

@@ -95,7 +95,9 @@
 
 	"courses_title": "Courses",
 	"courses_no_upcoming": "No courses are currently available.",
-	"courses_duration_label": "Duration",
+	"courses_duration_label": "Course duration",
+	"courses_duration_from": "from",
+	"courses_duration_to": "to",
 	"courses_sessions_suffix": "sessions",
 
 	"contact_title": "Contact",
@@ -254,11 +256,11 @@
 	"admin_weekday_sun": "Sun",
 	"admin_course_schedule_title": "Schedule & Enrollment",
 	"admin_course_schedule_start": "Start date",
-	"admin_course_schedule_duration_months": "Duration: months",
-	"admin_course_schedule_duration_days": "Days",
+	"admin_course_schedule_end": "End date",
 	"admin_course_schedule_max_participants": "Max. participants",
 	"admin_course_schedule_time": "Start time",
 	"admin_course_schedule_duration_minutes": "Duration (min.)",
+	"admin_course_schedule_session_count_label": "Number of sessions",
 	"admin_course_schedule_regenerate_note": "Changes to weekdays/times/date range replace all already-generated sessions on save — manually rescheduled individual sessions will be lost.",
 
 	"admin_age_group_min_age": "Minimum age",

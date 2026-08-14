@@ -95,7 +95,9 @@
 
 	"courses_title": "Kurse",
 	"courses_no_upcoming": "Aktuell sind keine Kurse verfügbar.",
-	"courses_duration_label": "Dauer",
+	"courses_duration_label": "Kursdauer",
+	"courses_duration_from": "von",
+	"courses_duration_to": "bis",
 	"courses_sessions_suffix": "Termine",
 
 	"contact_title": "Kontakt",
@@ -254,11 +256,11 @@
 	"admin_weekday_sun": "So",
 	"admin_course_schedule_title": "Termine & Anmeldung",
 	"admin_course_schedule_start": "Startdatum",
-	"admin_course_schedule_duration_months": "Dauer: Monate",
-	"admin_course_schedule_duration_days": "Tage",
+	"admin_course_schedule_end": "Enddatum",
 	"admin_course_schedule_max_participants": "Max. Teilnehmer",
 	"admin_course_schedule_time": "Startzeit",
 	"admin_course_schedule_duration_minutes": "Dauer (Min.)",
+	"admin_course_schedule_session_count_label": "Anzahl Termine",
 	"admin_course_schedule_regenerate_note": "Änderungen an Wochentagen/Zeiten/Zeitraum ersetzen beim Speichern alle bereits generierten Termine — manuell verschobene Einzeltermine gehen dabei verloren.",
 
 	"admin_age_group_min_age": "Mindestalter",
