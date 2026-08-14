@@ -1268,3 +1268,59 @@ CRUD-цикл через настоящую форму: `POST` (201, с реал
 корректно отражает каждый шаг. Активный пункт nav подсвечивается
 (`aria-current="page"`, `border-gold`). `npm run check`/`build` —
 чисто. Полный `./gradlew test` — 0 failures/errors.
+
+---
+
+## LR-081/082/083/085 — Course-расписание: `Group.courseId`+recurrence, генерация `Session`, mutual-exclusivity guard, admin-UI
+
+**Tier:** HIGH (081/082), MED (083), MED-HIGH (085) · **Статус:** Closed
+2026-08-12, коммит `fa6bfc5` · закрытие задокументировано этим
+артефакт-аудитом 2026-08-13 (тикеты оставались помечены Open в момент
+самого коммита — найдено `architect-reviewer`, не самим автором диффа)
+**Источник:** прямой запрос заказчика 2026-08-12 ("добавь поля на
+странице admin/courses: дата старта, длительность, макс. участников,
+расписание по дням недели с индивидуальным временем/длительностью
+каждого дня")
+
+**Реализовано, с отклонением от исходного текста тикетов — важно для
+читающего архив:**
+- `Group.java` — `course` (`@ManyToOne`), `recurrenceDays`
+  (`List<RecurrenceDay>`), `recurrenceStartDate`/`recurrenceEndDate`
+  (`LocalDate`). **Не `recurrenceDaysOfWeek`/`sessionStartTime`/
+  `sessionEndTime`, как было изначально описано в LR-081/`LR-ADR-023`
+  §2** (одно общее время на все выбранные дни) — заказчик 2026-08-12
+  уточнил: **у каждого выбранного дня своё время старта и своя
+  длительность**. `RecurrenceDay.java` (новый record:
+  `dayOfWeek`/`startTime`/`durationMinutes`) + `RecurrenceDaysConverter`
+  (JSON через Jackson, `@Convert`) реализуют именно это. Расхождение
+  между ADR-текстом и кодом задокументировано отдельно, см. новый
+  `LR-ADR-024` в `decisions.md`.
+- `V10__add_group_course_recurrence.sql` — миграция.
+- `GroupService.createGroup`/`update` — mutual-exclusivity guard
+  (`workshopId`/`course` оба заданы → `IllegalArgumentException`) —
+  закрывает LR-083.
+- `SessionService.generateSessionsFromRecurrence(groupId)` — новый
+  метод, парсит `recurrenceDays`, генерирует `Session`-строки на каждую
+  подходящую дату в `[recurrenceStartDate, recurrenceEndDate]` с
+  собственным временем/длительностью каждого дня, переиспользует
+  `replaceSessionsForGroup` (закрывает LR-082).
+- `SessionController` — `POST /groups/{groupId}/sessions/generate`.
+- **LR-085 — тоже отклонение от исходного текста:** тикет предполагал
+  UI на `admin/groups/+page.svelte` ("не относится к admin/courses").
+  По прямой инструкции заказчика 2026-08-12 реализовано на
+  `admin/courses/+page.svelte` — новая секция "Termine & Anmeldung":
+  дата старта, длительность (месяцы+дни → `recurrenceEndDate`), макс.
+  участников (`Group.capacity`), чекбоксы Пн-Вс, при выборе дня —
+  свои поля времени старта + длительности (мин., дефолт 60, ±).
+  Форма создаёт/находит связанный `Group` (courseId, `workshop=null`)
+  и вызывает `generateSessionsFromRecurrence`.
+
+**Не сделано в рамках этой находки (не в скоупе аудита):** сама
+эксплуатационная проверка живьём (создание курса с расписанием через
+реальный UI, подтверждение сгенерированных `Session`) — код
+компилируется и проходит локальные тесты
+(`SessionServiceTest.generateSessionsFromRecurrence_*`,
+`GroupServiceTest.createGroup_withBothWorkshopIdAndCourseId_throws`),
+но полный browser-E2E проход этой конкретной формы отдельно не
+подтверждён в рамках артефакт-аудита — на будущее, не блокирует
+закрытие (код уже в проде через обычный деплой-цикл).

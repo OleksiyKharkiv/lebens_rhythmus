@@ -747,6 +747,13 @@ export function deleteTeacher(id: number) {
 // all. Fixed here, see CHANGELOG.md 2026-07-23.
 // (GroupDTO itself is defined earlier, in the public-catalog section.)
 
+// UI/form-state shape only (nested {id} objects, matches <select> bindings
+// in admin/groups) — NOT the wire format for PUT anymore. Artefact-audit
+// 2026-08-14: the backend's raw-entity-bound update() (the last mass-
+// assignment gap on GroupController, matching the one LR-030 already fixed
+// on createGroup) was replaced with GroupUpdateDTO — flat ids, see
+// GroupUpdateRequestDTO below. Convert with a toUpdateRequest()-style helper
+// at the call site, same pattern admin/groups already uses for create.
 export interface GroupWriteDTO {
 	titleDe: string;
 	titleEn: string;
@@ -761,20 +768,14 @@ export interface GroupWriteDTO {
 	venue: { id: number } | null;
 	ageGroup: { id: number } | null;
 	active: boolean;
-	// LR-081 (LR-ADR-023) — mutually exclusive with `workshop` above;
-	// always send both explicitly (this endpoint binds the raw entity —
-	// an omitted field is indistinguishable from null, same reasoning as
-	// every other relation on this DTO).
 	course: { id: number } | null;
 	recurrenceDays: RecurrenceDay[] | null;
 	recurrenceStartDate: string | null;
 	recurrenceEndDate: string | null;
 }
 
-// LR-030 — POST /groups no longer binds the raw entity (backend:
-// GroupCreateDTO) — flat ids, not nested {id} objects like GroupWriteDTO
-// above (still correct for PUT, which the raw-entity-bound update()
-// endpoint is unaffected by this fix and still expects).
+// LR-030 — POST /groups binds GroupCreateDTO, flat ids not nested {id}
+// objects like the GroupWriteDTO form-state shape above.
 export interface GroupCreateRequestDTO {
 	titleDe: string;
 	titleEn: string;
@@ -783,6 +784,28 @@ export interface GroupCreateRequestDTO {
 	startDateTime: string;
 	endDateTime: string | null;
 	workshopId: number | null;
+	teacherId: number | null;
+	activityId: number | null;
+	venueId: number | null;
+	ageGroupId: number | null;
+	active: boolean;
+	courseId: number | null;
+	recurrenceDays: RecurrenceDay[] | null;
+	recurrenceStartDate: string | null;
+	recurrenceEndDate: string | null;
+}
+
+// Artefact-audit 2026-08-14 — PUT /groups/{id} payload, mirrors the backend
+// GroupUpdateDTO. No workshopId: group -> workshop reassignment was never
+// supported on update (see GroupService.update's own comment) — unaffected
+// by this fix, still not exposed here.
+export interface GroupUpdateRequestDTO {
+	titleDe: string;
+	titleEn: string;
+	titleUa: string;
+	capacity: number;
+	startDateTime: string;
+	endDateTime: string | null;
 	teacherId: number | null;
 	activityId: number | null;
 	venueId: number | null;
@@ -813,7 +836,7 @@ export function createGroup(input: GroupCreateRequestDTO) {
 	return authRequest<GroupDTO>('/groups', { method: 'POST', body: JSON.stringify(input) });
 }
 
-export function updateGroup(id: number, input: GroupWriteDTO) {
+export function updateGroup(id: number, input: GroupUpdateRequestDTO) {
 	return authRequest<GroupDTO>(`/groups/${id}`, { method: 'PUT', body: JSON.stringify(input) });
 }
 

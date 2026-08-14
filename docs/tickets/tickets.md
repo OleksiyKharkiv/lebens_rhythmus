@@ -1156,18 +1156,21 @@ domain/service/repository/controller, юридически значимый ко
 - [ ] LR-079 — Backlog (не срочно): форма согласия на съёмку
       (Einwilligungserklärung) для Aufführungen — "резерв на будущее"
       по формулировке брифа, не начинать без отдельного запроса
-- [ ] LR-081 — Backend: расширение `Group` (`courseId` + правило
-      повторения), новая из `LR-068`
-- [ ] LR-082 — Backend: `SessionService` — генерация `Session` из
-      правила повторения `Group`, новая из `LR-068`
-- [ ] LR-083 — Backend: mutual-exclusivity guard `workshopId`/`courseId`
-      в `GroupService`, новая из `LR-068`
+- [x] LR-081 — Backend: расширение `Group` (`courseId` + правило
+      повторения) — закрыт 2026-08-12 (коммит `fa6bfc5`).
+- [x] LR-082 — Backend: `SessionService` — генерация `Session` из
+      правила повторения `Group` — закрыт 2026-08-12 (коммит `fa6bfc5`).
+- [x] LR-083 — Backend: mutual-exclusivity guard `workshopId`/`courseId`
+      в `GroupService` — закрыт 2026-08-12 (коммит `fa6bfc5`).
 - [ ] LR-084 — Backend: `Enrollment`/`EnrollmentService`/
       `EnrollmentController`/`Order` — поддержка регистрации на `Course`,
-      новая из `LR-068`
-- [ ] LR-085 — Frontend: recurrence-поля на форме создания `Group` для
-      Course-связанных групп, новая из LR-069/075 сессии, блокируется на
-      `LR-081`/`LR-082`
+      новая из `LR-068`. **Всё ещё открыт** — подтверждено
+      артефакт-аудитом 2026-08-13: `Enrollment.workshop` по-прежнему
+      `@ManyToOne(optional = false)`, `course`-поля нет.
+- [x] LR-085 — Frontend: recurrence-UI для Course-связанных групп —
+      закрыт 2026-08-12, но **не так, как описано в тикете** (см. archive.md
+      — реализовано на `admin/courses/+page.svelte` по прямой инструкции
+      заказчика, не на `admin/groups/+page.svelte`).
 
 ---
 
@@ -1258,84 +1261,6 @@ Open · backlog, не начинать без отдельного запрос�
 
 ---
 
-## LR-081 — Backend: расширение `Group` — `courseId` + правило повторения
-
-**Tier:** HIGH (новая доменная связь, юридически значимый эпик)
-**Статус:** Open · **блокируется на `LR-069` (нужна `Course` для FK)**
-**Источник:** `LR-068`/`LR-ADR-023`
-
-Миграция + поля на `Group`: `courseId` (nullable, `@ManyToOne`, рядом с
-существующим `workshopId`), `recurrenceDaysOfWeek` (например, `Set
-<DayOfWeek>` через `@ElementCollection` или битовая маска — выбор
-конкретного типа хранения на реализацию), `sessionStartTime`/
-`sessionEndTime` (`LocalTime`). Поля используются только когда
-`courseId` задан — для `workshopId`-группы остаются `null`, не breaking
-change для существующих данных.
-
-Диапазон дат генерации — существующие `Group.startDateTime`/
-`endDateTime`; для Course-группы **`endDateTime` обязателен**
-(валидация в сервисе/DTO, не в схеме — колонка сегодня nullable ради
-Workshop-группы, где `endDateTime` опционален).
-
-**Mutual exclusivity `workshopId`/`courseId`:** явная валидация "ровно
-один из двух задан" в `GroupService` — см. `LR-083` (можно сделать в
-рамках этого тикета или отдельным PR, но до того, как `LR-075`-форма
-станет писать в оба поля).
-
-**Не начинать без:** `LR-069` (нужен реальный `Course.id` для FK).
-
----
-
-## LR-082 — Backend: `SessionService` — генерация `Session` из правила повторения
-
-**Tier:** HIGH (расширяет уже закрытый `LR-067`-сервис, влияет на
-существующий деструктивный `replaceSessionsForGroup`)
-**Статус:** Open · **блокируется на `LR-081`**
-**Источник:** `LR-068`/`LR-ADR-023`
-
-Новый метод в `SessionService` (не новый сервис — переиспользование
-`LR-067`): по `Group.recurrenceDaysOfWeek`/`sessionStartTime`/
-`sessionEndTime`/диапазону `startDateTime`..`endDateTime` генерирует
-реальные `Session`-строки на каждую подходящую дату (материализация, не
-ленивое вычисление — при масштабе ≤150 занятий/курс это не вопрос
-производительности, `LR-ADR-023`).
-
-**Explicit change-guard, не побочный эффект каждого `Group.save()`:**
-регенерация запускается только когда реально изменились поля правила
-повторения (дни недели/время/диапазон дат) — сравнение с предыдущим
-значением перед вызовом `replaceSessionsForGroup`, не на любое
-сохранение `Group` (иначе — до ~300 лишних DELETE/INSERT round-trip'ов
-на несвязанное редактирование, например смены `titleDe`).
-
-**Явно принятый trade-off, не баг:** `replaceSessionsForGroup`
-(`LR-067`) — деструктивный `clear()`+пересоздание. При регенерации из
-изменённого правила ручные правки отдельных `Session` (перенос одного
-занятия на праздник и т.п.), сделанные после предыдущей генерации, **не
-сохраняются** — теряются вместе со всем списком. Это осознанно принято
-`LR-ADR-023` для этого масштаба, не полное соответствие Fowler'овскому
-паттерну "occurrence независимо редактируем без разрушения правила".
-Admin-форма (`LR-075`) обязана явно предупреждать об этом перед
-регенерацией — не тихое поведение.
-
----
-
-## LR-083 — Backend: mutual-exclusivity guard `workshopId`/`courseId` в `GroupService`
-
-**Tier:** MED
-**Статус:** Open · **блокируется на `LR-081`**
-**Источник:** `LR-068`/`LR-ADR-023` (найдено `architect-reviewer` —
-конвенция унаследована от `LR-ADR-021`'s `Workshop.courseId`/
-`Performance.courseId`, но нигде не enforced, ни на уровне БД, ни на
-уровне сервиса)
-
-`GroupService.createGroup`/аналог — явная валидация "ровно один из
-`workshopId`/`courseId` задан" (оба `null` или оба заданы — ошибка).
-Сегодня это непроговорённая конвенция без механизма — тикет закрывает и
-для `Group`, и (если ещё не сделано к моменту реализации) для
-`Workshop.courseId`/`Performance.courseId` из `LR-ADR-021`.
-
----
-
 ## LR-084 — Backend: `Enrollment`/`EnrollmentService`/`EnrollmentController`/`Order` — регистрация на `Course`
 
 **Tier:** HIGH (пересекает `payment`-смежную область — `Order`; влияет
@@ -1382,21 +1307,31 @@ nullable FK).
 
 ---
 
-## LR-085 — Frontend: recurrence-поля на форме создания `Group` для Course-связанных групп
+## LR-086 — Admin `Groups`: нет поля языка — редактирование молча обнуляет `Group.language`
 
-**Tier:** MED-HIGH
-**Статус:** Open · **блокируется на `LR-081`/`LR-082`**
-**Источник:** найдено при закрытии `LR-069`/`LR-075` — `Course` сам не
-несёт расписания (`LR-ADR-023`, подтверждено заказчиком повторно
-2026-08-09 — держим `LR-ADR-023` как есть, не пересматриваем), но форма
-создания `Group` для Course-связанной группы будет нуждаться в UI для
-`recurrenceDaysOfWeek`/`sessionStartTime`/`sessionEndTime` (дни недели +
-время, `LR-081`) плюс явное предупреждение перед регенерацией `Session`
-из изменённого правила (деструктивная замена, `LR-ADR-023` п.3, теряет
-ручные правки отдельных занятий) — не относится к `admin/courses/
-+page.svelte` (закрыта `LR-075`, у неё корректно нет полей расписания),
-это отдельная будущая доработка `admin/groups/+page.svelte` или
-специализированной Course-Group формы.
+**Tier:** LOW (чистый frontend, один `<select>`, без риска для данных
+кроме самого поля, которое и так уже молча теряется)
+**Статус:** Open · backlog
+**Источник:** `architect-reviewer`, ревью диффа артефакт-аудита
+2026-08-14 (закрытие mass-assignment дыры на `GroupController.updateGroup`)
 
-**Не начинать без:** `LR-081`/`LR-082` (нужны реальные поля на `Group` и
-генерация `Session` из них).
+`Group.language` (`@ManyToOne`, читается в `GroupDTO.languageId`) не
+имеет соответствующего `<select>` ни на `admin/groups`, ни на
+`admin/courses` — оба места никогда не отправляли `languageId` при
+создании/редактировании. Это не регрессия сегодняшнего фикса
+(`GroupUpdateDTO`/`GroupUpdateRequestDTO`): при старом raw-entity-биндинге
+поведение было идентичным — `language` в присланном JSON всегда
+отсутствовал, значит всегда обнулялся при `update()`. Просто раньше это
+было незаметно за общей дырой, а сейчас `GroupService.update()`
+корректно (authoritative-паттерн) явно обнуляет `language`, когда
+`languageId` не пришёл — то есть теперь это единственная причина
+обнуления, а не побочный эффект мусорного биндинга.
+
+**Сделать:** добавить `<select>` языка на `admin/groups/+page.svelte`
+(и, если применимо, на `admin/courses`), прокинуть `languageId` через
+`toCreateRequest`/`toUpdateRequest`. Либо — если поле реально не нужно
+продукту прямо сейчас — явно решить и задокументировать, что `Group.
+language` не используется, а не оставлять тихо повреждающимся полем.
+
+---
+

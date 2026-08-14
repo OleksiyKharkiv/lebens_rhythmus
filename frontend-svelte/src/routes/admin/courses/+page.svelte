@@ -18,7 +18,7 @@
 		type AgeGroupDTO,
 		type IsoDayOfWeek,
 		type RecurrenceDay,
-		type GroupWriteDTO,
+		type GroupUpdateRequestDTO,
 		type GroupCreateRequestDTO
 	} from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
@@ -250,20 +250,19 @@
 
 				let groupId = scheduleGroupId;
 				if (groupId !== null) {
-					const groupUpdate: GroupWriteDTO = {
+					const groupUpdate: GroupUpdateRequestDTO = {
 						titleDe: course.titleDe,
 						titleEn: course.titleEn,
 						titleUa: course.titleUa,
 						capacity: maxParticipants,
 						startDateTime: `${scheduleStartDate}T00:00`,
 						endDateTime: null,
-						workshop: null,
-						teacher: null,
-						activity: null,
-						venue: null,
-						ageGroup: null,
+						teacherId: null,
+						activityId: null,
+						venueId: null,
+						ageGroupId: null,
 						active: true,
-						course: { id: course.id },
+						courseId: course.id,
 						recurrenceDays,
 						recurrenceStartDate: scheduleStartDate,
 						recurrenceEndDate

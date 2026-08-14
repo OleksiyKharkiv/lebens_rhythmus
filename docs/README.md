@@ -28,8 +28,9 @@
 
 1. **Коммить эти файлы в git.** Они ценнее большей части кода.
 2. **Никогда не удалять ADR** — помечать `Superseded by ADR-XXX` вместо
-   удаления, в `architecture/decisions.md` (когда заведём — пока ADR живут
-   в `PROJECT_INDEX.md` §8).
+   удаления, в `architecture/decisions.md` (канонический источник с
+   2026-07-20, Roundtable #1 — `PROJECT_INDEX.md` §8 устарел, путь
+   исправлен 2026-08-13, артефакт-аудит).
 3. **`decision-history/` — не текущая истина.** Если что-то там
    противоречит `architecture/decisions.md` или актуальному
    `PROJECT_INDEX.md` — побеждает последний.

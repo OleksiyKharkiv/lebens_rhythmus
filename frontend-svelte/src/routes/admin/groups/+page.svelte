@@ -15,6 +15,7 @@
 		type GroupDTO,
 		type GroupWriteDTO,
 		type GroupCreateRequestDTO,
+		type GroupUpdateRequestDTO,
 		type WorkshopListItem,
 		type TeacherInfoDTO,
 		type ActivityDTO,
@@ -150,9 +151,9 @@
 		days = [blankDay()];
 	}
 
-	// LR-030 — POST /groups now takes flat ids (backend: GroupCreateDTO),
-	// PUT is unaffected and still takes the nested-object GroupWriteDTO
-	// shape `form` is otherwise kept in.
+	// LR-030 — POST /groups takes flat ids (backend: GroupCreateDTO), not
+	// the nested-object GroupWriteDTO shape `form` is otherwise kept in
+	// (that shape matches the <select> bindings below).
 	function toCreateRequest(f: GroupWriteDTO): GroupCreateRequestDTO {
 		return {
 			titleDe: f.titleDe,
@@ -175,6 +176,30 @@
 		};
 	}
 
+	// Artefact-audit 2026-08-14 — PUT /groups/{id} now also takes flat ids
+	// (backend: GroupUpdateDTO, closed the last raw-entity mass-assignment
+	// gap on GroupController). No workshopId — this page never reassigns a
+	// group's workshop on edit, same as before this fix.
+	function toUpdateRequest(f: GroupWriteDTO): GroupUpdateRequestDTO {
+		return {
+			titleDe: f.titleDe,
+			titleEn: f.titleEn,
+			titleUa: f.titleUa,
+			capacity: f.capacity,
+			startDateTime: f.startDateTime,
+			endDateTime: f.endDateTime,
+			teacherId: f.teacher?.id ?? null,
+			activityId: f.activity?.id ?? null,
+			venueId: f.venue?.id ?? null,
+			ageGroupId: f.ageGroup?.id ?? null,
+			active: f.active,
+			courseId: f.course?.id ?? null,
+			recurrenceDays: f.recurrenceDays,
+			recurrenceStartDate: f.recurrenceStartDate,
+			recurrenceEndDate: f.recurrenceEndDate
+		};
+	}
+
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		saving = true;
@@ -189,7 +214,9 @@
 			form.endDateTime = sorted[sorted.length - 1].endDateTime || sorted[sorted.length - 1].startDateTime;
 
 			const groupId =
-				editingId !== null ? (await updateGroup(editingId, form)).id : (await createGroup(toCreateRequest(form))).id;
+				editingId !== null
+					? (await updateGroup(editingId, toUpdateRequest(form))).id
+					: (await createGroup(toCreateRequest(form))).id;
 
 			const sessionPayload: SessionWriteDTO[] = days.map((d) => ({
 				startDateTime: d.startDateTime,

@@ -60,6 +60,10 @@ human-facing index of the folder structure below.
 ## Grep-only — NEVER load whole
 - docs/context/CHANGELOG.md — как накопится, `grep -n "<keyword>"`.
 - docs/tickets/archive.md — закрытые тикеты, историческая справка.
+- docs/decision-history/roundtable-log.md — добавлено 2026-08-13
+  (артефакт-аудит): 1338+ строк, 8+ роундтейблов, тот же профиль размера,
+  что у файлов выше. Читать целиком нет смысла — `grep -n "Roundtable #N"`
+  или по теме, если ссылается на него ADR в decisions.md.
 
 ## Per-ticket, not session-wide
 - docs/tickets/tickets.md держит ВЕСЬ backlog. Смотри только свой тикет — его
@@ -68,20 +72,31 @@ human-facing index of the folder structure below.
   не в этой конвенции, не путать с активным трекером.
 
 ## Known open item
-Frontend сейчас — статический multi-page HTML/CSS/JS через nginx (18
-страниц, свой самодельный `partials-loader.js` для header/footer, без
-бандлера). Круглый стол 2026-07-20 рассматривает переход на фреймворк
-(кандидат — Svelte, по аналогии с numi ADR-002, но не решено) — это
-ADR-уровневое решение, результат будет зафиксирован в
-`docs/architecture/ARCHITECTURE_OLD.md` / решениях круглого стола, не делать
-миграцию по умолчанию в рамках обычного тикета до утверждения роадмапа.
+**Обновлено 2026-08-13 (артефакт-аудит) — предыдущая версия этого раздела
+была устаревшей минимум с 2026-07-21/22, см. находку ниже.**
 
-`docs/architecture/erm.drawio` и `docs/architecture/infrastructure_scheme.drawio`
-— чекпоинт архитектуры на СТАРТЕ проекта (>8 месяцев назад, до полугодового
-фриза) — исторический контекст для понимания стартовой идеи, НЕ текущая
-истина. Не следовать как актуальной документации, сверяться с реальным
-кодом (см. "Файловая карта" в PROJECT_INDEX.md после инвентаризации
-2026-07-20).
+Frontend-фреймворк вопрос **решён**: `LR-ADR-001` (Roundtable #1,
+2026-07-20) — полный снос статического MPA и перестройка на SvelteKit,
+не поэтапная миграция. Выполнено: `frontend-svelte/` — реальный
+SvelteKit-проект (`adapter-static`, SPA-fallback mode из-за клиентской
+загрузки данных через `$effect`, см. `LR-002` в tickets/archive), давно
+в проде на `tlab29.com`. Старый статический MPA — история, не текущее
+состояние. `ARCHITECTURE_OLD.md` — это НЕ запись итогового решения (как
+ошибочно утверждала прошлая версия этого раздела), а инвентаризация
+"как было" от 2026-07-20, использованная как baseline для самого
+Roundtable #1 — читать с этим пониманием, не как текущую архитектуру.
+
+`docs/architecture/erm.drawio` — **актуально поддерживается**, не
+исторический чекпоинт: каждое архитектурно значимое решение с
+`LR-ADR-021` (2026-08-09, эпик "Курсы") обновляет этот файл в том же
+диффе (см. Consequences-секции `LR-ADR-021`..`LR-ADR-023`). Доверять как
+текущей истине, но — как и любому артефакту — стоит проверить дату
+последнего связанного ADR, если диф выглядит подозрительно старым.
+
+`docs/infra/infrastructure_scheme.drawio` (путь исправлен — раньше здесь
+ошибочно стоял `docs/architecture/infrastructure_scheme.drawio`, файла
+там нет) — актуальность НЕ проверена в рамках этого аудита, статус
+неизвестен, не приравнивать к erm.drawio.
 
 ## Ticket risk tiers — match ceremony to actual risk
 Указывай tier в первом ответе по тикету.
@@ -101,7 +116,9 @@ ADR-уровневое решение, результат будет зафик�
   ОБЯЗАТЕЛЕН перед approval.
 - **INFRA** — касается k8s-манифестов, Cloudflare Tunnel, GitLab CI/CD,
   Proxmox/VM-конфигурации: **обязательно** свериться с
-  `docs/ops/infra-fix-shutdown.md`, никаких изменений сетевых/firewall правил
+  `docs/runbooks/infra-fix-shutdown.md` (путь исправлен 2026-08-13 —
+  `docs/ops/` не существует с 2026-07-20, см. docs/README.md), никаких
+  изменений сетевых/firewall правил
   без явного проговаривания последствий. Мы уже словили один серьёзный
   инцидент (power outage → каскад из 7 независимых поломок) — ceremony здесь
   оправдана.
@@ -151,18 +168,25 @@ Edit/Write на `docs/tickets/tickets.md`, `docs/tickets/archive.md` и
    закреплено правилом `ask` в settings.local.json.
 
 ## Build & verify
-- Backend: **Gradle** (подтверждено 2026-07-20 — `build.gradle`, `gradlew`,
-  CI использует `gradle:8.5-jdk21`), `./gradlew build`, package `com.be`,
-  Java 21, Spring Boot 3.5.7. ⚠️ CI (`build-backend` job) сейчас вызывает
-  только `./gradlew bootJar` — тесты (`BackendApplicationTests`,
-  `PasswordEncoderTest`, Testcontainers) существуют в `src/test/`, но
-  никогда не выполняются в пайплайне — см. тикет LR-002.
-- Frontend: статический HTML/CSS/JS — нет build-шага пока не появится
-  bundler; если добавят (Vite/etc, кандидат на замену всего фронтенда —
-  Svelte, см. Known open item выше) — обновить этот раздел.
-- DB-схема: **нет ни Flyway, ни Liquibase** — `spring.jpa.hibernate.ddl-auto=update`
-  + рантайм-костыль `DatabaseFixConfig` (см. KNOWN_ISSUES.md). Не добавлять
-  новые ALTER-в-коде по этому паттерну для новых изменений схемы — см.
-  CODING_PROTOCOL.md запрещённые паттерны.
+**Обновлено 2026-08-13 (артефакт-аудит)** — предыдущая версия описывала
+состояние на 2026-07-20/22, до эпика "Курсы" и полной пересборки
+фронтенда; проверено против реального кода/CI/`decisions.md`.
+
+- Backend: **Gradle** (`build.gradle`, `gradlew`, CI — `gradle:8.5-jdk21`),
+  `./gradlew build`, package `com.be`, Java 21, Spring Boot 3.5.7.
+  27 тестовых файлов в `src/test/java` на 2026-08-13 (юнит + Testcontainers-
+  интеграционные), локально зелёные. ⚠️ **Всё ещё актуально, не устарело:**
+  CI (`build-backend`) вызывает только `./gradlew bootJar` — тесты в
+  пайплайне не выполняются вообще, ни разу, до сих пор (подтверждено
+  прямым чтением `.gitlab-ci.yml` и открытого тикета `LR-002`, п.1
+  явно помечен "не устранено в CI"). Каждый прогон тестов этой сессией
+  был только локальным — реальная защита от регрессии в CI отсутствует.
+- Frontend: **SvelteKit** (`frontend-svelte/`, `adapter-static`, SPA-fallback
+  mode) — `npm run build`/`npm run check`/`npm test` (vitest). Старый
+  статический MPA — история, см. `LR-ADR-001`.
+- DB-схема: **Flyway**, `backend/src/main/resources/db/migration/`,
+  `V1__baseline.sql` .. `V10__...` на 2026-08-13 (`LR-ADR-003`). Раньше
+  здесь стоял `ddl-auto=update` + `DatabaseFixConfig` — оба убраны, не
+  актуальны, не предлагать их паттерн для новых изменений схемы.
 - Деньги/платежи: если появится платёжный домен — тесты сумм только через
   `BigDecimal`, никогда через `float`/`double` сравнение (см. CODING_PROTOCOL §forbidden).

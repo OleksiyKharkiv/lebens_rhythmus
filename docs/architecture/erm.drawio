@@ -73,9 +73,12 @@
         <mxCell id="FB" value="Feedback" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
           <mxGeometry x="-200" y="-90" width="100" height="40" as="geometry" />
         </mxCell>
-        <mxCell id="4" value="Payment Method" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="-50" y="450" width="100" height="40" as="geometry" />
-        </mxCell>
+        <!-- "Payment Method" node removed 2026-08-13 (artefact-audit): no
+             PaymentMethod entity exists in code. Payment.java only has a
+             free-text methodName field, with its own comment marking this
+             "useful until the PaymentMethod entity is implemented" — i.e.
+             genuinely not built yet, not a diagram-vs-code drift to paper
+             over. Re-add when/if that entity ships. -->
         <mxCell id="13" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="O" target="PY" edge="1">
           <mxGeometry width="100" height="100" relative="1" as="geometry">
             <mxPoint x="120" y="490" as="sourcePoint" />
@@ -121,25 +124,20 @@
             </Array>
           </mxGeometry>
         </mxCell>
-        <mxCell id="23" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="V" target="W" edge="1">
+        <mxCell id="23" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="V" target="G" edge="1">
           <mxGeometry width="100" height="100" relative="1" as="geometry">
             <mxPoint x="545" y="430" as="sourcePoint" />
             <mxPoint x="670" y="400" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="24" value="ActivityGroup" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="460" y="20" width="100" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="26" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="G" target="24" edge="1">
+        <!-- LR-015 (2026-08-05): venue moved Workshop -> Group. This edge
+             pointed at Workshop until artefact-audit 2026-08-13 found the
+             drift (Workshop.java itself documents the move in a comment;
+             the diagram was never updated). -->
+        <mxCell id="26" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;" parent="1" source="G" target="A" edge="1">
           <mxGeometry width="100" height="100" relative="1" as="geometry">
             <mxPoint x="280" y="-100" as="sourcePoint" />
             <mxPoint x="280" y="-30" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="27" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="4" target="PY" edge="1">
-          <mxGeometry width="100" height="100" relative="1" as="geometry">
-            <mxPoint x="40" y="550" as="sourcePoint" />
-            <mxPoint x="20" y="400" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="30" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0.75;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="U" target="P" edge="1">
@@ -154,49 +152,30 @@
             <mxPoint x="-140" y="470" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="32" value="ParticipantGroup" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="280" y="190" width="100" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="33" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="P" target="32" edge="1">
-          <mxGeometry width="100" height="100" relative="1" as="geometry">
-            <mxPoint x="-105" y="70" as="sourcePoint" />
-            <mxPoint x="100" y="220" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="34" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="G" target="32" edge="1">
+        <!-- ActivityGroup/ParticipantGroup/GroupWorkshop/TeacherWorkshop
+             join-entity nodes removed 2026-08-13 (artefact-audit) — none
+             were ever implemented (grep over domain/entity/ found zero
+             matching classes); real code uses direct FKs on Group
+             (Workshop.java:82 itself documents "In the ERM there is a
+             separate GroupWorkshop entity — it needs to be implemented.
+             Here simplified"). Edges below replace them with the real
+             direct relationships. -->
+        <mxCell id="34" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="G" target="P" edge="1">
           <mxGeometry width="100" height="100" relative="1" as="geometry">
             <mxPoint x="-115" y="10" as="sourcePoint" />
             <mxPoint x="90" y="160" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="35" value="GroupWorkshop" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="460" y="290" width="100" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="36" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="G" target="35" edge="1">
+        <mxCell id="36" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="G" target="W" edge="1">
           <mxGeometry width="100" height="100" relative="1" as="geometry">
             <mxPoint x="470" y="220" as="sourcePoint" />
             <mxPoint x="370" y="220" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="37" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=1;entryDx=0;entryDy=0;" parent="1" source="W" target="35" edge="1">
-          <mxGeometry width="100" height="100" relative="1" as="geometry">
-            <mxPoint x="520" y="240" as="sourcePoint" />
-            <mxPoint x="520" y="300" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="38" value="TeacherWorkshop" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="300" y="420" width="100" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="39" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="T" target="38" edge="1">
+        <mxCell id="39" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="T" target="G" edge="1">
           <mxGeometry width="100" height="100" relative="1" as="geometry">
             <mxPoint x="200" y="220" as="sourcePoint" />
             <mxPoint x="270" y="220" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="40" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="W" target="38" edge="1">
-          <mxGeometry width="100" height="100" relative="1" as="geometry">
-            <mxPoint x="470" y="220" as="sourcePoint" />
-            <mxPoint x="390" y="360" as="targetPoint" />
           </mxGeometry>
         </mxCell>
         <mxCell id="42" value="UserNotification" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
@@ -220,27 +199,15 @@
             <mxPoint x="-140" y="-40" as="targetPoint" />
           </mxGeometry>
         </mxCell>
-        <mxCell id="48" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="A" target="24" edge="1">
-          <mxGeometry width="100" height="100" relative="1" as="geometry">
-            <mxPoint x="60" y="-40" as="sourcePoint" />
-            <mxPoint x="60" y="30" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="49" value="ParticipantPerformance" style="rounded=1;whiteSpace=wrap;html=1;" parent="1" vertex="1">
-          <mxGeometry x="75" y="590" width="130" height="40" as="geometry" />
-        </mxCell>
-        <mxCell id="50" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="P" target="49" edge="1">
-          <mxGeometry width="100" height="100" relative="1" as="geometry">
-            <mxPoint x="-140" y="360" as="sourcePoint" />
-            <mxPoint x="-140" y="460" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
-        <mxCell id="51" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="PF" target="49" edge="1">
-          <mxGeometry width="100" height="100" relative="1" as="geometry">
-            <mxPoint x="660" y="450" as="sourcePoint" />
-            <mxPoint x="570" y="450" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
+        <!-- Edge 48 (Activity -> ActivityGroup) and node/edges 49-51
+             (ParticipantPerformance, fed by Participant and Performance)
+             removed 2026-08-13 (artefact-audit). ActivityGroup itself was
+             already removed above (see the comment near edge 26) — this
+             was its other dangling half. ParticipantPerformance has zero
+             backing: Performance.java:55 keeps the field as a commented-out
+             `// private List<ParticipantPerformance> ...`, never active.
+             No direct-FK replacement exists for either — nothing to draw
+             until the underlying feature is actually built. -->
         <mxCell id="52" value="" style="edgeStyle=orthogonalEdgeStyle;fontSize=12;html=1;endArrow=ERoneToMany;rounded=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;entryX=0.75;entryY=1;entryDx=0;entryDy=0;" edge="1" parent="1" source="O" target="W">
           <mxGeometry width="100" height="100" relative="1" as="geometry">
             <mxPoint x="-200" y="360" as="sourcePoint" />

@@ -3,6 +3,7 @@ package com.be.service;
 import com.be.domain.entity.*;
 import com.be.domain.repository.*;
 import com.be.web.dto.request.GroupCreateDTO;
+import com.be.web.dto.request.GroupUpdateDTO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -44,10 +45,12 @@ class GroupServiceTest {
     private AgeGroupRepository ageGroupRepository;
     @Mock
     private CourseRepository courseRepository;
+    @Mock
+    private LanguageRepository languageRepository;
 
     private GroupService service() {
         return new GroupService(groupRepository, workshopRepository, teacherRepository,
-                activityRepository, venueRepository, ageGroupRepository, courseRepository);
+                activityRepository, venueRepository, ageGroupRepository, courseRepository, languageRepository);
     }
 
     @Test
@@ -118,5 +121,105 @@ class GroupServiceTest {
         assertThat(created.getActivity()).isNull();
         assertThat(created.getVenue()).isNull();
         assertThat(created.getAgeGroup()).isNull();
+    }
+
+    /**
+     * Artefact-audit 2026-08-14 — update() used to bind {@code @RequestBody
+     * Group} directly (the last raw-entity gap on this controller); these
+     * cover the new GroupUpdateDTO-based resolution logic, mirroring the
+     * createGroup tests above.
+     */
+    @Test
+    void update_resolvesAllReferencedIdsToRealEntities() {
+        Group existing = Group.builder().id(1L).titleDe("Old").titleEn("Old").titleUa("Old").capacity(5).build();
+        Teacher teacher = Teacher.builder().id(2L).build();
+        Activity activity = Activity.builder().id(3L).build();
+        Venue venue = Venue.builder().id(4L).build();
+        AgeGroup ageGroup = AgeGroup.builder().id(5L).build();
+        Language language = Language.builder().id(6L).build();
+
+        when(groupRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(teacherRepository.findById(2L)).thenReturn(Optional.of(teacher));
+        when(activityRepository.findById(3L)).thenReturn(Optional.of(activity));
+        when(venueRepository.findById(4L)).thenReturn(Optional.of(venue));
+        when(ageGroupRepository.findById(5L)).thenReturn(Optional.of(ageGroup));
+        when(languageRepository.findById(6L)).thenReturn(Optional.of(language));
+        when(groupRepository.save(any(Group.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        GroupUpdateDTO dto = GroupUpdateDTO.builder()
+                .titleDe("Kinder Tanz").titleEn("Kids Dance").titleUa("Дитячий танець")
+                .capacity(12)
+                .startDateTime(LocalDateTime.now().plusDays(1))
+                .teacherId(2L).activityId(3L).venueId(4L).ageGroupId(5L).languageId(6L)
+                .active(true)
+                .build();
+
+        Group updated = service().update(1L, dto);
+
+        assertThat(updated.getTeacher()).isEqualTo(teacher);
+        assertThat(updated.getActivity()).isEqualTo(activity);
+        assertThat(updated.getVenue()).isEqualTo(venue);
+        assertThat(updated.getAgeGroup()).isEqualTo(ageGroup);
+        assertThat(updated.getLanguage()).isEqualTo(language);
+        assertThat(updated.getCapacity()).isEqualTo(12);
+    }
+
+    // Same bug class as CourseService/WorkshopService this same session:
+    // skip-if-null left a previously-set relation silently un-removable on
+    // update. Authoritative-on-every-field fixes it here too.
+    @Test
+    void update_withNullIds_clearsPreviouslySetRelations() {
+        Teacher oldTeacher = Teacher.builder().id(2L).build();
+        Group existing = Group.builder().id(1L).titleDe("X").titleEn("X").titleUa("X").capacity(5)
+                .teacher(oldTeacher)
+                .activity(Activity.builder().id(3L).build())
+                .venue(Venue.builder().id(4L).build())
+                .ageGroup(AgeGroup.builder().id(5L).build())
+                .language(Language.builder().id(6L).build())
+                .build();
+
+        when(groupRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(groupRepository.save(any(Group.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        GroupUpdateDTO dto = GroupUpdateDTO.builder()
+                .titleDe("X").titleEn("X").titleUa("X")
+                .capacity(5)
+                .startDateTime(LocalDateTime.now().plusDays(1))
+                .active(true)
+                .build();
+
+        Group updated = service().update(1L, dto);
+
+        assertThat(updated.getTeacher()).isNull();
+        assertThat(updated.getActivity()).isNull();
+        assertThat(updated.getVenue()).isNull();
+        assertThat(updated.getAgeGroup()).isNull();
+        assertThat(updated.getLanguage()).isNull();
+    }
+
+    // LR-081 (LR-ADR-023) — same guard as createGroup, adapted to update()'s
+    // reality: workshop can't be reassigned here, so the only way both end
+    // up set is linking a course onto an already workshop-linked group.
+    @Test
+    void update_withCourseIdOnWorkshopLinkedGroup_throws() {
+        Workshop workshop = Workshop.builder().id(1L).build();
+        Group existing = Group.builder().id(1L).titleDe("X").titleEn("X").titleUa("X").capacity(5)
+                .workshop(workshop)
+                .build();
+        Course course = Course.builder().id(9L).build();
+
+        when(groupRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(courseRepository.findById(9L)).thenReturn(Optional.of(course));
+
+        GroupUpdateDTO dto = GroupUpdateDTO.builder()
+                .titleDe("X").titleEn("X").titleUa("X")
+                .capacity(5)
+                .startDateTime(LocalDateTime.now().plusDays(1))
+                .courseId(9L)
+                .active(true)
+                .build();
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service().update(1L, dto))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 }

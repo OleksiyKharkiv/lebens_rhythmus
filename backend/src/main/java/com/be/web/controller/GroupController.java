@@ -5,6 +5,7 @@ import com.be.domain.entity.Group;
 import com.be.service.GroupService;
 import com.be.service.TeacherService;
 import com.be.web.dto.request.GroupCreateDTO;
+import com.be.web.dto.request.GroupUpdateDTO;
 import com.be.web.dto.response.GroupDTO;
 import com.be.web.mapper.GroupMapper;
 import jakarta.validation.Valid;
@@ -63,12 +64,13 @@ public class GroupController {
         return groupMapper.toDto(created);
     }
 
+    // Artefact-audit 2026-08-14 — was @RequestBody Group (raw entity, same
+    // mass-assignment class as LR-030's createGroup fix), now GroupUpdateDTO.
     @PutMapping("/{id}")
     @ResponseStatus(HttpStatus.OK)
     @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
-    public GroupDTO updateGroup(@PathVariable Long id, @RequestBody Group group) {
-        group.setId(id);
-        Group updated = groupService.update(group);
+    public GroupDTO updateGroup(@PathVariable Long id, @Valid @RequestBody GroupUpdateDTO dto) {
+        Group updated = groupService.update(id, dto);
         return groupMapper.toDto(updated);
     }
 

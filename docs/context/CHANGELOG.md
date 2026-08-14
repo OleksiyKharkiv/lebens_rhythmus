@@ -2,6 +2,46 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-14 — refactor+security: артефакт-аудит — `LR-ADR-005` компромисс закреплён, `erm.drawio` актуализирован, последняя mass-assignment дыра на `Group` закрыта
+
+### Область (`docs/architecture/{decisions.md,erm.drawio}`, `docs/context/{CLAUDE.md,CODING_PROTOCOL.md}`, `docs/decision-history/roundtable-log.md` (список grep-only), `backend/src/main/java/com/be/{service/GroupService.java,web/controller/GroupController.java,web/dto/request/GroupUpdateDTO.java (new)}`, `backend/src/test/java/com/be/service/GroupServiceTest.java`, `frontend-svelte/src/{lib/api.ts,routes/admin/{courses,groups}/+page.svelte}`)
+
+- **refactor (архитектурное решение, не код)** — предложенный полный
+  domain/persistence-split по Мартину для `Group`/`Workshop` (5 новых
+  файлов на сущность: `domain/model`, переименованный `*Entity`, порт,
+  адаптер, маппер) представлен владельцу и **осознанно отклонён** —
+  цена не оправдана теоретической (не практической) пользой при
+  зафиксированном стеке Java/Spring/Postgres. `LR-ADR-005` дополнен
+  апдейтом 2026-08-14: JPA-аннотации в `entity/` — норма для всех
+  сущностей, аксиомы про Spring/Postgres/будущие изолированные БД-модули
+  зафиксированы явно. `CODING_PROTOCOL.md`'s "непроверенное допущение"
+  предупреждение снято — решение теперь явное, не черновик.
+- **security (найдено при аудите, не живой инцидент)** — последняя
+  `@RequestBody`-на-сырую-сущность дыра на этом контроллере:
+  `GroupController.updateGroup` биндил `Group` напрямую (тот же класс
+  риска, что `LR-030` уже закрыл на `createGroup` — крафченный
+  `enrollments`-массив мог re-parent'ить чужой Enrollment,
+  `CascadeType.ALL`+`orphanRemoval=true`). Заменено на `GroupUpdateDTO`
+  (flat ids, без `workshopId` — реассайн воркшопа на update и раньше не
+  поддерживался). Заодно применён authoritative-clear-on-null паттерн
+  (id отсутствует → явно `null`, не skip) — тот же баг-класс, что нашёлся
+  живьём в `CourseService`/`WorkshopService` этой же сессией. Frontend
+  (`admin/courses`, `admin/groups`) синхронизирован — оба места слали
+  вложенные `{id}`-объекты, теперь flat id, добавлен `toUpdateRequest()`
+  зеркально уже существующему `toCreateRequest()`.
+- **refactor (docs)** — `erm.drawio`: `Venue→Workshop` ребро (устарело с
+  `LR-015`) исправлено на `Venue→Group`; добавлено прямое `Group→Workshop`
+  ребро (не было вообще); 4 фантомных join-сущности без backing-кода
+  (`ActivityGroup`, `ParticipantGroup`, `GroupWorkshop`, `TeacherWorkshop`)
+  заменены прямыми FK-рёбрами; 2 неимплементированных узла (`Payment
+  Method`, `ParticipantPerformance` — оба подтверждены закомментированными/
+  free-text в реальном коде) удалены без замены. XML провалидирован,
+  висячих ссылок нет. `roundtable-log.md` добавлен в grep-only список.
+- **verify** — `./gradlew compileTestJava`/`test --tests GroupServiceTest`
+  зелёные (3 новых теста: resolve, authoritative-clear, mutual-exclusivity
+  guard); `npm run check` 0 ошибок; `npm test` 13/13.
+- **docs** — `architect-reviewer` на этот дифф см. следующую запись/коммит.
+
 ## 2026-08-11 — feat: LR-073 закрыт — admin-страница Teachers + фикс `@Pattern`-бага на пустом телефоне (3 DTO)
 
 ### Область (`frontend-svelte/src/{lib/api.ts,routes/admin/{teachers/+page.svelte (new),+layout.svelte}}`, `frontend-svelte/messages/{de,en,uk}.json`, `backend/src/main/java/com/be/web/dto/request/{TeacherRequestDTO,UserUpdateDTO,ParticipantRequestDTO}.java`, `backend/src/test/java/com/be/web/dto/request/RequestDtoValidationTest.java`, `docs/tickets/{tickets.md,archive.md}`)

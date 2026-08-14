@@ -4,6 +4,7 @@ import com.be.domain.entity.Activity;
 import com.be.domain.entity.AgeGroup;
 import com.be.domain.entity.Course;
 import com.be.domain.entity.Group;
+import com.be.domain.entity.Language;
 import com.be.domain.entity.Participant;
 import com.be.domain.entity.Teacher;
 import com.be.domain.entity.Venue;
@@ -12,10 +13,12 @@ import com.be.domain.repository.ActivityRepository;
 import com.be.domain.repository.AgeGroupRepository;
 import com.be.domain.repository.CourseRepository;
 import com.be.domain.repository.GroupRepository;
+import com.be.domain.repository.LanguageRepository;
 import com.be.domain.repository.TeacherRepository;
 import com.be.domain.repository.VenueRepository;
 import com.be.domain.repository.WorkshopRepository;
 import com.be.web.dto.request.GroupCreateDTO;
+import com.be.web.dto.request.GroupUpdateDTO;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -34,6 +37,7 @@ public class GroupService {
     private final VenueRepository venueRepository;
     private final AgeGroupRepository ageGroupRepository;
     private final CourseRepository courseRepository;
+    private final LanguageRepository languageRepository;
 
     @Transactional(readOnly = true)
     public List<Group> findAll() {
@@ -116,48 +120,85 @@ public class GroupService {
     }
 
     /**
-     * Updates group properties then persists changes
+     * Updates group properties then persists changes.
+     * <p>
+     * Artefact-audit 2026-08-14 — replaced the old {@code update(Group group)}
+     * that bound {@code @RequestBody Group} directly (the last raw-entity gap
+     * on this controller; createGroup was already fixed this way, LR-030).
+     * A crafted body could set {@code capacityLeft} directly, or reference an
+     * existing Enrollment's id inside a crafted {@code enrollments} array to
+     * re-parent it onto this group ({@code Group.enrollments} is
+     * {@code CascadeType.ALL}, {@code orphanRemoval=true}). No workshopId —
+     * group -&gt; workshop reassignment was never supported here, unaffected.
      */
     @Transactional
-    public Group update(Group group) {
-        Group existingGroup = findById(group.getId());
+    public Group update(Long id, GroupUpdateDTO dto) {
+        Group existingGroup = findById(id);
 
-        // LR-081 (LR-ADR-023) — same guard as createGroup above; this
-        // path binds the raw entity, so `group.getWorkshop()`/`getCourse()`
-        // reflect whatever the client sent (nested {id} objects, or null).
-        if (group.getWorkshop() != null && group.getCourse() != null) {
+        Course course = null;
+        if (dto.getCourseId() != null) {
+            course = courseRepository.findById(dto.getCourseId())
+                    .orElseThrow(() -> new EntityNotFoundException("Course not found with id: " + dto.getCourseId()));
+        }
+        // LR-081 (LR-ADR-023) — same guard as createGroup; workshop
+        // reassignment isn't supported here (see method javadoc above), so
+        // the only way both could end up set is linking a course onto a
+        // group that already belongs to a workshop.
+        if (existingGroup.getWorkshop() != null && course != null) {
             throw new IllegalArgumentException("Group cannot be linked to both a Workshop and a Course");
         }
 
-        existingGroup.setTitleDe(group.getTitleDe());
-        existingGroup.setTitleEn(group.getTitleEn());
-        existingGroup.setTitleUa(group.getTitleUa());
-        existingGroup.setCapacity(group.getCapacity());
-        // startDateTime/endDateTime were missing here entirely — editing a
-        // group's schedule silently had no effect (found while building the
-        // admin Groups page, LR-008). `workshop` reassignment on edit is
-        // deliberately NOT added here — that's a bigger decision (does
-        // moving a group to a different workshop need to touch existing
-        // enrollments?) than a same-shape field copy, left for a separate
-        // ticket rather than decided here.
-        existingGroup.setStartDateTime(group.getStartDateTime());
-        existingGroup.setEndDateTime(group.getEndDateTime());
-        existingGroup.setActivity(group.getActivity());
-        existingGroup.setAgeGroup(group.getAgeGroup());
-        existingGroup.setLanguage(group.getLanguage());
-        existingGroup.setTeacher(group.getTeacher());
-        // LR-015 — was missing entirely, unlike the other relations right
-        // above it: editing an existing group's venue silently no-op'd on
-        // save (found while wiring the admin Groups venue select).
-        existingGroup.setVenue(group.getVenue());
-        existingGroup.setActive(group.isActive());
-        // LR-081 — same "copy every field explicitly" discipline as the
-        // rest of this method (LR-008/LR-015's own lesson: a field left
-        // out here silently no-ops on save).
-        existingGroup.setCourse(group.getCourse());
-        existingGroup.setRecurrenceDays(group.getRecurrenceDays());
-        existingGroup.setRecurrenceStartDate(group.getRecurrenceStartDate());
-        existingGroup.setRecurrenceEndDate(group.getRecurrenceEndDate());
+        existingGroup.setTitleDe(dto.getTitleDe());
+        existingGroup.setTitleEn(dto.getTitleEn());
+        existingGroup.setTitleUa(dto.getTitleUa());
+        existingGroup.setCapacity(dto.getCapacity() != null ? dto.getCapacity() : existingGroup.getCapacity());
+        existingGroup.setStartDateTime(dto.getStartDateTime());
+        existingGroup.setEndDateTime(dto.getEndDateTime());
+        existingGroup.setActive(dto.isActive());
+        existingGroup.setCourse(course);
+        existingGroup.setRecurrenceDays(dto.getRecurrenceDays());
+        existingGroup.setRecurrenceStartDate(dto.getRecurrenceStartDate());
+        existingGroup.setRecurrenceEndDate(dto.getRecurrenceEndDate());
+
+        // Authoritative on every field below (id present -> resolve and set,
+        // absent -> clear) — NOT skip-if-null. Skip-if-null was the exact bug
+        // found live in CourseService/WorkshopService this same session
+        // (teacher/ageGroup silently un-removable on update); same fix here.
+        if (dto.getActivityId() != null) {
+            Activity activity = activityRepository.findById(dto.getActivityId())
+                    .orElseThrow(() -> new EntityNotFoundException("Activity not found with id: " + dto.getActivityId()));
+            existingGroup.setActivity(activity);
+        } else {
+            existingGroup.setActivity(null);
+        }
+        if (dto.getAgeGroupId() != null) {
+            AgeGroup ageGroup = ageGroupRepository.findById(dto.getAgeGroupId())
+                    .orElseThrow(() -> new EntityNotFoundException("Age group not found with id: " + dto.getAgeGroupId()));
+            existingGroup.setAgeGroup(ageGroup);
+        } else {
+            existingGroup.setAgeGroup(null);
+        }
+        if (dto.getLanguageId() != null) {
+            Language language = languageRepository.findById(dto.getLanguageId())
+                    .orElseThrow(() -> new EntityNotFoundException("Language not found with id: " + dto.getLanguageId()));
+            existingGroup.setLanguage(language);
+        } else {
+            existingGroup.setLanguage(null);
+        }
+        if (dto.getTeacherId() != null) {
+            Teacher teacher = teacherRepository.findById(dto.getTeacherId())
+                    .orElseThrow(() -> new EntityNotFoundException("Teacher not found with id: " + dto.getTeacherId()));
+            existingGroup.setTeacher(teacher);
+        } else {
+            existingGroup.setTeacher(null);
+        }
+        if (dto.getVenueId() != null) {
+            Venue venue = venueRepository.findById(dto.getVenueId())
+                    .orElseThrow(() -> new EntityNotFoundException("Venue not found with id: " + dto.getVenueId()));
+            existingGroup.setVenue(venue);
+        } else {
+            existingGroup.setVenue(null);
+        }
 
         return groupRepository.save(existingGroup);
     }
