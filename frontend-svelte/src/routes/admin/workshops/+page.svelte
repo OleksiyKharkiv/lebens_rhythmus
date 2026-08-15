@@ -26,6 +26,9 @@
 	let error = $state(false);
 	let editingId = $state<number | null>(null);
 	let saving = $state(false);
+	// UI restructure 2026-08-15 — form is hidden by default; "Create new"
+	// button shows it blank, "Edit" on a list card shows it pre-filled.
+	let showForm = $state(false);
 
 	const blank: WorkshopCreateDTO = {
 		title: '',
@@ -53,6 +56,7 @@
 
 	async function startEdit(w: WorkshopListItem) {
 		editingId = w.id;
+		showForm = true;
 		const detail = await getWorkshop(w.id);
 		form = {
 			title: detail.title,
@@ -69,6 +73,12 @@
 	function cancelEdit() {
 		editingId = null;
 		form = { ...blank };
+		showForm = false;
+	}
+
+	function startCreate() {
+		cancelEdit();
+		showForm = true;
 	}
 
 	async function handleSubmit(e: SubmitEvent) {
@@ -96,6 +106,14 @@
 
 <h1 class="font-display text-3xl font-semibold text-paper">{m.admin_nav_workshops()}</h1>
 
+<!-- UI restructure 2026-08-15 — button first, form only while creating/editing. -->
+{#if !showForm}
+	<div class="mt-6">
+		<Button onclick={startCreate} fullWidth={false}>{m.admin_create_new()}</Button>
+	</div>
+{/if}
+
+{#if showForm}
 <Card>
 	<form onsubmit={handleSubmit}>
 		<h2 class="font-display text-lg font-semibold text-paper">
@@ -196,6 +214,7 @@
 		</div>
 	</form>
 </Card>
+{/if}
 
 {#if error}
 	<p class="mt-8 text-error">{m.state_error()}</p>

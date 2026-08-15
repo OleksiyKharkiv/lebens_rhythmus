@@ -36,6 +36,9 @@
 	let error = $state(false);
 	let editingId = $state<number | null>(null);
 	let saving = $state(false);
+	// UI restructure 2026-08-15 — form is hidden by default; "Create new"
+	// button shows it blank, "Edit" on a list card shows it pre-filled.
+	let showForm = $state(false);
 
 	const blank: GroupWriteDTO = {
 		titleDe: '',
@@ -106,6 +109,7 @@
 
 	async function startEdit(g: GroupDTO) {
 		editingId = g.id;
+		showForm = true;
 		form = {
 			titleDe: g.titleDe,
 			titleEn: g.titleEn,
@@ -149,6 +153,12 @@
 		editingId = null;
 		form = { ...blank };
 		days = [blankDay()];
+		showForm = false;
+	}
+
+	function startCreate() {
+		cancelEdit();
+		showForm = true;
 	}
 
 	// LR-030 — POST /groups takes flat ids (backend: GroupCreateDTO), not
@@ -244,6 +254,14 @@
 
 <h1 class="font-display text-3xl font-semibold text-paper">{m.admin_nav_groups()}</h1>
 
+<!-- UI restructure 2026-08-15 — button first, form only while creating/editing. -->
+{#if !showForm}
+	<div class="mt-6">
+		<Button onclick={startCreate} fullWidth={false}>{m.admin_create_new()}</Button>
+	</div>
+{/if}
+
+{#if showForm}
 <Card>
 	<form onsubmit={handleSubmit}>
 		<h2 class="font-display text-lg font-semibold text-paper">
@@ -417,6 +435,7 @@
 		</div>
 	</form>
 </Card>
+{/if}
 
 {#if error}
 	<p class="mt-8 text-error">{m.state_error()}</p>
