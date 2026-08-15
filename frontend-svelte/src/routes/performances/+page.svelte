@@ -21,7 +21,7 @@
 	<title>{m.site_name()} — {m.performances_title()}</title>
 </svelte:head>
 
-<section class="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+<section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
 	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{m.performances_title()}</h1>
 
 	{#if error}
@@ -37,7 +37,7 @@
 					<h2 class="font-display text-xl font-semibold text-paper">{perf.title}</h2>
 					<p class="mt-1 text-sm text-paper-dim">{formatDateTime(perf.performanceDate)}</p>
 					{#if perf.venue}<p class="text-sm text-paper-dim">{perf.venue}</p>{/if}
-					{#if perf.description}<p class="mt-2 text-paper-dim">{perf.description}</p>{/if}
+					{#if perf.description}<p class="mt-2 text-lg text-paper-dim">{perf.description}</p>{/if}
 				</Card>
 			{/each}
 		</div>

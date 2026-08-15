@@ -34,7 +34,7 @@
 	<title>{m.site_name()} — {course?.titleDe ?? m.courses_title()}</title>
 </svelte:head>
 
-<section class="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+<section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
 	{#if error}
 		<p class="text-error">{m.state_error()}</p>
 	{:else if course === null}
@@ -52,7 +52,7 @@
 			style={course.backgroundImageUrl ? `background-image: url('${course.backgroundImageUrl}')` : undefined}
 		>
 			{#if course.descriptionDe}
-				<p class="whitespace-pre-line leading-relaxed text-paper-dim">{course.descriptionDe}</p>
+				<p class="whitespace-pre-line text-lg leading-relaxed text-paper-dim">{course.descriptionDe}</p>
 			{/if}
 		</div>
 

@@ -54,7 +54,7 @@
 	<title>{m.site_name()} — {workshop?.title ?? m.workshops_title()}</title>
 </svelte:head>
 
-<section class="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+<section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
 	{#if error}
 		<p class="text-error">{m.state_error()}</p>
 	{:else if workshop === null}
@@ -64,7 +64,7 @@
 		<!-- whitespace-pre-line (2026-08-14, same fix as courses/[id]) — plain
 		     HTML text collapses newlines/blank lines by default; this
 		     preserves the admin's paragraph breaks without a rich-text editor. -->
-		{#if workshop.description}<p class="mt-4 whitespace-pre-line leading-relaxed text-paper-dim">{workshop.description}</p>{/if}
+		{#if workshop.description}<p class="mt-4 whitespace-pre-line text-lg leading-relaxed text-paper-dim">{workshop.description}</p>{/if}
 
 		<dl class="mt-6 grid grid-cols-2 gap-4 text-sm text-paper-dim">
 			{#if workshop.startDate}

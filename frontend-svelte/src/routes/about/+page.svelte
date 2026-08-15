@@ -6,7 +6,7 @@
 	<title>{m.site_name()} — {m.about_title()}</title>
 </svelte:head>
 
-<section class="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+<section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
 	<h1 class="font-display text-4xl font-semibold text-paper sm:text-5xl">{m.about_title()}</h1>
 	<p class="mt-4 font-display text-lg text-teal">{m.about_subtitle()}</p>
 

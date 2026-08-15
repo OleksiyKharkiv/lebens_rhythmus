@@ -8,7 +8,7 @@
 	<title>{m.site_name()} — {m.corporate_title()}</title>
 </svelte:head>
 
-<section class="mx-auto max-w-3xl px-6 py-16 sm:py-24">
+<section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
 	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{m.corporate_title()}</h1>
 	<p class="mt-4 text-lg text-paper-dim">{m.corporate_intro()}</p>
 
