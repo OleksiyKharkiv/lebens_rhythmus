@@ -1,6 +1,6 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"site_name": "Lebens Rhythmus",
+	"site_name": "Theater Lab 29",
 	"nav_home": "Home",
 	"nav_about": "About",
 	"nav_login": "Log in",
@@ -23,7 +23,7 @@
 	"home_direction_gymnastics_desc": "Flexibility, strength, balance.",
 
 	"about_title": "About TLab29",
-	"about_subtitle": "Theaterlabor 29 and the Lebens Rhythmus project",
+	"about_subtitle": "Theaterlabor 29",
 	"about_body_1": "TLab29 is a place where adults of any age discover their creative potential through theatre, dance and movement work.",
 	"about_body_2": "We create space and atmosphere for genuine artistic expression — no prior experience needed, no stage fright, just curiosity.",
 

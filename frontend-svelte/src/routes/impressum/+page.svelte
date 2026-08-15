@@ -20,7 +20,7 @@
 		<div>
 			<h2 class="font-display text-lg font-semibold text-paper">Angaben gemäß § 5 TMG</h2>
 			<p class="mt-2"><strong class="text-paper">Olena Khudoshyna</strong></p>
-			<p>Lebens Rhythmus – Studio für kreative Entwicklung</p>
+			<p>Theater Lab 29 – Studio für kreative Entwicklung</p>
 			<p>Ritterspornweg 1<br />50129 Bergheim<br />Deutschland</p>
 		</div>
 
@@ -68,7 +68,7 @@
 	</div>
 
 	<p class="mt-12 text-xs text-paper-dim/70">
-		© 2026 Lebens Rhythmus. Alle Rechte vorbehalten. Die Inhalte dieser Website sind urheberrechtlich
+		© 2026 Theater Lab 29. Alle Rechte vorbehalten. Die Inhalte dieser Website sind urheberrechtlich
 		geschützt.
 	</p>
 </section>

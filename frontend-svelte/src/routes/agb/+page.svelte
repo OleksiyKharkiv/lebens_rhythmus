@@ -9,13 +9,13 @@
 
 <section class="mx-auto max-w-2xl px-6 py-16 sm:py-24">
 	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">Allgemeine Geschäftsbedingungen</h1>
-	<p class="mt-2 text-paper-dim">Lebens Rhythmus – Studio für kreative Entwicklung</p>
+	<p class="mt-2 text-paper-dim">Theater Lab 29 – Studio für kreative Entwicklung</p>
 
 	<div class="mt-10 space-y-8 text-paper-dim">
 		<div>
 			<h2 class="font-display text-lg font-semibold text-paper">1. Geltungsbereich &amp; Widerrufsrecht</h2>
 			<p class="mt-2">
-				1.1 Für alle Geschäftsbeziehungen zwischen dem Betreiber des Studios „Lebens Rhythmus"
+				1.1 Für alle Geschäftsbeziehungen zwischen dem Betreiber des Studios „Theater Lab 29"
 				(nachfolgend „Anbieter") und seinen Kunden/Kursteilnehmern (nachfolgend „Kunde") gelten
 				ausschließlich die nachfolgenden Allgemeinen Geschäftsbedingungen in ihrer zum Zeitpunkt des
 				Vertragsschlusses gültigen Fassung.
@@ -177,5 +177,5 @@
 		</div>
 	</div>
 
-	<p class="mt-12 text-xs text-paper-dim/70">© 2026 Lebens Rhythmus. Alle Rechte vorbehalten.</p>
+	<p class="mt-12 text-xs text-paper-dim/70">© 2026 Theater Lab 29. Alle Rechte vorbehalten.</p>
 </section>

@@ -21,7 +21,7 @@
 			<p class="mt-2">Um Ihr Widerrufsrecht auszuüben, müssen Sie uns</p>
 			<p class="mt-2">
 				<strong class="text-paper">Olena Khudoshyna</strong><br />
-				Lebens Rhythmus – Studio für kreative Entwicklung<br />
+				Theater Lab 29 – Studio für kreative Entwicklung<br />
 				Ritterspornweg 1<br />
 				50129 Bergheim, Deutschland<br />
 				E-Mail: info@tlab29.com
@@ -73,7 +73,7 @@
 			<p class="mt-2">
 				<strong class="text-paper">An</strong><br />
 				Olena Khudoshyna<br />
-				Lebens Rhythmus – Studio für kreative Entwicklung<br />
+				Theater Lab 29 – Studio für kreative Entwicklung<br />
 				Ritterspornweg 1<br />
 				50129 Bergheim, Deutschland<br />
 				E-Mail: info@tlab29.com
@@ -95,5 +95,5 @@
 		</div>
 	</div>
 
-	<p class="mt-12 text-xs text-paper-dim/70">© 2026 Lebens Rhythmus. Alle Rechte vorbehalten.</p>
+	<p class="mt-12 text-xs text-paper-dim/70">© 2026 Theater Lab 29. Alle Rechte vorbehalten.</p>
 </section>

@@ -16,7 +16,7 @@
 			<h2 class="font-display text-lg font-semibold text-paper">1. Verantwortliche Stelle</h2>
 			<p class="mt-2">
 				Olena Khudoshyna<br />
-				Lebens Rhythmus – Studio für kreative Entwicklung<br />
+				Theater Lab 29 – Studio für kreative Entwicklung<br />
 				Ritterspornweg 1<br />
 				50129 Bergheim, Deutschland<br />
 				E-Mail: <a href="mailto:info@tlab29.com" class="text-gold hover:underline">info@tlab29.com</a>
@@ -132,5 +132,5 @@
 		</div>
 	</div>
 
-	<p class="mt-12 text-xs text-paper-dim/70">© 2026 Lebens Rhythmus. Alle Rechte vorbehalten.</p>
+	<p class="mt-12 text-xs text-paper-dim/70">© 2026 Theater Lab 29. Alle Rechte vorbehalten.</p>
 </section>

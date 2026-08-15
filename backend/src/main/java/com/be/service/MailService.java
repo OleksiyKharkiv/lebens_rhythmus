@@ -33,9 +33,9 @@ public class MailService {
     }
 
     public void sendVerificationEmail(String toEmail, String verificationLink) {
-        String subject = "Bitte bestätige deine E-Mail-Adresse — Lebens Rhythmus";
+        String subject = "Bitte bestätige deine E-Mail-Adresse — Theater Lab 29";
         String plainText = """
-                Willkommen bei Lebens Rhythmus!
+                Willkommen bei Theater Lab 29!
 
                 Bitte bestätige deine E-Mail-Adresse, um dein Konto zu aktivieren:
                 %s
@@ -55,7 +55,7 @@ public class MailService {
                         <table role="presentation" width="100%%" style="max-width:480px;background-color:#3d2a38;border-radius:12px;overflow:hidden;">
                           <tr>
                             <td style="padding:32px 32px 8px 32px;">
-                              <p style="margin:0;font-size:20px;font-weight:700;color:#f7eedd;">Lebens Rhythmus</p>
+                              <p style="margin:0;font-size:20px;font-weight:700;color:#f7eedd;">Theater Lab 29</p>
                             </td>
                           </tr>
                           <tr>

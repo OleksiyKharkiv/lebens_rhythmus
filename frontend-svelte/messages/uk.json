@@ -1,6 +1,6 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"site_name": "Lebens Rhythmus",
+	"site_name": "Theater Lab 29",
 	"nav_home": "Головна",
 	"nav_about": "Про нас",
 	"nav_login": "Увійти",
@@ -23,7 +23,7 @@
 	"home_direction_gymnastics_desc": "Гнучкість, сила, баланс.",
 
 	"about_title": "Про TLab29",
-	"about_subtitle": "Theaterlabor 29 та проєкт Lebens Rhythmus",
+	"about_subtitle": "Theaterlabor 29",
 	"about_body_1": "TLab29 — це простір, де дорослі будь-якого віку розкривають свій творчий потенціал через театр, танець і тілесну практику.",
 	"about_body_2": "Ми створюємо простір і атмосферу для справжнього творчого вираження — без попереднього досвіду, без страху сцени, лише цікавість.",
 
