@@ -89,6 +89,12 @@
 	"workshop_detail_no_groups": "Für diesen Workshop sind noch keine Termine angelegt.",
 	"workshop_detail_enroll_success": "Anmeldung erfolgreich!",
 	"workshop_detail_full": "Ausgebucht",
+	"workshop_detail_enroll_generic_error": "Fehler bei der Anmeldung.",
+	"enroll_group_full": "Leider sind bereits alle Plätze belegt.",
+	"enroll_already_enrolled": "Du bist bereits angemeldet.",
+	"enroll_pending_label": "Registrierung erhalten — wartet auf Zahlung:",
+	"courses_enroll_title": "Anmeldung",
+	"courses_no_schedule_yet": "Anmeldung für diesen Kurs ist noch nicht möglich.",
 
 	"performances_title": "Aufführungen",
 	"performances_none": "Aktuell sind keine Aufführungen geplant. Schau bald wieder vorbei!",

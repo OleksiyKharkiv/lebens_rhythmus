@@ -89,6 +89,12 @@
 	"workshop_detail_no_groups": "No sessions have been scheduled for this workshop yet.",
 	"workshop_detail_enroll_success": "Signed up successfully!",
 	"workshop_detail_full": "Full",
+	"workshop_detail_enroll_generic_error": "Registration failed.",
+	"enroll_group_full": "Sorry, this is fully booked.",
+	"enroll_already_enrolled": "You're already registered.",
+	"enroll_pending_label": "Registration received — awaiting payment:",
+	"courses_enroll_title": "Registration",
+	"courses_no_schedule_yet": "Registration for this course is not available yet.",
 
 	"performances_title": "Performances",
 	"performances_none": "No performances are scheduled right now. Check back soon!",

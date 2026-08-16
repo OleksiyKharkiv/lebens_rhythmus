@@ -2,6 +2,82 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-16 — feat+security: LR-084 бэкенд — Enrollment на Course, связка с Order, фиксы гонки и §4b
+
+### Область (`backend/src/main/java/com/be/{domain/entity/{Enrollment,Order,enums/EnrollmentStatus}.java,domain/repository/{EnrollmentRepository,GroupRepository}.java,service/{EnrollmentService,EnrollmentCleanupService,OrderService,NotificationService,LogNotificationService}.java,web/{controller/EnrollmentController.java,dto/{request/OrderRequestDTO.java,response/{EnrollmentResponseDTO,EnrollmentAdminDTO,OrderResponseDTO}.java},mapper/{EnrollmentMapper,OrderMapper}.java},BackendApplication.java}`, `backend/src/main/resources/db/migration/V12__enrollment_course_order_support.sql (new)`, `backend/src/test/java/com/be/service/{EnrollmentServiceTest,OrderServiceTest,EnrollmentCleanupServiceTest}.java (new)`)
+
+- **feat (LR-084)** — `Enrollment` расширен с Workshop-only до Workshop
+  ИЛИ Course (взаимоисключимо, тот же паттерн, что уже проверен на
+  `Group.workshop/course`) + связан с `Order` для платных регистраций.
+  Бесплатно → `CONFIRMED` сразу, без Order; платно → `PENDING` +
+  `Order(PENDING)` одной транзакцией — раньше Enrollment и Order/Payment
+  были никак не связаны, дашборд юзера не мог показать, что конкретно
+  ожидает оплаты. Новый маршрут `POST /courses/{id}/enroll`.
+- **fix (гонка вместимости)** — `group.getEnrolledCount() >=
+  group.getCapacity()` проверка + отдельный `save()` не были атомарны;
+  два конкурентных запроса на последнее место оба проходили проверку.
+  Заменено на атомарный `UPDATE ... WHERE capacity_left > 0`
+  (`GroupRepository.decrementCapacityLeft`), активирует ранее мёртвое
+  поле `capacityLeft`.
+- **feat (LR-084)** — 7-дневный TTL на неоплаченные `PENDING`-регистрации
+  (`EnrollmentCleanupService`, первая `@Scheduled`-джоба в проекте) —
+  `EnrollmentStatus.EXPIRED` новый статус, отдельный от `CANCELLED`.
+- **security (§4b, см. запись выше)** — `OrderService.create()` больше
+  не доверяет `dto.getStatus()`, всегда форсирует `PENDING`.
+- **fix (найдено `architect-reviewer` при ревью этого же диффа, до
+  деплоя)** — миграция `V12` теперь бэкфиллит `capacity_left` из
+  реального количества PENDING/CONFIRMED enrollments для уже
+  существующих групп — без этого шага атомарный гейт молча разрешил бы
+  оверселлинг на каждой уже занятой группе при деплое (то же самое, от
+  чего чиним гонку, просто в момент миграции, а не конкурентного
+  запроса).
+- **fix (найдено тем же ревью)** — `orderNumber` на основе одного
+  `System.currentTimeMillis()` мог коллизировать под конкурентной
+  нагрузкой (`unique`-констрейнт) — добавлен UUID-фрагмент, починено и
+  в новом коде, и в исходном `Order.onCreate()`-фолбэке.
+- **verify** — `./gradlew compileJava`/`compileTestJava` чисто, 12 новых
+  тестов зелёные, полный `./gradlew test --tests "com.be.service.*"`
+  зелёный. Живой прогон миграции на реальном Postgres не делал (нет
+  Docker в этой сессии) — проверить на staging перед прода.
+- **backlog** — попутно найдено ревью: `GroupDTO.enrolledCount`
+  (`GroupMapper.java`) считает ВСЕ enrollments включая
+  CANCELLED/EXPIRED, теперь разойдётся с реальным `capacityLeft` после
+  любой отмены/истечения — заведён `LR-090` отдельным тикетом (не
+  security, чисто данные/отображение).
+- **docs** — фронтенд (кнопка регистрации, UI для Course, обработка
+  PENDING/ожидания оплаты) — отдельным раундом, не в этом дифе.
+
+## 2026-08-16 — security+docs: LR-084 круглый стол — новое обязательное правило безопасности эндпоинтов (§4b)
+
+### Область (`docs/context/CODING_PROTOCOL.md`, `docs/tickets/tickets.md` (LR-087, LR-088 новые))
+
+- **security (найдено `architect-reviewer`, не эксплуатировано, но
+  реально)** — при проектировании LR-084 (регистрация на
+  Course/Workshop) обнаружено: `OrderRequestDTO.status` — свободная
+  строка, `OrderService.create()`/`OrderMapper` копируют её из клиента
+  как есть, ничем не перезаписывая. Любой авторизованный юзер мог
+  отправить `POST /orders` с `status: "PAID"`. Не эксплуатировалось
+  (сегодня ничто не читает `Order.status` для решений), но стало бы
+  обходом оплаты в момент, когда будущий код (в т.ч. предложенный этой
+  же сессией дизайн Enrollment↔Order) начал бы доверять этому полю.
+- **docs (правило, не разовый фикс)** — по прямому запросу владельца
+  записано как обязательное на будущее в `CODING_PROTOCOL.md`, новый
+  §4b: сервер обязан сам перепроверять права на каждый ресурс (не
+  верить "юзер авторизован → значит можно"), поля статуса/владения/
+  подтверждения из request DTO сервис обязан игнорировать/
+  перезаписывать на create, не копировать как есть. Плюс F12-чеклист
+  (источник — задокументированные массовые взломы vibe-coded
+  приложений 2025-2026: утечки API-ключей в JS-бандле, IDOR через
+  прямую подмену id в запросах) — обязательная самопроверка перед тем
+  как считать фронтенд-фичу готовой. Добавлены соответствующие пункты
+  в `🚫 ЗАПРЕЩЁННЫЕ ПАТТЕРНЫ` и в шаблон Pre-Check блока.
+- **docs (тикеты)** — из скоупа LR-084 явно вынесены `LR-087` (продажа
+  билетов на Performance через `Order` — заблокировано на регистрации
+  Gewerbe, Олена сейчас на §19 UStG) и `LR-088` (регистрация
+  ребёнка-Participant с согласием родителей — нет текущего прецедента,
+  но в планах курсы для подростков). Оба содержат находки круглого
+  стола, чтобы не потерялись при возврате к теме.
+
 ## 2026-08-14 — feat+fix: Курсы — цена+статус+фон-картинка, фикс форматирования описания (срочный тикет от Олены)
 
 ### Область (`backend/src/main/java/com/be/{domain/entity/{Course.java,enums/CourseStatus.java (new)},service/{CourseService.java,WorkshopService.java},web/dto/{request/CourseCreateDTO.java,response/{CourseDetailDTO.java,CourseListDTO.java}},web/mapper/CourseMapper.java}`, `backend/src/main/resources/db/migration/V11__add_course_price_status_background.sql (new)`, `frontend-svelte/src/{lib/{api.ts,components/Textarea.svelte},routes/{admin/courses,courses/[id],workshops/[id]}/+page.svelte}`, `frontend-svelte/messages/{de,en,uk}.json`)

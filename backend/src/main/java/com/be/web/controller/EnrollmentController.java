@@ -68,6 +68,32 @@ public class EnrollmentController {
     }
 
     /**
+     * Enroll the current user into a course. LR-084.
+     */
+    @PostMapping("/courses/{courseId}/enroll")
+    @PreAuthorize("""
+                hasRole('USER') or hasRole('TEACHER')
+                or hasRole('BUSINESS_OWNER') or hasRole('ADMIN')
+            """)
+    public ResponseEntity<EnrollmentResponseDTO> enrollCourse(
+            @PathVariable Long courseId,
+            @Valid @RequestBody(required = false) EnrollmentRequestDTO request,
+            @AuthenticationPrincipal Jwt jwt
+    ) {
+        Long userId = extractUserId(jwt);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Enrollment e = enrollmentService.enrollCourse(courseId, userId, request);
+        EnrollmentResponseDTO dto = mapper.toResponseDTO(e);
+
+        return ResponseEntity
+                .created(URI.create("/api/v1/enrollments/" + e.getId()))
+                .body(dto);
+    }
+
+    /**
      * Get current user's enrollments.
      */
     @GetMapping("/users/me/enrollments")

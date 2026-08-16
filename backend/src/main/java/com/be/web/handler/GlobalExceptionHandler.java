@@ -1,6 +1,8 @@
 package com.be.web.handler;
 
+import com.be.domain.exception.AlreadyEnrolledException;
 import com.be.domain.exception.EmailNotVerifiedException;
+import com.be.domain.exception.GroupFullException;
 import com.be.domain.exception.InvalidVerificationTokenException;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.validation.ConstraintViolation;
@@ -243,5 +245,47 @@ public class GlobalExceptionHandler {
         log.debug("Invalid verification token: {}", ex.getMessage());
 
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    /**
+     * LR-084 — EnrollmentService's atomic capacity check found nothing left.
+     * 409 Conflict: the request is well-formed, but the resource's current
+     * state (no open spots) rejects it. Distinct code so the frontend can
+     * show a clean, expected "this is full" message instead of a
+     * server-error-looking one — see GroupFullException's own javadoc for
+     * why this specifically was found in review (Course has no pre-emptive
+     * capacity check on the frontend, unlike Workshop, so this handler is
+     * that page's everyday full-course path, not just a race-condition edge
+     * case).
+     */
+    @ExceptionHandler(GroupFullException.class)
+    public ResponseEntity<Map<String, Object>> handleGroupFull(GroupFullException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("code", "GROUP_FULL");
+        body.put("message", ex.getMessage());
+
+        log.debug("Enrollment rejected, group full: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
+    }
+
+    /**
+     * LR-084 — user already has an Enrollment for the requested Workshop/
+     * Course (uk_user_workshop/uk_user_course). Same reasoning as
+     * GroupFullException above.
+     */
+    @ExceptionHandler(AlreadyEnrolledException.class)
+    public ResponseEntity<Map<String, Object>> handleAlreadyEnrolled(AlreadyEnrolledException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("status", HttpStatus.CONFLICT.value());
+        body.put("error", "Conflict");
+        body.put("code", "ALREADY_ENROLLED");
+        body.put("message", ex.getMessage());
+
+        log.debug("Enrollment rejected, already enrolled: {}", ex.getMessage());
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(body);
     }
 }

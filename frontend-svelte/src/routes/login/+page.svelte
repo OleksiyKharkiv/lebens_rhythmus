@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import * as m from '$lib/paraglide/messages.js';
@@ -33,7 +34,37 @@
 	let regResendBusy = $state(false);
 	let regResendSent = $state(false);
 
+	// LR-084 (roundtable UX finding, Addy Osmani) — a click on "Register"
+	// while logged out used to bounce straight to /login with no way back,
+	// losing the user's actual intent (which course/workshop they wanted).
+	// ?returnTo=<path> preserves it.
+	//
+	// architect-reviewer, 2026-08-16 — the original version of this check
+	// was a string prefix test (`!startsWith('/') || startsWith('//')`),
+	// which a value like `/\evil.com` slips past: WHATWG URL parsing
+	// treats a backslash as a path separator for http(s), so the browser
+	// (and SvelteKit's own goto()) resolve that to `https://evil.com`.
+	// Resolving the URL ourselves and comparing the actual origin is
+	// correct regardless of which navigation primitive consumes the
+	// result — doesn't rely on goto()'s own (undocumented, could change)
+	// origin re-check as the only line of defense.
+	function safeReturnTo(): string | null {
+		const raw = page.url.searchParams.get('returnTo');
+		if (!raw) return null;
+		try {
+			const resolved = new URL(raw, location.origin);
+			return resolved.origin === location.origin && raw.startsWith('/') ? raw : null;
+		} catch {
+			return null;
+		}
+	}
+
 	function redirectForRole(role: string) {
+		const returnTo = safeReturnTo();
+		if (returnTo) {
+			goto(returnTo);
+			return;
+		}
 		const target = role === 'ADMIN' ? '/admin' : role === 'TEACHER' ? '/teacher' : '/dashboard';
 		goto(target);
 	}

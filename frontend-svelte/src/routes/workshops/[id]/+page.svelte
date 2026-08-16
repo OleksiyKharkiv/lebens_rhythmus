@@ -1,16 +1,15 @@
 <script lang="ts">
 	import { page } from '$app/state';
 	import * as m from '$lib/paraglide/messages.js';
-	import { isAuthenticated, getWorkshop, enrollInWorkshop, type WorkshopDetail, ApiError } from '$lib/api';
+	import { isAuthenticated, getWorkshop, type WorkshopDetail, type EnrollmentDTO } from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
-	import Button from '$lib/components/Button.svelte';
+	import EnrollButton from '$lib/components/EnrollButton.svelte';
 	import ErrorText from '$lib/components/ErrorText.svelte';
 
 	let workshop = $state<WorkshopDetail | null>(null);
 	let error = $state(false);
-	let enrollBusy = $state<number | null>(null);
 	let enrollError = $state('');
-	let enrollSuccess = $state(false);
+	let enrollResult = $state<EnrollmentDTO | null>(null);
 
 	// SvelteKit guarantees params.id is set for a matched [id] route — the
 	// `string | undefined` in its generated type is generic route typing,
@@ -31,22 +30,15 @@
 		return new Date(d).toLocaleString('de-DE', { dateStyle: 'medium', timeStyle: 'short' });
 	}
 
-	async function handleEnroll(groupId: number) {
-		if (!isAuthenticated()) {
-			window.location.href = '/login';
-			return;
-		}
+	function handleEnrollSuccess(result: EnrollmentDTO) {
 		enrollError = '';
-		enrollBusy = groupId;
-		try {
-			await enrollInWorkshop(workshopId, groupId);
-			enrollSuccess = true;
-			load();
-		} catch (err) {
-			enrollError = err instanceof ApiError ? err.message : 'Fehler bei der Anmeldung.';
-		} finally {
-			enrollBusy = null;
-		}
+		enrollResult = result;
+		load();
+	}
+
+	function handleEnrollError(message: string) {
+		enrollResult = null;
+		enrollError = message;
 	}
 </script>
 
@@ -84,8 +76,14 @@
 
 		<h2 class="mt-10 font-display text-xl font-semibold text-paper">{m.workshop_detail_groups_title()}</h2>
 
-		{#if enrollSuccess}
-			<p class="mt-3 text-success">{m.workshop_detail_enroll_success()}</p>
+		{#if enrollResult}
+			{#if enrollResult.status === 'PENDING' && enrollResult.orderAmount != null}
+				<p class="mt-3 text-success">
+					{m.enroll_pending_label()} {enrollResult.orderAmount} {enrollResult.orderCurrency}
+				</p>
+			{:else}
+				<p class="mt-3 text-success">{m.workshop_detail_enroll_success()}</p>
+			{/if}
 		{/if}
 		<ErrorText message={enrollError} />
 
@@ -110,19 +108,19 @@
 									{group.enrolledCount}/{group.capacity} {m.workshops_spots_left()}
 								</p>
 							</div>
-							<Button
-								variant="teal"
-								fullWidth={false}
+							<EnrollButton
+								targetType="workshop"
+								targetId={workshop.id}
+								groupId={group.id}
 								disabled={full}
-								busy={enrollBusy === group.id}
-								onclick={() => handleEnroll(group.id)}
-							>
-								{full
+								label={full
 									? m.workshop_detail_full()
 									: isAuthenticated()
 										? m.workshops_enroll()
 										: m.workshops_enroll_login_first()}
-							</Button>
+								onSuccess={handleEnrollSuccess}
+								onError={handleEnrollError}
+							/>
 						</div>
 					</Card>
 				{/each}

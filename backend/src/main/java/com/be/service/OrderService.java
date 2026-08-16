@@ -17,6 +17,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ParticipantRepository participantRepository;
     private final WorkshopRepository workshopRepository;
+    private final CourseRepository courseRepository;
     private final EventRepository eventRepository;
     private final ContractRepository contractRepository;
     private final OrderMapper orderMapper;
@@ -25,6 +26,7 @@ public class OrderService {
                         UserRepository userRepository,
                         ParticipantRepository participantRepository,
                         WorkshopRepository workshopRepository,
+                        CourseRepository courseRepository,
                         EventRepository eventRepository,
                         ContractRepository contractRepository,
                         OrderMapper orderMapper) {
@@ -32,6 +34,7 @@ public class OrderService {
         this.userRepository = userRepository;
         this.participantRepository = participantRepository;
         this.workshopRepository = workshopRepository;
+        this.courseRepository = courseRepository;
         this.eventRepository = eventRepository;
         this.contractRepository = contractRepository;
         this.orderMapper = orderMapper;
@@ -51,6 +54,13 @@ public class OrderService {
     @Transactional
     public Order create(OrderRequestDTO dto, Long userId) {
         Order order = orderMapper.fromRequestDTO(dto);
+        // CODING_PROTOCOL.md §4b (found 2026-08-16, architect-reviewer) —
+        // status must never come from the client on create: OrderRequestDTO.
+        // status was a free string, copied as-is, letting any authenticated
+        // user POST an order already marked "PAID". Every new order starts
+        // PENDING regardless of what the request body said; only the
+        // already-admin-gated PUT /orders/{id} can change it.
+        order.setStatus("PENDING");
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
@@ -65,6 +75,11 @@ public class OrderService {
             Workshop workshop = workshopRepository.findById(dto.getWorkshopId())
                     .orElseThrow(() -> new RuntimeException("Workshop not found"));
             order.setWorkshop(workshop);
+        }
+        if (dto.getCourseId() != null) {
+            Course course = courseRepository.findById(dto.getCourseId())
+                    .orElseThrow(() -> new RuntimeException("Course not found"));
+            order.setCourse(course);
         }
         if (dto.getEventId() != null) {
             Event event = eventRepository.findById(dto.getEventId())

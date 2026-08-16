@@ -19,6 +19,8 @@ public class OrderMapper {
                 .participantName(order.getParticipant() != null ? (order.getParticipant().getFirstName() + " " + order.getParticipant().getLastName()) : null)
                 .workshopId(order.getWorkshop() != null ? order.getWorkshop().getId() : null)
                 .workshopTitle(order.getWorkshop() != null ? order.getWorkshop().getWorkshopName() : null)
+                .courseId(order.getCourse() != null ? order.getCourse().getId() : null)
+                .courseTitle(order.getCourse() != null ? order.getCourse().getTitleDe() : null)
                 .eventId(order.getEvent() != null ? order.getEvent().getId() : null)
                 .eventTitle(order.getEvent() != null ? order.getEvent().getTitle() : null)
                 .amount(order.getAmount())
@@ -32,6 +34,11 @@ public class OrderMapper {
                 .build();
     }
 
+    // CODING_PROTOCOL.md §4b (found 2026-08-16) — status is deliberately NOT
+    // copied from the request here: it's a field the application must
+    // decide, not the client. OrderService.create() sets it explicitly to a
+    // fixed initial value after this call; only PUT /orders/{id} (already
+    // ADMIN/BUSINESS_OWNER-gated) may change it afterward.
     public Order fromRequestDTO(OrderRequestDTO dto) {
         if (dto == null) return null;
         return Order.builder()
@@ -39,7 +46,6 @@ public class OrderMapper {
                 .amount(dto.getAmount())
                 .currency(dto.getCurrency())
                 .quantity(dto.getQuantity())
-                .status(dto.getStatus())
                 .note(dto.getNote())
                 .build();
     }

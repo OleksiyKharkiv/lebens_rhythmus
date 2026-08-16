@@ -89,6 +89,12 @@
 	"workshop_detail_no_groups": "Для цього воркшопу ще не заплановано занять.",
 	"workshop_detail_enroll_success": "Запис успішний!",
 	"workshop_detail_full": "Немає місць",
+	"workshop_detail_enroll_generic_error": "Помилка реєстрації.",
+	"enroll_group_full": "На жаль, усі місця зайняті.",
+	"enroll_already_enrolled": "Ви вже зареєстровані.",
+	"enroll_pending_label": "Реєстрацію отримано — очікує оплати:",
+	"courses_enroll_title": "Реєстрація",
+	"courses_no_schedule_yet": "Реєстрація на цей курс поки що недоступна.",
 
 	"performances_title": "Виступи",
 	"performances_none": "Наразі виступів не заплановано. Заглядайте пізніше!",

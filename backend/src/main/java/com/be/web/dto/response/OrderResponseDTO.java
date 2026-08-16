@@ -21,6 +21,8 @@ public class OrderResponseDTO {
     private String participantName;
     private Long workshopId;
     private String workshopTitle;
+    private Long courseId;
+    private String courseTitle;
     private Long eventId;
     private String eventTitle;
     private BigDecimal amount;

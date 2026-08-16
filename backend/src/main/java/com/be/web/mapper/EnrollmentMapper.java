@@ -1,7 +1,9 @@
 package com.be.web.mapper;
 
+import com.be.domain.entity.Course;
 import com.be.domain.entity.Enrollment;
 import com.be.domain.entity.Group;
+import com.be.domain.entity.Order;
 import com.be.domain.entity.Workshop;
 import com.be.web.dto.response.EnrollmentAdminDTO;
 import com.be.web.dto.response.EnrollmentResponseDTO;
@@ -19,16 +21,23 @@ public class EnrollmentMapper {
 
     public EnrollmentResponseDTO toResponseDTO(Enrollment e) {
         Workshop w = e.getWorkshop();
+        Course c = e.getCourse();
         Group g = e.getGroup();
+        Order o = e.getOrder();
 
         // Maps group ID, title, and enrollment status
         return EnrollmentResponseDTO.builder()
                 .id(e.getId())
                 .workshopId(w != null ? w.getId() : null)
                 .workshopTitle(w != null ? w.getWorkshopName() : null)
+                .courseId(c != null ? c.getId() : null)
+                .courseTitle(c != null ? c.getTitleDe() : null)
                 .groupId(g != null ? g.getId() : null)
                 .groupTitle(g != null ? selectGroupTitle(g) : null)
                 .status(e.getStatus())
+                .orderId(o != null ? o.getId() : null)
+                .orderAmount(o != null ? o.getAmount() : null)
+                .orderCurrency(o != null ? o.getCurrency() : null)
                 .createdAt(e.getCreatedAt())
                 .build();
     }
@@ -42,6 +51,8 @@ public class EnrollmentMapper {
                 .id(basic.getId())
                 .workshopId(basic.getWorkshopId())
                 .workshopTitle(basic.getWorkshopTitle())
+                .courseId(basic.getCourseId())
+                .courseTitle(basic.getCourseTitle())
                 .groupId(basic.getGroupId())
                 .groupTitle(basic.getGroupTitle())
                 .status(basic.getStatus())

@@ -304,9 +304,19 @@ export function getPerformances() {
 }
 
 export function enrollInWorkshop(workshopId: string | number, groupId?: number) {
-	return authRequest<{ status: string }>(`/workshops/${workshopId}/enroll`, {
+	return authRequest<EnrollmentDTO>(`/workshops/${workshopId}/enroll`, {
 		method: 'POST',
 		body: JSON.stringify(groupId ? { groupId } : {})
+	});
+}
+
+// LR-084 — mirrors enrollInWorkshop; no groupId needed, the backend
+// auto-resolves the Course's linked Group (one Course = one Group, MVP
+// scope, see GroupService).
+export function enrollInCourse(courseId: string | number) {
+	return authRequest<EnrollmentDTO>(`/courses/${courseId}/enroll`, {
+		method: 'POST',
+		body: JSON.stringify({})
 	});
 }
 
@@ -323,13 +333,23 @@ export function submitFeedback(input: { content: string; rating?: number }) {
 
 // ---------- Personal dashboard (LR-ADR-016: schedule + media + payments) ----------
 
+// LR-084 — workshopId/workshopTitle are now nullable: an Enrollment is
+// either Workshop OR Course (mutually exclusive), never both. orderId/
+// orderAmount/orderCurrency are set only for paid enrollments (see
+// EnrollmentService) — null for free ones, which confirm instantly with no
+// Order at all.
 export interface EnrollmentDTO {
 	id: number;
-	workshopId: number;
-	workshopTitle: string;
+	workshopId: number | null;
+	workshopTitle: string | null;
+	courseId: number | null;
+	courseTitle: string | null;
 	groupId: number | null;
 	groupTitle: string | null;
 	status: string;
+	orderId: number | null;
+	orderAmount: number | null;
+	orderCurrency: string | null;
 	createdAt: string;
 }
 

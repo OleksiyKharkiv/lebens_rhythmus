@@ -32,6 +32,7 @@ public class OrderRequestDTO {
 
     private Long participantId;
     private Long workshopId;
+    private Long courseId;
     private Long eventId;
 
     @DecimalMin(value = "0.01", message = "Amount must be greater than zero")
@@ -43,6 +44,11 @@ public class OrderRequestDTO {
     @Min(value = 1, message = "Quantity must be at least 1")
     private Integer quantity;
 
+    // CODING_PROTOCOL.md §4b (found 2026-08-16) — honored only on
+    // OrderService.update() (already ADMIN/BUSINESS_OWNER-gated); ignored on
+    // create(), which always forces "PENDING" regardless of this value. Same
+    // DTO shared between both actions, but this field must never let a
+    // plain authenticated user set their own order's status on creation.
     @Size(max = 32)
     private String status;
 

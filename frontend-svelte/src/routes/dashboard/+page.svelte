@@ -35,7 +35,10 @@
 				// No dedicated "my media" endpoint exists yet — files live on
 				// WorkshopDetail (LR-ADR-016 scoped this as photos/videos from
 				// classes the user is enrolled in, not a separate media store).
-				const workshopIds = [...new Set(enrollmentData.map((e) => e.workshopId))];
+				// LR-084 — workshopId is now nullable (Course enrollments have
+				// none); Course has no equivalent media feature yet, so those
+				// rows are simply excluded here, not an oversight.
+				const workshopIds = [...new Set(enrollmentData.map((e) => e.workshopId).filter((id) => id !== null))];
 				const details = await Promise.all(workshopIds.map((id) => getWorkshop(id).catch(() => null)));
 				media = details
 					.filter((d) => d !== null)
@@ -72,9 +75,18 @@
 					<div class="mt-4 grid gap-4 sm:grid-cols-2">
 						{#each enrollments as e (e.id)}
 							<Card>
-								<h3 class="font-display text-lg font-semibold text-paper">{e.workshopTitle}</h3>
+								<!-- LR-084 — workshopTitle/courseTitle mutually exclusive now,
+								     never both set. -->
+								<h3 class="font-display text-lg font-semibold text-paper">
+									{e.workshopTitle ?? e.courseTitle}
+								</h3>
 								{#if e.groupTitle}<p class="mt-1 text-sm text-paper-dim">{e.groupTitle}</p>{/if}
 								<p class="mt-2 text-sm text-teal">{e.status}</p>
+								{#if e.status === 'PENDING' && e.orderAmount != null}
+									<p class="mt-1 text-sm text-paper-dim">
+										{m.enroll_pending_label()} {e.orderAmount} {e.orderCurrency}
+									</p>
+								{/if}
 							</Card>
 						{/each}
 					</div>

@@ -16,6 +16,8 @@ public class EnrollmentAdminDTO {
     private Long id;
     private Long workshopId;
     private String workshopTitle;
+    private Long courseId;
+    private String courseTitle;
     private Long groupId;
     private String groupTitle;
     private EnrollmentStatus status;

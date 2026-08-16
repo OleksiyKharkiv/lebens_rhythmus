@@ -58,6 +58,15 @@ public class Order {
     private Workshop workshop;
 
     /**
+     * If the order is for a course, link here (LR-084) — mutually exclusive
+     * with workshop/event in practice, same nullable-pair convention as
+     * Group.workshop/course, Performance.workshop/course.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "course_id")
+    private Course course;
+
+    /**
      * If the order is for an event (e.g., performance) — alternative target.
      */
     @ManyToOne(fetch = FetchType.LAZY)
@@ -120,8 +129,11 @@ public class Order {
         createdAt = LocalDateTime.now();
         updatedAt = createdAt;
         // generate minimal orderNumber if not provided (can be overridden by service)
+        // architect-reviewer, 2026-08-16 (LR-084) — timestamp alone collides
+        // under real concurrency (orderNumber has a unique constraint); UUID
+        // fragment appended, timestamp prefix kept for human readability.
         if (orderNumber == null || orderNumber.isBlank()) {
-            orderNumber = "ORD-" + System.currentTimeMillis();
+            orderNumber = "ORD-" + System.currentTimeMillis() + "-" + java.util.UUID.randomUUID().toString().substring(0, 8);
         }
     }
 

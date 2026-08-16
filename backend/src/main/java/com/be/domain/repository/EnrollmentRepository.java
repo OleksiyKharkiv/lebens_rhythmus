@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -15,11 +16,21 @@ public interface EnrollmentRepository extends JpaRepository<Enrollment, Long> {
 
     boolean existsByUserIdAndWorkshopId(Long userId, Long workshopId);
 
+    // LR-084 — Course path, parallel to the Workshop check above (mirrors
+    // uk_user_course, the DB-level twin of this app-level check).
+    boolean existsByUserIdAndCourseId(Long userId, Long courseId);
+
     List<Enrollment> findByUserIdOrderByCreatedAtDesc(Long userId);
 
     List<Enrollment> findByWorkshopId(Long workshopId);
 
+    List<Enrollment> findByCourseId(Long courseId);
+
     List<Enrollment> findByGroupId(Long groupId);
+
+    // LR-084 — 7-day TTL cleanup job's query: unpaid (still PENDING) paid
+    // enrollments whose Order never got confirmed within the window.
+    List<Enrollment> findByStatusAndCreatedAtBefore(EnrollmentStatus status, LocalDateTime cutoff);
 
     // M6 (retention, LR-015) — one row per customer (Role.USER — same
     // restriction as M4's findByRoleAndCreatedAtAfter, since TEACHER/ADMIN/
