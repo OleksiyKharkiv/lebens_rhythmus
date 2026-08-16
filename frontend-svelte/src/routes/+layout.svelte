@@ -97,13 +97,16 @@
 		     copy, wrong for a navbar: on wide monitors the whole header sat
 		     in a narrow centered box, so logo/utility controls read as
 		     "clumped in the middle" instead of anchored to the real left/
-		     right edges of the window. Full-width bar now; logo pinned left,
-		     nav centered in the remaining space (flex-1 + justify-center),
-		     language/theme pinned right — the conventional 3-zone navbar. -->
-		<div class="flex items-center justify-between px-6 py-4">
+		     right edges of the window. Full-width bar now, 3-column grid
+		     `1fr auto 1fr` (not flex + flex-1 — that only centers the nav
+		     within logo/lang-block leftover space, which is off-center
+		     whenever those two differ in width; grid's outer columns are
+		     equal by definition, so the middle column is exactly centered
+		     regardless of what's in the side columns). -->
+		<div class="grid grid-cols-[1fr_auto_1fr] items-center px-6 py-4">
 			<a
 				href={resolve('/')}
-				class="shrink-0 font-display text-lg font-semibold whitespace-nowrap text-paper tracking-wide"
+				class="shrink-0 justify-self-start font-display text-lg font-semibold whitespace-nowrap text-paper tracking-wide"
 			>
 				{m.site_name()}
 			</a>
@@ -115,7 +118,7 @@
 			     page-wide symptom this caused). Tightened spacing + moved the
 			     breakpoint out to lg: (1024px) so anything narrower gets the
 			     hamburger menu instead of a cramped/overflowing full nav. -->
-			<nav class="hidden flex-1 items-center justify-center gap-5 lg:flex">
+			<nav class="hidden items-center justify-self-center gap-5 lg:flex">
 				<a href={resolve('/')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_home()}
 				</a>
@@ -157,7 +160,7 @@
 			<!-- Language + theme — pinned to the right edge, separate from the
 			     centered nav group above (was inside the same <nav>, which is
 			     why it used to drift with the nav block instead of anchoring). -->
-			<div class="hidden shrink-0 items-center gap-2 lg:flex">
+			<div class="hidden items-center justify-self-end gap-2 lg:flex">
 				<div class="flex items-center gap-2 border-l border-ink-line pl-6 text-sm">
 					{#each locales as locale (locale)}
 						<a
@@ -191,7 +194,7 @@
 			</div>
 
 			<button
-				class="text-paper lg:hidden"
+				class="col-start-3 justify-self-end text-paper lg:hidden"
 				aria-label="Menu"
 				aria-expanded={mobileOpen}
 				onclick={() => (mobileOpen = !mobileOpen)}
@@ -267,20 +270,28 @@
 	     own line below. flex-wrap still degrades to stacked lines on narrow
 	     viewports, same as before. -->
 	<footer class="border-t border-ink-line px-6 py-8 text-center text-sm text-paper-dim">
-		<div class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2">
-			<nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+		<!-- UI fix 2026-08-15 (round 2, beta feedback) — a single flex row
+		     with one uniform gap-x on 5 children (nav, divider, nav, divider,
+		     p) puts equal space on both sides of the divider between any two
+		     neighbors — the legal block (center) ends up equidistant from
+		     the functional block (left) and the disclaimer (right) by
+		     construction, without pinning either to the viewport edge (that
+		     was explicitly not wanted). Widened both the inter-block gap and
+		     the gap between links within each block — was too cramped. -->
+		<div class="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
+			<nav class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
 				<a href="/contact" class="hover:text-paper">{m.nav_contact()}</a>
 				<a href="/corporate" class="hover:text-paper">{m.nav_corporate()}</a>
 				<a href="/feedback" class="hover:text-paper">{m.feedback_title()}</a>
 			</nav>
-			<span class="text-paper-dim/30" aria-hidden="true">|</span>
-			<nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
+			<span class="hidden text-paper-dim/30 sm:inline" aria-hidden="true">|</span>
+			<nav class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
 				<a href="/impressum" class="hover:text-paper">{m.footer_impressum()}</a>
 				<a href="/datenschutz" class="hover:text-paper">{m.footer_datenschutz()}</a>
 				<a href="/agb" class="hover:text-paper">{m.footer_agb()}</a>
 				<a href="/widerruf" class="hover:text-paper">{m.footer_widerruf()}</a>
 			</nav>
-			<span class="text-paper-dim/30" aria-hidden="true">|</span>
+			<span class="hidden text-paper-dim/30 sm:inline" aria-hidden="true">|</span>
 			<p class="text-xs text-paper-dim/60">{m.footer_legal_note()}</p>
 		</div>
 		<p class="mt-3">© {new Date().getFullYear()} {m.site_name()} · TLab29</p>
