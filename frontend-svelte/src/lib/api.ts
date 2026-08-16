@@ -952,8 +952,10 @@ export function deletePerformance(id: number) {
 
 export interface EnrollmentAdminDTO {
 	id: number;
-	workshopId: number;
-	workshopTitle: string;
+	workshopId: number | null;
+	workshopTitle: string | null;
+	courseId: number | null;
+	courseTitle: string | null;
 	groupId: number;
 	groupTitle: string;
 	status: string;

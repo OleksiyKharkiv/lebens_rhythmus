@@ -1162,11 +1162,12 @@ domain/service/repository/controller, юридически значимый ко
       правила повторения `Group` — закрыт 2026-08-12 (коммит `fa6bfc5`).
 - [x] LR-083 — Backend: mutual-exclusivity guard `workshopId`/`courseId`
       в `GroupService` — закрыт 2026-08-12 (коммит `fa6bfc5`).
-- [ ] LR-084 — Backend: `Enrollment`/`EnrollmentService`/
-      `EnrollmentController`/`Order` — поддержка регистрации на `Course`,
-      новая из `LR-068`. **Всё ещё открыт** — подтверждено
-      артефакт-аудитом 2026-08-13: `Enrollment.workshop` по-прежнему
-      `@ManyToOne(optional = false)`, `course`-поля нет.
+- [x] LR-084 — Backend+Frontend: `Enrollment`/`EnrollmentService`/
+      `EnrollmentController`/`Order` — единая регистрация на
+      `Workshop`+`Course` — закрыт 2026-08-16 (коммит `f706ae8`), см.
+      archive.md для полного описания (реализация вышла существенно
+      шире исходного текста — atomic-capacity fix, Order security fix,
+      open-redirect fix, cleanup-джоб).
 - [x] LR-085 — Frontend: recurrence-UI для Course-связанных групп —
       закрыт 2026-08-12, но **не так, как описано в тикете** (см. archive.md
       — реализовано на `admin/courses/+page.svelte` по прямой инструкции
@@ -1258,52 +1259,6 @@ Open · backlog, не начинать без отдельного запрос�
 нужны обе (например, `File` — для чего-то не привязанного к Workshop
 изначально, просто ещё не расширенного). Не начинать удаление без
 проверки реальных данных в обеих таблицах на проде.
-
----
-
-## LR-084 — Backend: `Enrollment`/`EnrollmentService`/`EnrollmentController`/`Order` — регистрация на `Course`
-
-**Tier:** HIGH (пересекает `payment`-смежную область — `Order`; влияет
-на существующий, уже используемый в проде путь регистрации)
-**Статус:** Open · **блокируется на `LR-069`, желательно после `LR-081`
-(нужен реальный сценарий Course-группы для сквозного теста)**
-**Источник:** `LR-068`/`LR-ADR-023` п.5 — найдено `architect-reviewer`,
-шире, чем изначально предполагал Roundtable #8 (не только два
-nullable-поля)
-
-Сегодня `Enrollment.workshop` — `@ManyToOne(optional = false)`,
-обязательное поле; регистрация на `Course`-группу без `Workshop`
-технически невозможна на уровне схемы. Полный scope:
-
-1. `Enrollment.workshop` → nullable; новое nullable `course`-поле
-   (`@ManyToOne` на `Course`).
-2. `EnrollmentService` — текущий `enroll(workshopId, ...)` выводит
-   `PENDING`/`CONFIRMED` из `workshop.getPrice()`; у `Course` в
-   принятой модели (`LR-069`) нет поля цены. Нужно отдельное решение:
-   либо новый `enrollInCourse(courseId, ...)` с собственной
-   статус-логикой (например, всегда `CONFIRMED` для бесплатных курсов,
-   пока платные Course не появились), либо цена переносится на `Course`
-   отдельным ADR — **не решать по умолчанию, выбор — на реализацию
-   этого тикета**, зафиксировать явно, не тихим побочным эффектом.
-3. `EnrollmentController` — новый route для Course-регистрации (сейчас
-   есть только `POST /workshops/{workshopId}/enroll`).
-4. `Order.java` — та же workshop-only-FK семантика, что и `Enrollment`
-   до этого тикета; если платные Course когда-либо появятся
-   (правдоподобно при длительности "1 месяц – 1 год"), тот же пробел —
-   зафиксировать как известное следствие, не обязательно чинить в этом
-   тикете, если платных Course пока нет в скоупе эпика.
-5. `uk_user_workshop` (unique на `user_id, workshop_id`) не защищает от
-   дублей регистрации после того, как `workshop_id` станет nullable —
-   Postgres не считает `NULL` дубликатом относительно себя в
-   unique-constraint. Нужен app-level guard в новом
-   `enrollInCourse`-пути или параллельный `uk_user_course`.
-6. `EnrollmentRepository.countDistinctWorkshopsPerUserWithStatus`
-   (retention-метрика M6) — workshop-scoped, Course-регистрации будут в
-   ней невидимы. Зафиксировать как известное следствие, отдельный
-   тикет по расширению метрики — не в скоупе этого.
-
-**Не начинать без:** `LR-069` (нужен реальный `Course`-класс/entity для
-nullable FK).
 
 ---
 

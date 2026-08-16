@@ -2,6 +2,50 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-16 — feat+security: LR-084 фронтенд + закрытие тикета — EnrollButton, open-redirect fix, чистые сообщения об ошибках, финальная верификация
+
+### Область (`frontend-svelte/src/{lib/{api.ts,components/EnrollButton.svelte (new)},routes/{login,courses/[id],workshops/[id],dashboard}/+page.svelte}`, `frontend-svelte/messages/{de,en,uk}.json`, `backend/.../{domain/exception/{GroupFullException,AlreadyEnrolledException}.java (new),web/handler/GlobalExceptionHandler.java}`, `docs/tickets/{tickets.md,archive.md}`)
+
+- **feat (LR-084)** — новый общий компонент `EnrollButton.svelte`
+  (Workshop + Course): login-gate (редирект на `/login?returnTo=...`
+  при неаутентифицированном пользователе, полная навигация, не
+  `goto()`) + вызов `enrollInWorkshop`/`enrollInCourse` + перевод
+  ошибок через `translateEnrollError()`. Убрал дублирование, которое
+  иначе завелось бы во второй раз при добавлении Course.
+- **feat (LR-084)** — `courses/[id]/+page.svelte` получила секцию
+  регистрации (её раньше не было вообще); обе страницы (`courses`,
+  `workshops`) различают PENDING (показывает сумму+валюту заказа) и
+  CONFIRMED (обычное сообщение об успехе).
+- **security (найдено `architect-reviewer`, реальный open-redirect)**
+  — `login/+page.svelte`'s `safeReturnTo()` был уязвим к
+  WHATWG-URL backslash-normalization байпасу (`/\evil.com` →
+  резолвится в `https://evil.com`); строковая prefix-проверка
+  заменена на `new URL(raw, location.origin)` + сравнение `.origin`.
+- **fix (найдено `architect-reviewer`, ложное допущение в коде)** —
+  комментарий на Course-странице утверждал, что "полная группа
+  выдаёт чистую ошибку от API", но реально `RuntimeException("Group is
+  full")` проваливался в generic `handleAll()` и всегда возвращал
+  фиксированную английскую строку 500-й ошибкой. Добавлены
+  `GroupFullException`/`AlreadyEnrolledException` (409,
+  `code: GROUP_FULL`/`ALREADY_ENROLLED`) + переводы на 3 языка
+  (`enroll_group_full`/`enroll_already_enrolled`).
+- **fix (найдено финальным независимым `architect-reviewer`-прогоном
+  2026-08-16, при закрытии тикета)** — `frontend-svelte/src/lib/api.ts`'s
+  `EnrollmentAdminDTO` не объявлял `courseId`/`courseTitle`, хотя
+  бэкенд их уже отдавал — расхождение типов, безобидное на момент
+  находки (UI поле нигде не читал), исправлено сразу.
+- **verify** — `npm run check` 0 ошибок, `npm test -- --run` 13/13,
+  `./gradlew test --tests "com.be.service.*"` 67 тестов/0 failures.
+  Финальный независимый `architect-reviewer`-прогон (не опирался на
+  предыдущие раунды, проверял код+тесты с нуля) подтвердил все
+  заявления коммита `f706ae8` построчно — PASS по всем 6 областям.
+- **docs (workflow)** — LR-084 перенесён в `docs/tickets/archive.md`
+  (закрытая запись существенно шире и точнее старого текста тикета —
+  см. архив для полного описания); `tickets.md` заменён на короткую
+  ссылку на архив, устаревшая пометка "всё ещё открыт" убрана.
+
+---
+
 ## 2026-08-16 — feat+security: LR-084 бэкенд — Enrollment на Course, связка с Order, фиксы гонки и §4b
 
 ### Область (`backend/src/main/java/com/be/{domain/entity/{Enrollment,Order,enums/EnrollmentStatus}.java,domain/repository/{EnrollmentRepository,GroupRepository}.java,service/{EnrollmentService,EnrollmentCleanupService,OrderService,NotificationService,LogNotificationService}.java,web/{controller/EnrollmentController.java,dto/{request/OrderRequestDTO.java,response/{EnrollmentResponseDTO,EnrollmentAdminDTO,OrderResponseDTO}.java},mapper/{EnrollmentMapper,OrderMapper}.java},BackendApplication.java}`, `backend/src/main/resources/db/migration/V12__enrollment_course_order_support.sql (new)`, `backend/src/test/java/com/be/service/{EnrollmentServiceTest,OrderServiceTest,EnrollmentCleanupServiceTest}.java (new)`)
