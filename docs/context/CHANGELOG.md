@@ -2,6 +2,29 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-16 — feat: кнопка регистрации на `/workshops`, аналогично `/courses`
+
+### Область (`backend/.../{web/dto/response/WorkshopListDTO.java,web/mapper/WorkshopMapper.java}`, `frontend-svelte/src/{lib/api.ts,routes/workshops/+page.svelte}`, `frontend-svelte/messages/{de,en,uk}.json`)
+
+- **feat** — `WorkshopListDTO` получил `groups: List<GroupDTO>`
+  (`WorkshopMapper` — вынес общий `toGroupDTOs(Workshop)`, переиспользован
+  `toListDTO`/`toDetailDTO`, было дублирование stream-map-collect).
+  Причина: в отличие от Course (максимум одна Group, MVP-допущение),
+  Workshop может иметь несколько Group (разные даты/сессии) — список не
+  может молча выбрать "ту самую" группу для регистрации в один клик.
+- **feat** — `workshops/+page.svelte`: если у воркшопа ровно одна активная
+  группа — прямая кнопка регистрации (`EnrollButton`, тот же паттерн, что
+  на `/courses`), disabled+"Ausgebucht" если полная. Если групп 2+ —
+  кнопка ведёт на страницу воркшопа выбрать дату (`workshops_choose_date`,
+  новый ключ на 3 языках), не пытается угадать. Если активных групп нет —
+  кнопки нет вообще (нечего бронировать).
+- **verify** — backend: `compileJava`/`compileTestJava` + `test
+  --tests "com.be.service.*" --tests "com.be.web.mapper.*"` — BUILD
+  SUCCESSFUL. Frontend: `npm run check` 1164 files/0 ошибок, `npm test`
+  13/13.
+
+---
+
 ## 2026-08-16 — feat+security: LR-084 фронтенд + закрытие тикета — EnrollButton, open-redirect fix, чистые сообщения об ошибках, финальная верификация
 
 ### Область (`frontend-svelte/src/{lib/{api.ts,components/EnrollButton.svelte (new)},routes/{login,courses/[id],workshops/[id],dashboard}/+page.svelte}`, `frontend-svelte/messages/{de,en,uk}.json`, `backend/.../{domain/exception/{GroupFullException,AlreadyEnrolledException}.java (new),web/handler/GlobalExceptionHandler.java}`, `docs/tickets/{tickets.md,archive.md}`)

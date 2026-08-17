@@ -41,6 +41,7 @@ public class WorkshopMapper {
                 .endDate(w.getEndDate())
                 .price(w.getPrice())
                 .status(String.valueOf(w.getStatus()))
+                .groups(toGroupDTOs(w))
                 .build();
     }
 
@@ -49,9 +50,7 @@ public class WorkshopMapper {
      */
     public WorkshopDetailDTO toDetailDTO(Workshop w) {
         TeacherInfoDTO teacher = w.getTeacher() != null ? teacherMapper.toInfoDTO(w.getTeacher()) : null;
-        List<GroupDTO> groups = w.getGroups() == null ? List.of() : w.getGroups().stream()
-                .map(this::toGroupDTO)
-                .collect(Collectors.toList());
+        List<GroupDTO> groups = toGroupDTOs(w);
         List<WorkshopFileDTO> files = w.getFiles() == null ? List.of() : w.getFiles().stream()
                 .map(this::toFileDTO)
                 .collect(Collectors.toList());
@@ -73,6 +72,12 @@ public class WorkshopMapper {
                 .files(files)
                 .totalEnrollments(enrollments)
                 .build();
+    }
+
+    private List<GroupDTO> toGroupDTOs(Workshop w) {
+        return w.getGroups() == null ? List.of() : w.getGroups().stream()
+                .map(this::toGroupDTO)
+                .collect(Collectors.toList());
     }
 
     private GroupDTO toGroupDTO(Group g) {

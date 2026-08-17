@@ -204,6 +204,11 @@ export interface WorkshopListItem {
 	// workshop's groups can each run at a different place now.
 	price: number | null;
 	status: string;
+	// Registration button on the list page (2026-08-16) needs this to
+	// decide whether it can enroll directly (exactly one active group,
+	// same as Course's single-Group MVP shape) or must send the user to
+	// the detail page to pick a date (2+ active groups).
+	groups: GroupDTO[];
 }
 
 // Full real shape (backend GroupDTO.java) — activityId/teacherId/ageGroupId/
