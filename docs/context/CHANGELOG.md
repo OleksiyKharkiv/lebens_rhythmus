@@ -2,6 +2,24 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-16 — docs: LR-094 — admin-страница состояния курса/воркшопа
+
+### Область (`docs/tickets/tickets.md`)
+
+- **docs** — `LR-094` (MED) заводит тикет на кнопку "Обзор"/
+  "Статистика записи" в карточках `admin/courses`/`admin/workshops`
+  (ADMIN/BUSINESS_OWNER-only, наследует существующий layout-гейт),
+  ведущую на страницу состояния: название, даты, ёмкость, цена,
+  количество PENDING/CONFIRMED-регистраций. Проверено по коду перед
+  формулировкой: `GET /admin/workshops/{workshopId}/participants` уже
+  существует и уже отдаёт `status` на каждую запись — нужен только
+  зеркальный эндпоинт для Course, аггрегация PENDING/CONFIRMED
+  client-side. Отмечен открытый UI-вопрос — Workshop может иметь
+  несколько `Group` (разных дат) с разной ёмкостью, агрегировать или
+  показывать таблицей — решить на дизайне, не тихим выбором.
+
+---
+
 ## 2026-08-16 — docs: LR-093 — круглый стол по self-service оплате (Stripe/Numi-Rechnung/N26), тикет заведён
 
 ### Область (`docs/tickets/tickets.md`)
