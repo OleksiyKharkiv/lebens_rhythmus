@@ -2,6 +2,58 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-16 — docs: LR-093 — круглый стол по self-service оплате (Stripe/Numi-Rechnung/N26), тикет заведён
+
+### Область (`docs/tickets/tickets.md`)
+
+- **docs** — `LR-093` (HIGH, не начинать без Pre-Check +
+  подтверждения владельца) заводит тикет текстом круглого стола
+  2026-08-16 (4 раунда): домен (N26 — не новый метод оплаты, а частный
+  случай существующего `Payment.provider`); главная находка — нет
+  известного публичного N26-API/webhook для автоматического
+  подтверждения перевода, три реалистичных пути вместо этого (PSD2-
+  агрегатор / Stripe SEPA / ручное подтверждение); индустрия
+  бронирования (Mindbody/Acuity/ClassPass-класс) — hold→confirm→
+  release-on-timeout, уже построено в LR-084; UX-пробел — нет выбора
+  канала оплаты на фронте. Открытый вопрос к владельцу — Numi-Rechnung
+  канал требует либо multi-tenant numi, либо отдельного tenant'а для
+  Олены. Предложена фазировка A (Stripe карта) → B (перевод/счёт
+  вручную) → C (Numi-интеграция), ждёт подтверждения.
+
+---
+
+## 2026-08-16 — feat+docs: кнопка регистрации на `/courses`, тикеты LR-091/LR-092 (Google/Apple Sign-In)
+
+### Область (`frontend-svelte/src/routes/courses/+page.svelte`, `docs/tickets/tickets.md`)
+
+- **feat** — `courses/+page.svelte`: кнопка регистрации (`EnrollButton`,
+  `targetType="course"`) добавлена прямо в карточку списка курсов,
+  симметрично кнопке "Details" (справа, `justify-between`) — раньше
+  зарегистрироваться можно было только со страницы отдельного курса.
+  Показывается только для `status === 'PUBLISHED'`. Результат
+  (PENDING+сумма заказа / CONFIRMED / ошибка) — per-card state
+  (`enrollResults`/`enrollErrors`, keyed по `course.id`), тот же паттерн
+  сообщений, что на `courses/[id]`.
+- **docs** — `tickets.md`: `LR-091` (вход через Google) и `LR-092`
+  (вход через Apple) — оба тегированы HIGH (новый внешний
+  identity-provider, ADR-007-adjacent решение), явно требуют круглого
+  стола перед реализацией, по тому же процессу, что LR-084. LR-092
+  явно ссылается на Apple App Store Guideline 4.8 (обязательность Sign
+  in with Apple, если предлагается сторонний логин типа Google) —
+  учитывать при приоритизации.
+- **verify** — `npm run check` 916 files, 0 ошибок; `npm test -- --run`
+  13/13. Живой браузерный превью недоступен в этой сессии (та же
+  неполадка working directory numi/lebens_rhythmus, что и раньше).
+
+**Отдельно, вне кода:** объяснил владельцу текущее состояние оплаты
+(нет self-service способа заплатить — `Order` уходит в `PENDING` и
+дальше застревает, `Payment` может создать только ADMIN/BUSINESS_OWNER
+вручную; `LR-ADR-017` уже фиксирует направление — Numi-счёт и Stripe
+параллельно, выбор за плательщиком) — Stripe/Numi-инвойс интеграция
+не начата, ждёт отдельного запроса на круглый стол.
+
+---
+
 ## 2026-08-16 — feat: кнопка регистрации на `/workshops`, аналогично `/courses`
 
 ### Область (`backend/.../{web/dto/response/WorkshopListDTO.java,web/mapper/WorkshopMapper.java}`, `frontend-svelte/src/{lib/api.ts,routes/workshops/+page.svelte}`, `frontend-svelte/messages/{de,en,uk}.json`)
