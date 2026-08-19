@@ -91,9 +91,11 @@ body {
 	overflow-x: hidden;
 }
 
-/* Site background art, supplied by Olena (2026-08-17) — light theme only
-   for now; the dark-theme counterpart is a separate asset, not yet
-   supplied (see docs/tickets/tickets.md if a ticket was filed for it).
+/* Site background art, supplied by Olena — separate hand-prepared files
+   per theme (light: 2026-08-17, dark: 2026-08-19; the earlier
+   invert()+hue-rotate() CSS-filter attempt at faking a dark version
+   from the light file was reverted — real asset per theme instead, see
+   git history around 2026-08-19 if the reasoning is needed again).
    Layered under a translucent wash of the theme's own ground color
    (same color-mix() idiom already used for the header backdrop above,
    in +layout.svelte) rather than shown at full strength — LR-ADR-014's
@@ -109,6 +111,18 @@ body {
 			color-mix(in srgb, var(--color-ink) 85%, transparent)
 		),
 		url('/background-light.png');
+	background-repeat: no-repeat;
+	background-position: top center;
+	background-size: cover;
+}
+
+:root:not([data-theme='light']) body {
+	background-image:
+		linear-gradient(
+			color-mix(in srgb, var(--color-ink) 85%, transparent),
+			color-mix(in srgb, var(--color-ink) 85%, transparent)
+		),
+		url('/background-dark.png');
 	background-repeat: no-repeat;
 	background-position: top center;
 	background-size: cover;
