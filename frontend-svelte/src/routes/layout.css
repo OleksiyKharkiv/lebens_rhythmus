@@ -91,6 +91,29 @@ body {
 	overflow-x: hidden;
 }
 
+/* Site background art, supplied by Olena (2026-08-17) — light theme only
+   for now; the dark-theme counterpart is a separate asset, not yet
+   supplied (see docs/tickets/tickets.md if a ticket was filed for it).
+   Layered under a translucent wash of the theme's own ground color
+   (same color-mix() idiom already used for the header backdrop above,
+   in +layout.svelte) rather than shown at full strength — LR-ADR-014's
+   whole design language is "restraint in the ground, vividness spent
+   only on the accents," so a full-opacity multi-color line drawing
+   behind body text would fight the accent-gold/accent-teal palette
+   and hurt readability. Deliberately no `background-attachment: fixed`
+   — that's a known broken/janky combo on iOS Safari. */
+:root[data-theme='light'] body {
+	background-image:
+		linear-gradient(
+			color-mix(in srgb, var(--color-ink) 85%, transparent),
+			color-mix(in srgb, var(--color-ink) 85%, transparent)
+		),
+		url('/background-light.png');
+	background-repeat: no-repeat;
+	background-position: top center;
+	background-size: cover;
+}
+
 h1,
 h2,
 h3,

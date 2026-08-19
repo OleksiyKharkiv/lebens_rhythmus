@@ -2,6 +2,30 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-17 — feat: фоновая иллюстрация от Олены (только светлая тема пока)
+
+### Область (`frontend-svelte/{static/background-light.png (new),src/routes/layout.css}`)
+
+- **feat** — файл, присланный Олены, сохранён в `static/` (переименован
+  из `Tlab29_,background_light.png` — запятая в имени файла опасна для
+  URL). Подключён через `[data-theme='light'] body` — под полупрозрачной
+  заливкой тем же `color-mix()`-приёмом, что уже используется в шапке
+  (`+layout.svelte`), не на полную непрозрачность: `LR-ADR-014`
+  прямо формулирует "сдержанность в фоне, яркость только в акцентах",
+  а разноцветный рисунок на всю страницу спорит с этим. Без
+  `background-attachment: fixed` — известно ломается на iOS Safari.
+- **verify** — живой браузер (`preview_start` с прямым `url`, обходит
+  неполадку working directory numi/lebens_rhythmus): переключение на
+  светлую тему → `document.documentElement.dataset.theme === 'light'`,
+  `background-light.png` реально запросился и отдал 200, вычисленный
+  `background-image` совпал 1-в-1 с написанным CSS. Скриншот снять не
+  вышло (Browser pane не рендерился в этой сессии), но сетевой
+  запрос+вычисленный стиль — не менее надёжное подтверждение.
+- **Отдельно (не в этом коммите):** тёмная тема — пробуем
+  CSS-фильтром (`invert()+hue-rotate()`) на существующем файле, без
+  второго файла, по прямой просьбе владельца — отдельный коммит,
+  явно помечен как обратимый эксперимент.
+
 ## 2026-08-17 — fix: переключение языка не сохранялось при переходе по меню; docs: LR-095
 
 ### Область (`frontend-svelte/src/routes/{+layout.svelte,admin/{+layout.svelte,+page.svelte},agb/+page.svelte,login/+page.svelte}`, `docs/tickets/tickets.md`)
