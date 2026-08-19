@@ -59,22 +59,24 @@
 </section>
 
 <style>
-	/* 2026-08-17, beta feedback — this is the one spot on the site where
-	   text sits directly on the raw page background (no card/section
-	   bg behind it), so it's the one place the new background art
-	   (layout.css) can land a same-hue patch right behind a word and
-	   kill contrast (reported: tagline going near-invisible over a
-	   tan/beige patch in dark theme, h1 hard to read over a pink one).
-	   A soft dark shadow is the standard fix for text-over-busy-art
-	   (hero banners do this constantly) — not layered opacity tricks,
-	   which would also dim the art itself everywhere else on the page.
-	   Plain black works in both themes: it darkens/defines edges
-	   against whatever's behind it rather than trying to match a
-	   ground color that flips meaning between themes. */
-	.hero-text {
-		text-shadow:
-			0 1px 3px rgba(0, 0, 0, 0.55),
-			0 1px 12px rgba(0, 0, 0, 0.35);
+	/* 2026-08-17, beta feedback (round 2) — the first version of this fix
+	   (two stacked shadows, one with a 12px blur) made both hero lines
+	   look blurry/shaky instead of crisp, worst on the small-size,
+	   thin-stroke tagline (Nunito Sans at text-lg) where a 12px blur is
+	   huge relative to the actual glyph strokes — it wasn't adding a
+	   shadow behind the text, it was smearing the text itself.
+
+	   It also had no business running in light theme at all: light
+	   theme's hero text (`text-paper`) is already DARK ink on a light
+	   ground — a dark shadow behind already-dark text adds visible
+	   blur without adding any contrast, which is exactly what read as
+	   "wrong-prescription-glasses" there. Only dark theme's LIGHT text
+	   (`text-paper`, cream) actually benefits from a dark edge — and
+	   only dark theme was ever reported as having a legibility problem
+	   before this fix existed. Scoped accordingly; single small shadow,
+	   no second blurred layer. */
+	:global(:root:not([data-theme='light'])) .hero-text {
+		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
 	}
 
 	.hero-glow {
