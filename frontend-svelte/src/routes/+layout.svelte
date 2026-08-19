@@ -140,7 +140,11 @@
 			     page-wide symptom this caused). Tightened spacing + moved the
 			     breakpoint out to lg: (1024px) so anything narrower gets the
 			     hamburger menu instead of a cramped/overflowing full nav. -->
-			<nav class="hidden items-center justify-self-center gap-5 lg:flex">
+			<!-- Beta feedback 2026-08-19 — nav links had no explicit size at
+			     all (inherited the 1rem/16px ambient default), read as
+			     small on a real desktop screen. text-lg here (not on each
+			     <a>) cascades to all of them via ordinary CSS inheritance. -->
+			<nav class="hidden items-center justify-self-center gap-5 text-lg lg:flex">
 				<a href={localizeHref('/')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_home()}
 				</a>

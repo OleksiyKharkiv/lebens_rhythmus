@@ -15,10 +15,15 @@
 
 <section class="mx-auto grid max-w-5xl items-center gap-12 px-6 py-16 sm:py-24 lg:grid-cols-2 lg:gap-16">
 	<div>
-		<h1 class="hero-text font-display text-4xl leading-tight font-semibold text-paper sm:text-5xl">
+		<!-- Beta feedback 2026-08-19 — sm: (640px) is a low bar; on a real
+		     wide desktop monitor text sized for it can still read as
+		     small relative to all the surrounding space. Added an lg:
+		     step for both lines rather than just bumping the sm: value,
+		     so phones/tablets stay exactly as they were. -->
+		<h1 class="hero-text font-display text-4xl leading-tight font-semibold text-paper sm:text-5xl lg:text-6xl">
 			{m.home_hero_title()}
 		</h1>
-		<p class="hero-text mt-6 max-w-md text-lg text-paper-dim">
+		<p class="hero-text mt-6 max-w-md text-lg text-paper-dim lg:text-xl">
 			{m.home_hero_tagline()}
 		</p>
 		<a
