@@ -7,10 +7,13 @@
 </svelte:head>
 
 <section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
-	<h1 class="hero-title font-display font-semibold text-paper">{m.about_title()}</h1>
-	<p class="mt-4 font-display text-lg text-teal">{m.about_subtitle()}</p>
+	<!-- 2026-08-19 — .page-title, same as every other inner page's h1
+	     (was .hero-title, the same big Home-hero size — extra-large was
+	     right for Home's actual hero section, wrong here). -->
+	<h1 class="page-title font-display font-semibold text-paper">{m.about_title()}</h1>
+	<p class="lead-text mt-4 font-display text-teal">{m.about_subtitle()}</p>
 
-	<div class="mt-10 space-y-6 text-lg leading-relaxed text-paper-dim">
+	<div class="lead-text mt-10 space-y-6 leading-relaxed text-paper-dim">
 		<p>{m.about_body_1()}</p>
 		<p>{m.about_body_2()}</p>
 	</div>

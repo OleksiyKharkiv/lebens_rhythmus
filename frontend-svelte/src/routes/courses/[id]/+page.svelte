@@ -66,7 +66,7 @@
 			style={course.backgroundImageUrl ? `background-image: url('${course.backgroundImageUrl}')` : undefined}
 		>
 			{#if course.descriptionDe}
-				<p class="whitespace-pre-line text-lg leading-relaxed text-paper-dim">{course.descriptionDe}</p>
+				<p class="lead-text whitespace-pre-line leading-relaxed text-paper-dim">{course.descriptionDe}</p>
 			{/if}
 		</div>
 

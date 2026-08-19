@@ -209,10 +209,20 @@ h4 {
    because there are many structurally-identical headings across the
    site (every list page's card title, every inner page's h1) — one
    definition each, applied everywhere, instead of retyping six
-   breakpoint values per element per file. */
+   breakpoint values per element per file.
+
+   2026-08-19 — `.hero-title` (below) was briefly applied to About's h1
+   too, alongside Home's actual hero section — corrected: About isn't
+   a hero, it's a regular inner page, its h1 belongs on `.page-title`
+   like every other inner page. `.hero-title` stays reserved for
+   Home's own hero section specifically — a deliberately larger,
+   one-time visual moment on the page a visitor actually lands on, not
+   a size every page's h1 should carry. The two must still scale in
+   lockstep (same breakpoints, values move together) so nothing about
+   either one jumps unexpectedly on its own. */
 
 .hero-title {
-	font-size: 2.25rem; /* text-4xl, base/mobile — unchanged */
+	font-size: 2.25rem; /* text-4xl, base/mobile — unchanged, matches page-title */
 }
 @media (min-width: 640px) {
 	.hero-title {

@@ -49,7 +49,7 @@
 			{#each courses as c (c.id)}
 				<Card>
 					<h2 class="list-card-title font-display font-semibold text-paper">{c.titleDe}</h2>
-					{#if c.shortDescriptionDe}<p class="mt-2 text-sm text-paper-dim">{c.shortDescriptionDe}</p>{/if}
+					{#if c.shortDescriptionDe}<p class="lead-text mt-2 text-paper-dim">{c.shortDescriptionDe}</p>{/if}
 					{#if c.teacher}
 						<p class="mt-2 text-sm text-paper-dim">
 							<span class="font-semibold text-paper">Kursleitung:</span> {c.teacher.firstName} {c.teacher.lastName}

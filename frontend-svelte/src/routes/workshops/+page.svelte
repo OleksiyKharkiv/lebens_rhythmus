@@ -62,7 +62,7 @@
 			{#each workshops as w (w.id)}
 				<Card>
 					<h2 class="list-card-title font-display font-semibold text-paper">{w.title}</h2>
-					{#if w.shortDescription}<p class="mt-2 text-sm text-paper-dim">{w.shortDescription}</p>{/if}
+					{#if w.shortDescription}<p class="lead-text mt-2 text-paper-dim">{w.shortDescription}</p>{/if}
 					<dl class="mt-4 space-y-1 text-sm text-paper-dim">
 						{#if w.startDate}
 							<div><dt class="inline font-semibold text-paper">Start:</dt> <dd class="inline">{formatDate(w.startDate)}</dd></div>

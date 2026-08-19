@@ -46,7 +46,7 @@
 			{#each activities.filter((a) => a.active) as activity (activity.id)}
 				<Card>
 					<h2 class="list-card-title font-display font-semibold text-paper">{localizedTitle(activity)}</h2>
-					<p class="mt-2 text-sm text-paper-dim">{localizedDescription(activity)}</p>
+					<p class="lead-text mt-2 text-paper-dim">{localizedDescription(activity)}</p>
 					<div class="mt-4 flex items-center justify-between text-sm text-paper-dim">
 						<span>{activity.durationMinutes} {m.activities_duration_min()}</span>
 						<span class="font-display text-teal">
