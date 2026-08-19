@@ -15,15 +15,20 @@
 
 <section class="mx-auto grid max-w-5xl items-center gap-12 px-6 py-16 sm:py-24 lg:grid-cols-2 lg:gap-16">
 	<div>
-		<!-- Beta feedback 2026-08-19 — sm: (640px) is a low bar; on a real
-		     wide desktop monitor text sized for it can still read as
-		     small relative to all the surrounding space. Added an lg:
-		     step for both lines rather than just bumping the sm: value,
-		     so phones/tablets stay exactly as they were. -->
-		<h1 class="hero-text font-display text-4xl leading-tight font-semibold text-paper sm:text-5xl lg:text-6xl">
+		<!-- Beta feedback 2026-08-19 — sm:/lg: are a low bar; a size tuned
+		     for a 1024-1440px test viewport can still read as small on a
+		     genuinely wide monitor, since nothing scaled beyond lg: (no
+		     upper bound on a Tailwind breakpoint). Full ladder now (see
+		     layout.css's --breakpoint-1366 etc.) instead of one flat lg:
+		     value — mobile/tablet (base/sm:) stays exactly as it was. -->
+		<h1
+			class="hero-text font-display text-4xl leading-tight font-semibold text-paper 640:text-[3rem] 1024:text-[3.75rem] 1366:text-[4rem] 1440:text-[4.25rem] 1920:text-[4.5rem] 2560:text-[4.875rem] 3840:text-[5.5rem]"
+		>
 			{m.home_hero_title()}
 		</h1>
-		<p class="hero-text mt-6 max-w-md text-lg text-paper-dim lg:text-xl">
+		<p
+			class="hero-text mt-6 max-w-md text-lg text-paper-dim 1024:text-[1.25rem] 1366:text-[1.3125rem] 1440:text-[1.375rem] 1920:text-[1.5rem] 2560:text-[1.625rem] 3840:text-[1.875rem]"
+		>
 			{m.home_hero_tagline()}
 		</p>
 		<a
@@ -56,7 +61,16 @@
 			{#each directions as d (d.title)}
 				<div class="rounded-2xl border border-ink-line bg-ink px-6 py-8 transition-colors hover:border-gold/60">
 					<h3 class="font-display text-xl font-semibold text-teal">{d.title()}</h3>
-					<p class="mt-3 text-sm leading-relaxed text-paper-dim">{d.desc()}</p>
+					<!-- Direct request 2026-08-19 — +0.5rem (0.875rem -> 1.375rem)
+					     as the base/mobile-through-1024 size (unchanged, this
+					     element had no breakpoint at all before, flat
+					     everywhere), then the same breakpoint ladder as the
+					     rest of the page from 1024px up (layout.css). -->
+					<p
+						class="mt-3 text-[1.375rem] leading-relaxed text-paper-dim 1366:text-[1.4375rem] 1440:text-[1.5rem] 1920:text-[1.625rem] 2560:text-[1.75rem] 3840:text-[2rem]"
+					>
+						{d.desc()}
+					</p>
 				</div>
 			{/each}
 		</div>

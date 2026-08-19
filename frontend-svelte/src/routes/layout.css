@@ -48,6 +48,54 @@
 
 	--font-display: 'Quicksand', sans-serif;
 	--font-body: 'Nunito Sans', sans-serif;
+
+	/* Breakpoint ladder — 2026-08-19, direct request, after a design
+	   review + architect-reviewer round on font sizing. Deliberately a
+	   step ladder, NOT clamp()-based fluid scaling: chosen explicitly
+	   over continuous interpolation for this project — each step is a
+	   named, individually testable width instead of a formula, at the
+	   cost of still being stepped (not perfectly smooth) between them.
+	   Named literally by pixel width, not by category label (no
+	   "laptop"/"desktop"), so there's no naming judgment call to get
+	   wrong or disagree with later — the number IS the breakpoint.
+	   New widths beyond Tailwind's built-in scale are real, common
+	   Windows/monitor widths, not arbitrary round numbers: 1366 (WXGA,
+	   most common laptop width for years), 1440 (WXGA+, also MacBook
+	   Air 13" logical width), 1920 (Full HD, most common desktop
+	   monitor), 2560 (QHD), 3840 (4K UHD).
+
+	   Found the hard way (live browser, comparing actual generated CSS
+	   source order via fetch()) that Tailwind v4 does NOT sort custom
+	   --breakpoint-* additions together with the named defaults
+	   (sm/md/lg/xl/2xl) by pixel value — named defaults get their own
+	   fixed emission slot regardless of value, custom numeric ones get
+	   emitted as a separate group elsewhere. Redeclaring sm/md/lg/xl/2xl
+	   at their stock values in this same block did NOT fix it (tried,
+	   verified, reverted) — the two kinds just don't merge into one
+	   sorted list. So: this ladder does NOT reuse `lg:` at all — 1024
+	   is defined here as a plain custom breakpoint, same mechanism as
+	   the rest, so all six (1024/1366/1440/1920/2560/3840) are the same
+	   kind of thing and do sort correctly among themselves (verified).
+	   Tailwind's own sm/md/lg/xl/2xl are untouched/unused by this
+	   ladder — still there for the rest of the site as before.
+
+	   Learned the SAME lesson a second time on the hero h1 specifically
+	   (sm:text-5xl mixed with the custom ladder) before generalizing
+	   this comment: it's not just `lg:` — ANY named breakpoint mixed
+	   with a custom one on the same element/property has the named one
+	   win regardless of actual pixel value (confirmed: at a 1920px
+	   viewport, sm:'s 640px-wide rule was overriding the custom 1920:
+	   rule). --breakpoint-640 exists here ONLY so hero h1 has a
+	   same-mechanism replacement for `sm:` — do not mix `sm:`/`lg:`/etc.
+	   into any element that also uses this ladder; use `640:` instead
+	   of `sm:` there too. */
+	--breakpoint-640: 640px;
+	--breakpoint-1024: 1024px;
+	--breakpoint-1366: 1366px;
+	--breakpoint-1440: 1440px;
+	--breakpoint-1920: 1920px;
+	--breakpoint-2560: 2560px;
+	--breakpoint-3840: 3840px;
 }
 
 /* Light theme — same warm/elegant character (LR-ADR-014), ground and text

@@ -126,9 +126,15 @@
 		     equal by definition, so the middle column is exactly centered
 		     regardless of what's in the side columns). -->
 		<div class="grid grid-cols-[1fr_auto_1fr] items-center px-6 py-4">
+			<!-- Direct request 2026-08-19 — header text +0.5rem (except the
+			     language links and theme toggle, in the separate div
+			     below — untouched, not part of this ask). lg: only, same
+			     desktop-scoping as the earlier nav size fix (this link is
+			     also the logo, visible at all widths — no lg: here would
+			     bump mobile too, not requested). -->
 			<a
 				href={localizeHref('/')}
-				class="shrink-0 justify-self-start font-display text-lg font-semibold whitespace-nowrap text-paper tracking-wide"
+				class="shrink-0 justify-self-start font-display text-lg font-semibold whitespace-nowrap text-paper tracking-wide 1024:text-[1.625rem] 1366:text-[1.6875rem] 1440:text-[1.75rem] 1920:text-[1.875rem] 2560:text-[2rem] 3840:text-[2.25rem]"
 			>
 				{m.site_name()}
 			</a>
@@ -141,10 +147,17 @@
 			     breakpoint out to lg: (1024px) so anything narrower gets the
 			     hamburger menu instead of a cramped/overflowing full nav. -->
 			<!-- Beta feedback 2026-08-19 — nav links had no explicit size at
-			     all (inherited the 1rem/16px ambient default), read as
-			     small on a real desktop screen. text-lg here (not on each
-			     <a>) cascades to all of them via ordinary CSS inheritance. -->
-			<nav class="hidden items-center justify-self-center gap-5 text-lg lg:flex">
+			     all, read as small on a real desktop screen. Cascades to
+			     all links (incl. login/logout) via ordinary inheritance,
+			     one class instead of repeating it on each <a>. Full
+			     breakpoint ladder (see layout.css's --breakpoint-1024
+			     etc.) instead of one flat lg: value — nav is already
+			     display:none below 1024px (hidden/lg:flex on this same
+			     element), so the ladder only ever needs to cover
+			     1024px-and-up, same set as the logo just above. -->
+			<nav
+				class="hidden items-center justify-self-center gap-5 1024:flex 1024:text-[1.625rem] 1366:text-[1.6875rem] 1440:text-[1.75rem] 1920:text-[1.875rem] 2560:text-[2rem] 3840:text-[2.25rem]"
+			>
 				<a href={localizeHref('/')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_home()}
 				</a>
