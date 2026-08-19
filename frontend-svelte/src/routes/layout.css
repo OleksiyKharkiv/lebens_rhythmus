@@ -112,8 +112,8 @@ body {
 :root[data-theme='light'] body {
 	background-image:
 		linear-gradient(
-			color-mix(in srgb, var(--color-ink) 20%, transparent),
-			color-mix(in srgb, var(--color-ink) 20%, transparent)
+			color-mix(in srgb, var(--color-ink) 70%, transparent),
+			color-mix(in srgb, var(--color-ink) 70%, transparent)
 		),
 		url('/background-light.png');
 	background-repeat: no-repeat;
@@ -124,8 +124,8 @@ body {
 :root:not([data-theme='light']) body {
 	background-image:
 		linear-gradient(
-			color-mix(in srgb, var(--color-ink) 20%, transparent),
-			color-mix(in srgb, var(--color-ink) 20%, transparent)
+			color-mix(in srgb, var(--color-ink) 70%, transparent),
+			color-mix(in srgb, var(--color-ink) 70%, transparent)
 		),
 		url('/background-dark.png');
 	background-repeat: no-repeat;
