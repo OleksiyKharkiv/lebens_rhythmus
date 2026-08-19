@@ -1,7 +1,18 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { afterNavigate } from '$app/navigation';
+	// Bug report 2026-08-17 — only the "My area" link preserved the active
+	// language; every other nav/footer link was a bare unprefixed href
+	// ("/courses" etc., some via SvelteKit's resolve()). With
+	// strategy: ['url', 'cookie', 'baseLocale'] (vite.config.ts), an
+	// unprefixed href always resolves to baseLocale ('de') — clicking any
+	// of them silently reset the language. localizeHref(path) (no locale
+	// option) defaults to the CURRENT locale, so it's the fix for every
+	// internal link, not just the language-switcher links that already
+	// used it. Deliberately NOT combined with resolve() here — an earlier
+	// resolve(localizeHref(...)) attempt on this same file broke
+	// svelte-check because resolve() needs a literal route id, not a
+	// dynamically localized string (see docs/tickets/archive.md).
 	import { locales, localizeHref, getLocale } from '$lib/paraglide/runtime';
 	import * as m from '$lib/paraglide/messages.js';
 	import { isAuthenticated, clearSession, getStoredRole } from '$lib/api';
@@ -75,7 +86,7 @@
 	function handleLogout() {
 		clearSession();
 		loggedIn = false;
-		window.location.href = '/';
+		window.location.href = localizeHref('/');
 	}
 
 	// The mobile nav stayed open after picking a link — SvelteKit's client
@@ -105,7 +116,7 @@
 		     regardless of what's in the side columns). -->
 		<div class="grid grid-cols-[1fr_auto_1fr] items-center px-6 py-4">
 			<a
-				href={resolve('/')}
+				href={localizeHref('/')}
 				class="shrink-0 justify-self-start font-display text-lg font-semibold whitespace-nowrap text-paper tracking-wide"
 			>
 				{m.site_name()}
@@ -119,26 +130,26 @@
 			     breakpoint out to lg: (1024px) so anything narrower gets the
 			     hamburger menu instead of a cramped/overflowing full nav. -->
 			<nav class="hidden items-center justify-self-center gap-5 lg:flex">
-				<a href={resolve('/')} class="text-paper-dim hover:text-gold transition-colors">
+				<a href={localizeHref('/')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_home()}
 				</a>
-				<a href={resolve('/about')} class="text-paper-dim hover:text-gold transition-colors">
+				<a href={localizeHref('/about')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_about()}
 				</a>
-				<a href="/activities" class="text-paper-dim hover:text-gold transition-colors">
+				<a href={localizeHref('/activities')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_activities()}
 				</a>
-				<a href="/workshops" class="text-paper-dim hover:text-gold transition-colors">
+				<a href={localizeHref('/workshops')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_workshops()}
 				</a>
-				<a href="/courses" class="text-paper-dim hover:text-gold transition-colors">
+				<a href={localizeHref('/courses')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_courses()}
 				</a>
-				<a href="/performances" class="text-paper-dim hover:text-gold transition-colors">
+				<a href={localizeHref('/performances')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_performances()}
 				</a>
 				{#if loggedIn}
-					<a href={roleAreaHref} class="text-paper-dim hover:text-gold transition-colors">
+					<a href={localizeHref(roleAreaHref)} class="text-paper-dim hover:text-gold transition-colors">
 						{roleAreaLabel}
 					</a>
 					<button
@@ -149,7 +160,7 @@
 					</button>
 				{:else}
 					<a
-						href={resolve('/login')}
+						href={localizeHref('/login')}
 						class="rounded-full border border-gold/70 px-4 py-1.5 text-paper transition-colors hover:bg-gold hover:text-ink"
 					>
 						{m.nav_login()}
@@ -207,14 +218,14 @@
 
 		{#if mobileOpen}
 			<nav class="flex flex-col gap-4 border-t border-ink-line px-6 py-4 lg:hidden">
-				<a href={resolve('/')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_home()}</a>
-				<a href={resolve('/about')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_about()}</a>
-				<a href="/activities" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_activities()}</a>
-				<a href="/workshops" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_workshops()}</a>
-				<a href="/courses" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_courses()}</a>
-				<a href="/performances" onclick={closeMobileMenu} class="text-paper-dim">{m.nav_performances()}</a>
+				<a href={localizeHref('/')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_home()}</a>
+				<a href={localizeHref('/about')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_about()}</a>
+				<a href={localizeHref('/activities')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_activities()}</a>
+				<a href={localizeHref('/workshops')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_workshops()}</a>
+				<a href={localizeHref('/courses')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_courses()}</a>
+				<a href={localizeHref('/performances')} onclick={closeMobileMenu} class="text-paper-dim">{m.nav_performances()}</a>
 				{#if loggedIn}
-					<a href={roleAreaHref} onclick={closeMobileMenu} class="text-paper-dim">{roleAreaLabel}</a>
+					<a href={localizeHref(roleAreaHref)} onclick={closeMobileMenu} class="text-paper-dim">{roleAreaLabel}</a>
 					<button
 						onclick={() => {
 							closeMobileMenu();
@@ -225,7 +236,7 @@
 						{m.nav_logout()}
 					</button>
 				{:else}
-					<a href={resolve('/login')} onclick={closeMobileMenu} class="text-gold">{m.nav_login()}</a>
+					<a href={localizeHref('/login')} onclick={closeMobileMenu} class="text-gold">{m.nav_login()}</a>
 				{/if}
 				<div class="flex items-center justify-between pt-2">
 					<div class="flex gap-4 text-sm">
@@ -280,16 +291,16 @@
 		     the gap between links within each block — was too cramped. -->
 		<div class="flex flex-wrap items-center justify-center gap-x-10 gap-y-3">
 			<nav class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
-				<a href="/contact" class="hover:text-paper">{m.nav_contact()}</a>
-				<a href="/corporate" class="hover:text-paper">{m.nav_corporate()}</a>
-				<a href="/feedback" class="hover:text-paper">{m.feedback_title()}</a>
+				<a href={localizeHref('/contact')} class="hover:text-paper">{m.nav_contact()}</a>
+				<a href={localizeHref('/corporate')} class="hover:text-paper">{m.nav_corporate()}</a>
+				<a href={localizeHref('/feedback')} class="hover:text-paper">{m.feedback_title()}</a>
 			</nav>
 			<span class="hidden text-paper-dim/30 sm:inline" aria-hidden="true">|</span>
 			<nav class="flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
-				<a href="/impressum" class="hover:text-paper">{m.footer_impressum()}</a>
-				<a href="/datenschutz" class="hover:text-paper">{m.footer_datenschutz()}</a>
-				<a href="/agb" class="hover:text-paper">{m.footer_agb()}</a>
-				<a href="/widerruf" class="hover:text-paper">{m.footer_widerruf()}</a>
+				<a href={localizeHref('/impressum')} class="hover:text-paper">{m.footer_impressum()}</a>
+				<a href={localizeHref('/datenschutz')} class="hover:text-paper">{m.footer_datenschutz()}</a>
+				<a href={localizeHref('/agb')} class="hover:text-paper">{m.footer_agb()}</a>
+				<a href={localizeHref('/widerruf')} class="hover:text-paper">{m.footer_widerruf()}</a>
 			</nav>
 			<span class="hidden text-paper-dim/30 sm:inline" aria-hidden="true">|</span>
 			<p class="text-xs text-paper-dim/60">{m.footer_legal_note()}</p>

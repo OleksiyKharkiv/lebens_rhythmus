@@ -2,6 +2,7 @@
 	import { page } from '$app/state';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import * as m from '$lib/paraglide/messages.js';
 	import { login, register, resendVerification, persistSession, ApiError } from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
@@ -272,7 +273,7 @@
 				<input type="checkbox" required bind:checked={acceptTerms} class="mt-1 accent-teal" />
 				<span>
 					{m.register_terms_prefix()}
-					<a href="/agb" target="_blank" rel="noopener" class="text-teal underline hover:no-underline">
+					<a href={localizeHref('/agb')} target="_blank" rel="noopener" class="text-teal underline hover:no-underline">
 						{m.register_terms_link()}
 					</a>
 				</span>
@@ -281,7 +282,7 @@
 				<input type="checkbox" required bind:checked={acceptPrivacy} class="mt-1 accent-teal" />
 				<span>
 					{m.register_privacy_prefix()}
-					<a href="/datenschutz" target="_blank" rel="noopener" class="text-teal underline hover:no-underline">
+					<a href={localizeHref('/datenschutz')} target="_blank" rel="noopener" class="text-teal underline hover:no-underline">
 						{m.register_privacy_link()}
 					</a>
 				</span>

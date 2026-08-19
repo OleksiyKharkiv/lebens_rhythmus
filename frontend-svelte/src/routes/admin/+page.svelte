@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import {
 		getUserStatistics,
 		getWorkshops,
@@ -101,7 +102,7 @@
 					<Card>
 						<h3 class="font-display text-lg font-semibold text-paper">{w.title}</h3>
 						<p class="mt-1 text-sm text-paper-dim">{w.startDate ?? '—'}</p>
-						<a href="/admin/workshops" class="mt-3 inline-block text-sm text-gold hover:underline">
+						<a href={localizeHref('/admin/workshops')} class="mt-3 inline-block text-sm text-gold hover:underline">
 							{m.admin_manage()}
 						</a>
 					</Card>

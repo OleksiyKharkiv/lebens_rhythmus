@@ -2,6 +2,38 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-08-17 — fix: переключение языка не сохранялось при переходе по меню; docs: LR-095
+
+### Область (`frontend-svelte/src/routes/{+layout.svelte,admin/{+layout.svelte,+page.svelte},agb/+page.svelte,login/+page.svelte}`, `docs/tickets/tickets.md`)
+
+- **fix** — почти все внутренние ссылки (главное меню, мобильное меню,
+  футер, admin-сайдбар, пара cross-ссылок на AGB/login) были голыми
+  непрефиксованными `href="/courses"` и т.п. (часть — через
+  `resolve()` из `$app/paths`, который тоже не локализует). При
+  `strategy: ['url', 'cookie', 'baseLocale']` (vite.config.ts)
+  непрефиксованный href всегда резолвится в `baseLocale` (`de`) — клик
+  по любой из этих ссылок молча сбрасывал язык на немецкий. Заменено
+  на `localizeHref(path)` (без явного `locale` — по умолчанию берёт
+  текущий) везде, тот же примитив, что уже использовался только в
+  самом переключателе языка. Намеренно НЕ через
+  `resolve(localizeHref(...))` — эта комбинация уже один раз ломала
+  `svelte-check` в этом же файле (см. `archive.md`, resolve() требует
+  литеральный route id, не динамическую строку).
+- **verify** — `npm run check` 0 ошибок, `npm test -- --run` 13/13.
+  Позже в этой же сессии живой браузер всё же удалось подключить
+  (`preview_start` с прямым `url`, не именем из launch.json — обходит
+  неполадку working directory numi/lebens_rhythmus) — переключатель
+  языка в шапке реально генерирует `DE→/`, `УКР→/uk/`, `EN→/en/`, как
+  и задумано.
+- **docs** — `LR-095` (LOW) заводит тикет на хардкоженный немецкий
+  текст вне legal-страниц (`Kursleitung`/`Altersgruppe` и т.п. в
+  `courses`/`workshops` — не проходит через `m.xxx()`, значит не
+  переводится вообще, независимо от языка). Дедуп проверен — дублей в
+  `tickets.md`/`archive.md` нет. Явно отмечено, что это НЕ проблема
+  i18n-инфраструктуры (все 3 `messages/*.json` — 252/252/252 ключей,
+  параллельны) и НЕ включает `agb`/`impressum`/`datenschutz`/`widerruf`
+  (намеренно German-only, `LR-ADR-013`).
+
 ## 2026-08-16 — docs: LR-094 — admin-страница состояния курса/воркшопа
 
 ### Область (`docs/tickets/tickets.md`)

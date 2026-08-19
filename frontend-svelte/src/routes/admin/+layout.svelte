@@ -1,6 +1,7 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
 	import { page } from '$app/state';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import { isAuthenticated, getStoredRole } from '$lib/api';
 
 	let { children } = $props();
@@ -51,7 +52,7 @@
 		<nav class="mb-10 flex flex-wrap gap-2 border-b border-ink-line pb-6">
 			{#each navItems as item (item.href)}
 				<a
-					href={item.href}
+					href={localizeHref(item.href)}
 					aria-current={isActive(item.href) ? 'page' : undefined}
 					class="rounded-full border px-4 py-1.5 text-sm transition-colors {isActive(item.href)
 						? 'border-gold text-paper bg-gold/10'

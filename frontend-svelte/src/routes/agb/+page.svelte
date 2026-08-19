@@ -1,6 +1,10 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
-	// German-only, see note in impressum/+page.svelte.
+	import { localizeHref } from '$lib/paraglide/runtime';
+	// German-only, see note in impressum/+page.svelte. Cross-links below
+	// still go through localizeHref — the legal text itself stays German,
+	// but the site chrome around the linked page should keep whatever
+	// locale the user is actually browsing in (2026-08-17 nav-locale fix).
 </script>
 
 <svelte:head>
@@ -23,7 +27,7 @@
 			<p class="mt-2">
 				1.2 Verbrauchern steht ein gesetzliches Widerrufsrecht von 14 Tagen zu. Die Widerrufsfrist
 				beginnt mit dem Tag des Vertragsschlusses. Näheres regelt die separate
-				<a href="/widerruf" class="text-gold hover:underline">Widerrufsbelehrung</a>.
+				<a href={localizeHref('/widerruf')} class="text-gold hover:underline">Widerrufsbelehrung</a>.
 			</p>
 		</div>
 
@@ -101,14 +105,14 @@
 			<p class="mt-2">
 				7.1 Der Anbieter erhebt, verarbeitet und nutzt personenbezogene Daten des Kunden
 				ausschließlich zur Vertragsdurchführung gemäß den Bestimmungen der DSGVO. Nähere Hinweise
-				finden Sie in der <a href="/datenschutz" class="text-gold hover:underline">Datenschutzerklärung</a>.
+				finden Sie in der <a href={localizeHref('/datenschutz')} class="text-gold hover:underline">Datenschutzerklärung</a>.
 			</p>
 			<p class="mt-2">
 				7.2 Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:
 				<a href="https://ec.europa.eu/consumers/odr/" class="text-gold hover:underline"
 					>https://ec.europa.eu/consumers/odr/</a
 				>. Unsere E-Mail-Adresse finden Sie im
-				<a href="/impressum" class="text-gold hover:underline">Impressum</a>.
+				<a href={localizeHref('/impressum')} class="text-gold hover:underline">Impressum</a>.
 			</p>
 		</div>
 
