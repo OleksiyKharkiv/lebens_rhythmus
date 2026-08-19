@@ -96,19 +96,24 @@ body {
    invert()+hue-rotate() CSS-filter attempt at faking a dark version
    from the light file was reverted — real asset per theme instead, see
    git history around 2026-08-19 if the reasoning is needed again).
-   Layered under a translucent wash of the theme's own ground color
-   (same color-mix() idiom already used for the header backdrop above,
-   in +layout.svelte) rather than shown at full strength — LR-ADR-014's
-   whole design language is "restraint in the ground, vividness spent
-   only on the accents," so a full-opacity multi-color line drawing
-   behind body text would fight the accent-gold/accent-teal palette
-   and hurt readability. Deliberately no `background-attachment: fixed`
-   — that's a known broken/janky combo on iOS Safari. */
+   Layered under a LIGHT wash of the theme's own ground color (same
+   color-mix() idiom already used for the header backdrop above, in
+   +layout.svelte) purely so the art doesn't sit on a jarring pure-
+   white/pure-black rectangle that fights the ground color at the
+   edges — not to mute the art itself. 2026-08-19 (beta feedback): the
+   first version of this wash was 85% ink / 15% art, which read as the
+   whole background being washed-out/blurred rather than a background
+   image at all — dropped to 20% ink / 80% art. Text-over-art contrast
+   is handled separately, at the elements that actually needed it
+   (header backdrop opacity, hero text-shadow) rather than by keeping
+   the art itself faint everywhere. Deliberately no
+   `background-attachment: fixed` — known broken/janky combo on iOS
+   Safari. */
 :root[data-theme='light'] body {
 	background-image:
 		linear-gradient(
-			color-mix(in srgb, var(--color-ink) 85%, transparent),
-			color-mix(in srgb, var(--color-ink) 85%, transparent)
+			color-mix(in srgb, var(--color-ink) 20%, transparent),
+			color-mix(in srgb, var(--color-ink) 20%, transparent)
 		),
 		url('/background-light.png');
 	background-repeat: no-repeat;
@@ -119,8 +124,8 @@ body {
 :root:not([data-theme='light']) body {
 	background-image:
 		linear-gradient(
-			color-mix(in srgb, var(--color-ink) 85%, transparent),
-			color-mix(in srgb, var(--color-ink) 85%, transparent)
+			color-mix(in srgb, var(--color-ink) 20%, transparent),
+			color-mix(in srgb, var(--color-ink) 20%, transparent)
 		),
 		url('/background-dark.png');
 	background-repeat: no-repeat;
