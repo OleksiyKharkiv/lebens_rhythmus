@@ -98,7 +98,13 @@
 	}
 </script>
 
-<div class="flex min-h-screen flex-col bg-ink text-paper">
+<!-- No bg-ink here (2026-08-17) — this div's own opaque background was
+     painting over layout.css's body::before background-art layer,
+     which sits at z-index:-1 behind normal-flow content. html's own
+     `background: var(--color-ink)` (layout.css) already provides the
+     same solid fallback color underneath, so this div only needs to
+     stay transparent and let that show through. -->
+<div class="flex min-h-screen flex-col text-paper">
 	<header
 		class="border-ink-line/60 sticky top-0 z-20 border-b bg-ink/90 backdrop-blur"
 		style="background-color: color-mix(in srgb, var(--color-ink) 90%, transparent);"
