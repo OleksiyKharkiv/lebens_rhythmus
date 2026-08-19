@@ -126,15 +126,16 @@
 		     equal by definition, so the middle column is exactly centered
 		     regardless of what's in the side columns). -->
 		<div class="grid grid-cols-[1fr_auto_1fr] items-center px-6 py-4">
-			<!-- Direct request 2026-08-19 — header text +0.5rem (except the
-			     language links and theme toggle, in the separate div
-			     below — untouched, not part of this ask). lg: only, same
-			     desktop-scoping as the earlier nav size fix (this link is
-			     also the logo, visible at all widths — no lg: here would
-			     bump mobile too, not requested). -->
+			<!-- 2026-08-19 — the manual +0.5rem bump (once the ladder below
+			     started at 1024px) is reverted: now that the breakpoint
+			     ladder itself actually scales correctly, the flat +0.5rem
+			     on top of it read as oversized ("великанским"). Ladder
+			     now starts at the SAME size as mobile/base (1.125rem) at
+			     1024px and grows from there, instead of jumping to
+			     1.625rem immediately. -->
 			<a
 				href={localizeHref('/')}
-				class="shrink-0 justify-self-start font-display text-lg font-semibold whitespace-nowrap text-paper tracking-wide 1024:text-[1.625rem] 1366:text-[1.6875rem] 1440:text-[1.75rem] 1920:text-[1.875rem] 2560:text-[2rem] 3840:text-[2.25rem]"
+				class="shrink-0 justify-self-start font-display text-lg font-semibold whitespace-nowrap text-paper tracking-wide 1024:text-[1.125rem] 1366:text-[1.1875rem] 1440:text-[1.25rem] 1920:text-[1.375rem] 2560:text-[1.5rem] 3840:text-[1.75rem]"
 			>
 				{m.site_name()}
 			</a>
@@ -146,17 +147,15 @@
 			     page-wide symptom this caused). Tightened spacing + moved the
 			     breakpoint out to lg: (1024px) so anything narrower gets the
 			     hamburger menu instead of a cramped/overflowing full nav. -->
-			<!-- Beta feedback 2026-08-19 — nav links had no explicit size at
-			     all, read as small on a real desktop screen. Cascades to
-			     all links (incl. login/logout) via ordinary inheritance,
-			     one class instead of repeating it on each <a>. Full
-			     breakpoint ladder (see layout.css's --breakpoint-1024
-			     etc.) instead of one flat lg: value — nav is already
-			     display:none below 1024px (hidden/lg:flex on this same
-			     element), so the ladder only ever needs to cover
-			     1024px-and-up, same set as the logo just above. -->
+			<!-- Cascades to all links (incl. login/logout) via ordinary
+			     inheritance, one class instead of repeating it on each
+			     <a>. Full breakpoint ladder (see layout.css's
+			     --breakpoint-1024 etc.), same shape/reasoning as the logo
+			     just above, incl. the 2026-08-19 revert of the flat
+			     +0.5rem manual bump — starts at the ambient 1.125rem at
+			     1024px, grows from there instead of jumping immediately. -->
 			<nav
-				class="hidden items-center justify-self-center gap-5 1024:flex 1024:text-[1.625rem] 1366:text-[1.6875rem] 1440:text-[1.75rem] 1920:text-[1.875rem] 2560:text-[2rem] 3840:text-[2.25rem]"
+				class="hidden items-center justify-self-center gap-5 1024:flex 1024:text-[1.125rem] 1366:text-[1.1875rem] 1440:text-[1.25rem] 1920:text-[1.375rem] 2560:text-[1.5rem] 3840:text-[1.75rem]"
 			>
 				<a href={localizeHref('/')} class="text-paper-dim hover:text-gold transition-colors">
 					{m.nav_home()}

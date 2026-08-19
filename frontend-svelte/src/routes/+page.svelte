@@ -60,7 +60,20 @@
 		<div class="mt-10 grid gap-6 sm:grid-cols-3">
 			{#each directions as d (d.title)}
 				<div class="rounded-2xl border border-ink-line bg-ink px-6 py-8 transition-colors hover:border-gold/60">
-					<h3 class="font-display text-xl font-semibold text-teal">{d.title()}</h3>
+					<!-- Fix 2026-08-19 — title was left at a flat text-xl (1.25rem)
+					     while the description below it (next block) got a
+					     whole breakpoint ladder growing well past that — the
+					     title read smaller than its own body text at every
+					     width. Same ladder shape, offset to stay ~2px ahead
+					     of the description at each step. Base bumped
+					     1.25rem->1.5rem too, since the description's base
+					     (1.375rem, below) is unconditional/unprefixed and was
+					     already ahead of the old title size even on mobile. -->
+					<h3
+						class="font-display text-[1.5rem] font-semibold text-teal 1366:text-[1.5625rem] 1440:text-[1.625rem] 1920:text-[1.75rem] 2560:text-[1.875rem] 3840:text-[2.125rem]"
+					>
+						{d.title()}
+					</h3>
 					<!-- Direct request 2026-08-19 — +0.5rem (0.875rem -> 1.375rem)
 					     as the base/mobile-through-1024 size (unchanged, this
 					     element had no breakpoint at all before, flat
