@@ -105,9 +105,14 @@
      same solid fallback color underneath, so this div only needs to
      stay transparent and let that show through. -->
 <div class="flex min-h-screen flex-col text-paper">
+	<!-- Bumped 90% -> 96% (2026-08-17, beta feedback) — the new page
+	     background art (layout.css) shows through backdrop-blur enough
+	     at 90% to visibly reduce nav-link contrast, something that
+	     wasn't a problem when the page behind the header was ever just
+	     a flat ground color. -->
 	<header
-		class="border-ink-line/60 sticky top-0 z-20 border-b bg-ink/90 backdrop-blur"
-		style="background-color: color-mix(in srgb, var(--color-ink) 90%, transparent);"
+		class="border-ink-line/60 sticky top-0 z-20 border-b bg-ink/96 backdrop-blur"
+		style="background-color: color-mix(in srgb, var(--color-ink) 96%, transparent);"
 	>
 		<!-- UI fix 2026-08-15 (beta feedback) — was `mx-auto max-w-6xl`, same
 		     reading-width constraint the page body uses. Correct for body
