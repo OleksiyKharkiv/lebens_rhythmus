@@ -91,34 +91,18 @@ body {
 	overflow-x: hidden;
 }
 
-/* Site background art, supplied by Olena (2026-08-17). Layered under a
-   translucent wash of the theme's own ground color (same color-mix()
-   idiom already used for the header backdrop, in +layout.svelte) rather
-   than shown at full strength — LR-ADR-014's whole design language is
-   "restraint in the ground, vividness spent only on the accents," so a
-   full-opacity multi-color line drawing behind body text would fight
-   the accent-gold/accent-teal palette and hurt readability.
-
-   2026-08-17 experiment (owner's explicit request, reversible) — dark
-   theme reuses the SAME light-theme file, run through
-   invert()+hue-rotate(180deg) instead of a second hand-prepared asset.
-   Plain invert() alone would just hue-shift every stroke (red->cyan,
-   green->magenta, ...); adding hue-rotate(180deg) is the standard
-   "smart invert" pairing that flips light/dark while landing each hue
-   much closer to its original than invert() alone. If this reads as
-   muddy/wrong in review, revert to a real second asset instead of
-   tuning the filter further.
-
-   The filter sits on a ::before pseudo-element, not body itself —
-   filter on body would also invert/hue-rotate the actual page content
-   (text, cards, everything), not just this backdrop layer. Deliberately
-   no `background-attachment: fixed` on it — known broken/janky combo on
-   iOS Safari. */
-body::before {
-	content: '';
-	position: fixed;
-	inset: 0;
-	z-index: -1;
+/* Site background art, supplied by Olena (2026-08-17) — light theme only
+   for now; the dark-theme counterpart is a separate asset, not yet
+   supplied (see docs/tickets/tickets.md if a ticket was filed for it).
+   Layered under a translucent wash of the theme's own ground color
+   (same color-mix() idiom already used for the header backdrop above,
+   in +layout.svelte) rather than shown at full strength — LR-ADR-014's
+   whole design language is "restraint in the ground, vividness spent
+   only on the accents," so a full-opacity multi-color line drawing
+   behind body text would fight the accent-gold/accent-teal palette
+   and hurt readability. Deliberately no `background-attachment: fixed`
+   — that's a known broken/janky combo on iOS Safari. */
+:root[data-theme='light'] body {
 	background-image:
 		linear-gradient(
 			color-mix(in srgb, var(--color-ink) 85%, transparent),
@@ -128,10 +112,6 @@ body::before {
 	background-repeat: no-repeat;
 	background-position: top center;
 	background-size: cover;
-}
-
-:root:not([data-theme='light']) body::before {
-	filter: invert(1) hue-rotate(180deg);
 }
 
 h1,
