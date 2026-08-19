@@ -49,7 +49,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
-	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{m.workshops_title()}</h1>
+	<h1 class="page-title font-display font-semibold text-paper">{m.workshops_title()}</h1>
 
 	{#if error}
 		<p class="mt-8 text-error">{m.state_error()}</p>
@@ -61,7 +61,7 @@
 		<div class="mt-10 grid gap-6 sm:grid-cols-2">
 			{#each workshops as w (w.id)}
 				<Card>
-					<h2 class="font-display text-xl font-semibold text-paper">{w.title}</h2>
+					<h2 class="list-card-title font-display font-semibold text-paper">{w.title}</h2>
 					{#if w.shortDescription}<p class="mt-2 text-sm text-paper-dim">{w.shortDescription}</p>{/if}
 					<dl class="mt-4 space-y-1 text-sm text-paper-dim">
 						{#if w.startDate}

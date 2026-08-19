@@ -22,7 +22,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
-	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{m.performances_title()}</h1>
+	<h1 class="page-title font-display font-semibold text-paper">{m.performances_title()}</h1>
 
 	{#if error}
 		<p class="mt-8 text-error">{m.state_error()}</p>
@@ -34,10 +34,10 @@
 		<div class="mt-10 space-y-4">
 			{#each performances as perf (perf.id)}
 				<Card>
-					<h2 class="font-display text-xl font-semibold text-paper">{perf.title}</h2>
+					<h2 class="list-card-title font-display font-semibold text-paper">{perf.title}</h2>
 					<p class="mt-1 text-sm text-paper-dim">{formatDateTime(perf.performanceDate)}</p>
 					{#if perf.venue}<p class="text-sm text-paper-dim">{perf.venue}</p>{/if}
-					{#if perf.description}<p class="mt-2 text-lg text-paper-dim">{perf.description}</p>{/if}
+					{#if perf.description}<p class="lead-text mt-2 text-paper-dim">{perf.description}</p>{/if}
 				</Card>
 			{/each}
 		</div>

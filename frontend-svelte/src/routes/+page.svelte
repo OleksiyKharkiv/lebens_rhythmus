@@ -15,20 +15,14 @@
 
 <section class="mx-auto grid max-w-5xl items-center gap-12 px-6 py-16 sm:py-24 lg:grid-cols-2 lg:gap-16">
 	<div>
-		<!-- Beta feedback 2026-08-19 — sm:/lg: are a low bar; a size tuned
-		     for a 1024-1440px test viewport can still read as small on a
-		     genuinely wide monitor, since nothing scaled beyond lg: (no
-		     upper bound on a Tailwind breakpoint). Full ladder now (see
-		     layout.css's --breakpoint-1366 etc.) instead of one flat lg:
-		     value — mobile/tablet (base/sm:) stays exactly as it was. -->
-		<h1
-			class="hero-text font-display text-4xl leading-tight font-semibold text-paper 640:text-[3rem] 1024:text-[3.75rem] 1366:text-[4rem] 1440:text-[4.25rem] 1920:text-[4.5rem] 2560:text-[4.875rem] 3840:text-[5.5rem]"
-		>
+		<!-- 2026-08-19 — refactored onto the shared .hero-title/.lead-text
+		     classes (layout.css) once the site-wide ladder rollout gave
+		     them a home; same values this element already had, just no
+		     longer duplicated inline. -->
+		<h1 class="hero-text hero-title font-display leading-tight font-semibold text-paper">
 			{m.home_hero_title()}
 		</h1>
-		<p
-			class="hero-text mt-6 max-w-md text-lg text-paper-dim 1024:text-[1.25rem] 1366:text-[1.3125rem] 1440:text-[1.375rem] 1920:text-[1.5rem] 2560:text-[1.625rem] 3840:text-[1.875rem]"
-		>
+		<p class="hero-text lead-text mt-6 max-w-md text-paper-dim">
 			{m.home_hero_tagline()}
 		</p>
 		<a
@@ -54,7 +48,7 @@
 
 <section class="border-t border-ink-line bg-ink-soft/40 px-6 py-16 sm:py-20">
 	<div class="mx-auto max-w-5xl">
-		<h2 class="font-display text-2xl font-semibold text-paper sm:text-3xl">
+		<h2 class="section-title font-display font-semibold text-paper">
 			{m.home_directions_title()}
 		</h2>
 		<div class="mt-10 grid gap-6 sm:grid-cols-3">

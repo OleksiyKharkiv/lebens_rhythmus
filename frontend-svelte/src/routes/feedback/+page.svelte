@@ -39,7 +39,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-xl px-6 py-16 sm:py-24">
-	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{m.feedback_title()}</h1>
+	<h1 class="page-title font-display font-semibold text-paper">{m.feedback_title()}</h1>
 	<p class="mt-4 text-paper-dim">{m.feedback_intro()}</p>
 
 	<div class="mt-8">

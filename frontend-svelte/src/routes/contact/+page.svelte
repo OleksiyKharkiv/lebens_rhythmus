@@ -14,7 +14,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-2xl px-6 py-16 sm:py-24">
-	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{m.contact_title()}</h1>
+	<h1 class="page-title font-display font-semibold text-paper">{m.contact_title()}</h1>
 	<p class="mt-4 text-paper-dim">{m.contact_intro()}</p>
 
 	<dl class="mt-10 space-y-4 text-paper-dim">

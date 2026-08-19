@@ -12,7 +12,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-2xl px-6 py-16 sm:py-24">
-	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">Allgemeine Geschäftsbedingungen</h1>
+	<h1 class="page-title font-display font-semibold text-paper">Allgemeine Geschäftsbedingungen</h1>
 	<p class="mt-2 text-paper-dim">Theater Lab 29 – Studio für kreative Entwicklung</p>
 
 	<div class="mt-10 space-y-8 text-paper-dim">

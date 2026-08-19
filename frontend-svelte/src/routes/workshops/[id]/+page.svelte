@@ -52,7 +52,7 @@
 	{:else if workshop === null}
 		<p class="text-paper-dim">{m.state_loading()}</p>
 	{:else}
-		<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{workshop.title}</h1>
+		<h1 class="page-title font-display font-semibold text-paper">{workshop.title}</h1>
 		<!-- whitespace-pre-line (2026-08-14, same fix as courses/[id]) — plain
 		     HTML text collapses newlines/blank lines by default; this
 		     preserves the admin's paragraph breaks without a rich-text editor. -->

@@ -13,7 +13,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-2xl px-6 py-16 sm:py-24">
-	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">Impressum</h1>
+	<h1 class="page-title font-display font-semibold text-paper">Impressum</h1>
 	<p class="mt-2 text-paper-dim">Rechtliche Informationen</p>
 
 	<div class="mt-10 space-y-8 text-paper-dim">

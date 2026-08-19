@@ -54,7 +54,7 @@
 	{:else if course === null}
 		<p class="text-paper-dim">{m.state_loading()}</p>
 	{:else}
-		<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{course.titleDe}</h1>
+		<h1 class="page-title font-display font-semibold text-paper">{course.titleDe}</h1>
 
 		<!-- backgroundImageUrl (added 2026-08-14) — falls back to the page's
 		     normal background when unset, per spec. whitespace-pre-line

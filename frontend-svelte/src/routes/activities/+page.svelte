@@ -33,7 +33,7 @@
 </svelte:head>
 
 <section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
-	<h1 class="font-display text-3xl font-semibold text-paper sm:text-4xl">{m.activities_title()}</h1>
+	<h1 class="page-title font-display font-semibold text-paper">{m.activities_title()}</h1>
 
 	{#if error}
 		<p class="mt-8 text-error">{m.state_error()}</p>
@@ -45,7 +45,7 @@
 		<div class="mt-10 grid gap-6 sm:grid-cols-2">
 			{#each activities.filter((a) => a.active) as activity (activity.id)}
 				<Card>
-					<h2 class="font-display text-xl font-semibold text-paper">{localizedTitle(activity)}</h2>
+					<h2 class="list-card-title font-display font-semibold text-paper">{localizedTitle(activity)}</h2>
 					<p class="mt-2 text-sm text-paper-dim">{localizedDescription(activity)}</p>
 					<div class="mt-4 flex items-center justify-between text-sm text-paper-dim">
 						<span>{activity.durationMinutes} {m.activities_duration_min()}</span>

@@ -189,6 +189,218 @@ h4 {
 	text-wrap: balance;
 }
 
+/* Site-wide font-size breakpoint ladder — 2026-08-19, extending the
+   home page's calibration (798f0ae, 26027ec) to every other public
+   page, same pattern: named roles, real Windows/monitor widths
+   (1024/1366/1440/1920/2560/3840), base/640px sizing unchanged from
+   before (mobile/tablet wasn't the complaint).
+
+   Written as PLAIN CSS classes with hand-ordered @media blocks, not
+   Tailwind arbitrary-variant classes (text-[...] 1920:text-[...] etc,
+   the pattern used on the home page itself) — deliberately, so this
+   doesn't repeat 798f0ae's bug on 15+ files. That bug was Tailwind v4
+   not sorting custom --breakpoint-* variants together with named ones
+   (sm:/lg:) by pixel value; plain hand-written @media rules in
+   ascending source order have no such ambiguity — the cascade does
+   exactly what's written, because nothing here is auto-generated or
+   auto-sorted by a framework.
+
+   Reused as shared classes (not per-element inline lists) specifically
+   because there are many structurally-identical headings across the
+   site (every list page's card title, every inner page's h1) — one
+   definition each, applied everywhere, instead of retyping six
+   breakpoint values per element per file. */
+
+.hero-title {
+	font-size: 2.25rem; /* text-4xl, base/mobile — unchanged */
+}
+@media (min-width: 640px) {
+	.hero-title {
+		font-size: 3rem;
+	} /* text-5xl */
+}
+@media (min-width: 1024px) {
+	.hero-title {
+		font-size: 3.75rem;
+	}
+}
+@media (min-width: 1366px) {
+	.hero-title {
+		font-size: 4rem;
+	}
+}
+@media (min-width: 1440px) {
+	.hero-title {
+		font-size: 4.25rem;
+	}
+}
+@media (min-width: 1920px) {
+	.hero-title {
+		font-size: 4.5rem;
+	}
+}
+@media (min-width: 2560px) {
+	.hero-title {
+		font-size: 4.875rem;
+	}
+}
+@media (min-width: 3840px) {
+	.hero-title {
+		font-size: 5.5rem;
+	}
+}
+
+.page-title {
+	font-size: 1.875rem; /* text-3xl, base/mobile — unchanged */
+}
+@media (min-width: 640px) {
+	.page-title {
+		font-size: 2.25rem;
+	} /* text-4xl */
+}
+@media (min-width: 1024px) {
+	.page-title {
+		font-size: 2.5rem;
+	}
+}
+@media (min-width: 1366px) {
+	.page-title {
+		font-size: 2.625rem;
+	}
+}
+@media (min-width: 1440px) {
+	.page-title {
+		font-size: 2.75rem;
+	}
+}
+@media (min-width: 1920px) {
+	.page-title {
+		font-size: 3rem;
+	}
+}
+@media (min-width: 2560px) {
+	.page-title {
+		font-size: 3.25rem;
+	}
+}
+@media (min-width: 3840px) {
+	.page-title {
+		font-size: 3.75rem;
+	}
+}
+
+.section-title {
+	font-size: 1.5rem; /* text-2xl, base/mobile — unchanged */
+}
+@media (min-width: 640px) {
+	.section-title {
+		font-size: 1.875rem;
+	} /* text-3xl */
+}
+@media (min-width: 1024px) {
+	.section-title {
+		font-size: 2rem;
+	}
+}
+@media (min-width: 1366px) {
+	.section-title {
+		font-size: 2.125rem;
+	}
+}
+@media (min-width: 1440px) {
+	.section-title {
+		font-size: 2.25rem;
+	}
+}
+@media (min-width: 1920px) {
+	.section-title {
+		font-size: 2.375rem;
+	}
+}
+@media (min-width: 2560px) {
+	.section-title {
+		font-size: 2.5rem;
+	}
+}
+@media (min-width: 3840px) {
+	.section-title {
+		font-size: 2.875rem;
+	}
+}
+
+.list-card-title {
+	font-size: 1.25rem; /* text-xl, base/mobile — unchanged */
+}
+@media (min-width: 1024px) {
+	.list-card-title {
+		font-size: 1.375rem;
+	}
+}
+@media (min-width: 1366px) {
+	.list-card-title {
+		font-size: 1.4375rem;
+	}
+}
+@media (min-width: 1440px) {
+	.list-card-title {
+		font-size: 1.5rem;
+	}
+}
+@media (min-width: 1920px) {
+	.list-card-title {
+		font-size: 1.625rem;
+	}
+}
+@media (min-width: 2560px) {
+	.list-card-title {
+		font-size: 1.75rem;
+	}
+}
+@media (min-width: 3840px) {
+	.list-card-title {
+		font-size: 2rem;
+	}
+}
+
+/* Prominent lead/body copy (hero taglines, card descriptions that are
+   actual descriptive text, not meta/label lines) — deliberately NOT
+   applied to every text-sm on the site (dates, prices, venue lines,
+   badges): those stay small on purpose, this is for the same role the
+   home page's tagline/direction-card description already had. */
+.lead-text {
+	font-size: 1.125rem; /* text-lg, base/mobile — unchanged */
+}
+@media (min-width: 1024px) {
+	.lead-text {
+		font-size: 1.25rem;
+	}
+}
+@media (min-width: 1366px) {
+	.lead-text {
+		font-size: 1.3125rem;
+	}
+}
+@media (min-width: 1440px) {
+	.lead-text {
+		font-size: 1.375rem;
+	}
+}
+@media (min-width: 1920px) {
+	.lead-text {
+		font-size: 1.5rem;
+	}
+}
+@media (min-width: 2560px) {
+	.lead-text {
+		font-size: 1.625rem;
+	}
+}
+@media (min-width: 3840px) {
+	.lead-text {
+		font-size: 1.875rem;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	* {
 		transition: none !important;
