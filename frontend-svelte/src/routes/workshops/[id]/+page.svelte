@@ -60,16 +60,16 @@
 
 		<dl class="mt-6 grid grid-cols-2 gap-4 text-sm text-paper-dim">
 			{#if workshop.startDate}
-				<div><dt class="font-semibold text-paper">Start</dt><dd>{workshop.startDate}</dd></div>
+				<div><dt class="font-semibold text-paper">{m.workshop_detail_start_label()}</dt><dd>{workshop.startDate}</dd></div>
 			{/if}
 			{#if workshop.teacher}
 				<div>
-					<dt class="font-semibold text-paper">Kursleitung</dt>
+					<dt class="font-semibold text-paper">{m.workshop_detail_teacher_label()}</dt>
 					<dd>{workshop.teacher.firstName} {workshop.teacher.lastName}</dd>
 				</div>
 			{/if}
 			<div>
-				<dt class="font-semibold text-paper">Preis</dt>
+				<dt class="font-semibold text-paper">{m.workshop_detail_price_label()}</dt>
 				<dd>{workshop.price ? `${workshop.price} €` : m.activities_price_on_request()}</dd>
 			</div>
 		</dl>

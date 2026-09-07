@@ -52,7 +52,7 @@
 					{#if c.shortDescriptionDe}<p class="lead-text mt-2 text-paper-dim">{c.shortDescriptionDe}</p>{/if}
 					{#if c.teacher}
 						<p class="mt-2 text-sm text-paper-dim">
-							<span class="font-semibold text-paper">Kursleitung:</span> {c.teacher.firstName} {c.teacher.lastName}
+							<span class="font-semibold text-paper">{m.courses_teacher_label()}:</span> {c.teacher.firstName} {c.teacher.lastName}
 						</p>
 					{/if}
 					{#if c.price != null || c.priceDescription}

@@ -87,6 +87,9 @@
 	"workshops_spots_left": "вільних місць",
 
 	"workshop_detail_groups_title": "Заняття",
+	"workshop_detail_start_label": "Початок",
+	"workshop_detail_teacher_label": "Викладач",
+	"workshop_detail_price_label": "Ціна",
 	"workshop_detail_no_groups": "Для цього воркшопу ще не заплановано занять.",
 	"workshop_detail_enroll_success": "Запис успішний!",
 	"workshop_detail_full": "Немає місць",
@@ -103,6 +106,8 @@
 	"courses_title": "Курси",
 	"courses_no_upcoming": "Наразі курсів немає.",
 	"courses_duration_label": "Тривалість курсу",
+	"courses_teacher_label": "Викладач",
+	"courses_age_group_label": "Вікова група",
 	"courses_duration_from": "з",
 	"courses_duration_to": "по",
 	"courses_sessions_suffix": "занять",

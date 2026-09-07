@@ -1,6 +1,5 @@
 package com.be.web.dto.request;
 
-import com.be.domain.entity.enums.Role;
 import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -37,8 +36,15 @@ public class UserRegistrationDTO {
     @Past(message = "Birth date should be in the past")
     private LocalDate birthDate;
 
-    @Builder.Default
-    private Role role = Role.USER;
+    // LR-089 (security audit, 2026-09-07) — a `role` field used to live here,
+    // read by UserMapper.toEntity() and mapped straight onto the new User.
+    // This is the public self-registration endpoint (permitAll()) — anyone
+    // could register with {"role":"ADMIN"} in the request body and get an
+    // admin account with zero authentication. Role is never client-supplied
+    // for registration; UserService.createUser() already defaults a null
+    // role to Role.USER. Removed the field entirely rather than mapping-
+    // then-overriding, same reasoning as the OrderMapper/Order.status fix
+    // in LR-084 — nothing left to accidentally start trusting again later.
 
     @AssertTrue(message = "You must accept terms and conditions")
     @Builder.Default

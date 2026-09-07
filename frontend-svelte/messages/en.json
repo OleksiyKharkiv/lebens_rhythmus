@@ -87,6 +87,9 @@
 	"workshops_spots_left": "spots left",
 
 	"workshop_detail_groups_title": "Sessions",
+	"workshop_detail_start_label": "Start",
+	"workshop_detail_teacher_label": "Instructor",
+	"workshop_detail_price_label": "Price",
 	"workshop_detail_no_groups": "No sessions have been scheduled for this workshop yet.",
 	"workshop_detail_enroll_success": "Signed up successfully!",
 	"workshop_detail_full": "Full",
@@ -103,6 +106,8 @@
 	"courses_title": "Courses",
 	"courses_no_upcoming": "No courses are currently available.",
 	"courses_duration_label": "Course duration",
+	"courses_teacher_label": "Instructor",
+	"courses_age_group_label": "Age group",
 	"courses_duration_from": "from",
 	"courses_duration_to": "to",
 	"courses_sessions_suffix": "sessions",

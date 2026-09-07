@@ -38,6 +38,14 @@ public class UserNotificationService {
         return userNotificationRepository.findByUserId(userId);
     }
 
+    // LR-089 — added so the controller can check ownership before
+    // markAsRead() mutates anything, same shape as OrderController.getById.
+    @Transactional(readOnly = true)
+    public UserNotification getById(Long id) {
+        return userNotificationRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("UserNotification not found"));
+    }
+
     @Transactional
     public UserNotification create(UserNotificationRequestDTO dto) {
         UserNotification un = userNotificationMapper.fromRequestDTO(dto);

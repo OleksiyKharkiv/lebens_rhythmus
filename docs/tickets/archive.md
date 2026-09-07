@@ -1438,3 +1438,82 @@ founders'-roundtable по архитектуре регистрации (2026-08
   `courseId`/`courseTitle`, хотя бэкенд их уже отдавал — найдено
   финальным ревью 2026-08-16, исправлено тем же днём (безобидно на
   момент находки: UI это поле нигде не читал).
+
+---
+
+## LR-095 — Хардкоженный немецкий текст вне legal-страниц не проходит через Paraglide
+
+**Tier:** LOW · **Статус:** Closed 2026-09-07
+**Источник:** прямой запрос владельца, 2026-08-17 (п.1.2 бага про
+переключение языка)
+
+Часть публичных (не legal, не admin) страниц использовала хардкоженный
+немецкий текст прямо в шаблоне вместо `m.xxx()` — `Kursleitung`/
+`Altersgruppe`/`Start`/`Preis` в `courses/+page.svelte`,
+`courses/[id]/+page.svelte`, `workshops/[id]/+page.svelte` (6 мест,
+подтверждено `grep`). Даже переключившись на EN/UK, пользователь видел
+эти строки по-немецки.
+
+**Решение:** 5 новых ключей (`courses_teacher_label`,
+`courses_age_group_label`, `workshop_detail_start_label`,
+`workshop_detail_teacher_label`, `workshop_detail_price_label`) —
+новые, не переиспользовали похожие по смыслу `admin_*`-ключи
+(`admin_workshop_teacher`="Lehrkraft" — другой текст для другой
+аудитории, переиспользование склеило бы независимые области).
+`agb`/`impressum`/`datenschutz`/`widerruf` не тронуты (намеренно
+German-only, `LR-ADR-013`); `admin/**` не проверялся (внутренний,
+персонал говорит по-немецки — вне скоупа этого тикета).
+
+**Verify:** `npm run check` 1169 файлов/0 ошибок, `npm test` 13/13.
+Полный `grep`-сверка по всем публичным `+page.svelte` не нашла других
+хардкоженных немецких строк.
+
+---
+
+## LR-089 — Ревизия всех request-DTO на предмет клиент-управляемых статусов/флагов без пере-авторизации
+
+**Tier:** MED → одна находка эскалирована до **CRITICAL** · **Статус:** Closed 2026-09-07
+**Источник:** LR-084, круглый стол по регистрации 2026-08-16 —
+`architect-reviewer` нашёл `Order.status`, явный запрос владельца
+убедиться, что это не единственный случай
+
+Прошёлся по всем 27 `*RequestDTO` в `backend/.../web/dto/request/` и
+по каждому non-admin-gated (`isAuthenticated()`) мутирующему
+эндпоинту (список получен `grep`'ом по всем контроллерам — закрытый,
+исчерпывающий, не выборочный). Две реальные находки:
+
+**1. CRITICAL — самоназначение роли при регистрации.**
+`UserRegistrationDTO` (публичный `POST /auth/register`, `permitAll()`)
+содержал поле `role`, которое `UserMapper.toEntity()` копировал на
+новую сущность как есть; `UserService.createUser()` подставляет
+`Role.USER` только когда роль `null` — не когда клиент явно её
+прислал. **Любой аноним мог зарегистрироваться с `{"role":"ADMIN"}` и
+получить полный доступ администратора.** Живая уязвимость на момент
+находки. Исправлено удалением поля из DTO целиком (не
+"маппим-потом-перезаписываем" — та же логика, что `Order.status`/
+LR-084). Тесты: `UserMapperTest`, `UserServiceTest`
+(`createUser_nullRole_defaultsToUser`,
+`createUser_explicitRole_isNotOverridden`).
+
+**2. IDOR в `UserNotificationController.markAsRead`.** `userId` из JWT
+извлекался и никогда не использовался (комментарий в коде: "I'll just
+call service and assume it's correct for now"). Любой юзер мог
+пометить чужое уведомление прочитанным по произвольному `{id}` и
+получить в ответе чужие `userId`/`username`/`notificationTitle` —
+реальная утечка персональных данных. Исправлено тем же паттерном, что
+`OrderController.getById` (проверка владения, 403 если не свой/не
+admin). Тест `UserNotificationControllerTest` явно проверяет, что
+запрещённый запрос не мутирует чужую запись (`verify(...,never())`),
+не только возвращает правильный статус.
+
+**Проверено, находок нет:** остальные 25 DTO (все create/update либо
+ADMIN/BUSINESS_OWNER-gated с безопасными для этой роли полями, либо
+без клиент-управляемых полей вообще);
+`EnrollmentController.cancelEnrollment` (уже правильно проверяет
+владение); `Group`/`Course`/`Workshop` update() на предмет полей,
+добавленных после LR-030 (`capacityLeft` намеренно вне DTO — drift не
+найден).
+
+**Verify:** `./gradlew compileJava compileTestJava` + целевые тесты —
+зелено. Полный `./gradlew test` — те же ~13 предсуществующих
+Docker-зависимых падений (построчно сверено, не новые).

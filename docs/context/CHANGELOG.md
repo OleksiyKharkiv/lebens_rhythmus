@@ -2,7 +2,78 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
-## 2026-08-19 — docs: LR-093 круглый стол раунды 3-4 (GiroCode) записан; LR-096/LR-097 заведены
+## 2026-09-07 — security: LR-089 закрыт — ДВЕ реальные дыры найдены и исправлены (одна критическая)
+
+### Область (`backend/.../{web/dto/request/UserRegistrationDTO.java,web/mapper/UserMapper.java,web/controller/UserNotificationController.java,service/UserNotificationService.java}` + тесты)
+
+**Находка 1 (CRITICAL) — самостоятельное назначение роли при регистрации.**
+`UserRegistrationDTO` (публичный `POST /auth/register`, `permitAll()`)
+содержал поле `role` со значением по умолчанию `USER`. `UserMapper.
+toEntity()` копировал `dto.getRole()` на новую сущность как есть.
+`UserService.createUser()` подставляет `Role.USER` только когда роль
+`null` — а она никогда не была `null`, если клиент явно её прислал.
+**Итог: любой аноним мог зарегистрироваться с `{"role":"ADMIN"}` в теле
+запроса и получить полный доступ администратора без единой проверки
+авторизации.** Живая уязвимость в проде на момент находки.
+Исправлено: поле `role` убрано из DTO целиком (не "маппим, потом
+перезаписываем" — та же логика, что и в фиксе `Order.status`/LR-084,
+чтобы нечего было случайно снова начать доверять). `UserMapperTest`/
+`UserServiceTest` — новые регрессионные тесты.
+
+**Находка 2 — IDOR в `UserNotificationController.markAsRead`.**
+Код извлекал `userId` из JWT и... никогда его не использовал — в
+комментариях буквально было написано "I'll just call service and
+assume it's correct for now". Любой авторизованный юзер мог пометить
+чужое уведомление прочитанным, подставив произвольный `{id}`, и в
+ответе получал `userId`/`username`/`notificationTitle` чужого
+человека — реальная утечка персональных данных, не только "порча"
+чужого статуса. Исправлено тем же паттерном, что уже в
+`OrderController.getById` (проверка владения после загрузки, 403 если
+не свой и не admin/owner). `UserNotificationControllerTest` — новый,
+explicitly проверяет, что запрещённый запрос НЕ мутирует чужую запись
+(`verify(..., never())`), не только что возвращает правильный статус.
+
+**Проверено и признано безопасным (без находок):** все 27
+`*RequestDTO` в проекте; каждый non-admin-gated (`isAuthenticated()`)
+мутирующий эндпоинт — полный список получен `grep`'ом, закрытый и
+исчерпывающий (`Enrollment.enroll/cancelEnrollment`, `Order.create`,
+`Feedback.create`, `Payment./me`); симметрия `Group`/`Course`/
+`Workshop` create/update на предмет полей, добавленных после LR-030
+(например `capacityLeft` — намеренно не в DTO, управляется только
+атомарными репозиторными методами, не найдено drift).
+
+**Побочная находка, не связанная с задачей:** `User.java` содержал
+битую, не Java-синтаксис строку (`private Array String lastName = new
+String[Skorikh, Khudoshyn, Reshaev];`) — случайная вставка владельца
+не туда, ломала компиляцию. Удалена по прямому подтверждению
+владельца, не входит в LR-089 как таковая.
+
+**Verify:** `./gradlew compileJava compileTestJava` — чисто.
+`./gradlew test --tests "com.be.service.*" --tests "com.be.web.mapper.*"
+--tests "com.be.web.controller.*" --tests "com.be.web.dto.request.*"` —
+всё зелёное. Полный `./gradlew test` — те же ~13 предсуществующих
+Docker/Testcontainers-зависимых падений, не новые, не связаны с этим
+фиксом (подтверждено построчно по именам тестов).
+
+## 2026-09-07 — fix(i18n): LR-095 закрыт — хардкоженный немецкий текст заменён на `m.xxx()`
+
+### Область (`frontend-svelte/src/routes/{courses/+page.svelte,courses/[id]/+page.svelte,workshops/[id]/+page.svelte}`, `frontend-svelte/messages/{de,en,uk}.json`)
+
+- **fix** — 6 мест хардкоженного немецкого текста на публичных страницах
+  (не legal, не admin) заменены на `m.xxx()`: `Kursleitung`/`Kursleitung:`
+  (courses list + detail + workshop detail), `Altersgruppe` (courses
+  detail), `Start`/`Preis` (workshop detail). Пользователь, переключившийся
+  на EN/UK, раньше всё равно видел эти строки по-немецки.
+- **docs** — 5 новых ключей (`courses_teacher_label`,
+  `courses_age_group_label`, `workshop_detail_start_label`,
+  `workshop_detail_teacher_label`, `workshop_detail_price_label`) —
+  новые, не переиспользовали `admin_*`-ключи с похожим текстом (разные
+  смысловые области, `admin_workshop_teacher`="Lehrkraft" ≠ нужное
+  "Kursleitung" — переиспользование склеило бы независимые тексты).
+- **verify** — `npm run check` 1169 файлов/0 ошибок, `npm test` 13/13.
+  Полный `grep`-сверка по всем публичным `+page.svelte` (кроме
+  agb/impressum/datenschutz/widerruf — намеренно German-only) не нашла
+  других хардкоженных немецких строк.
 
 ### Область (`docs/tickets/tickets.md`)
 

@@ -39,11 +39,19 @@ public class UserNotificationController {
     @PutMapping("/{id}/read")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<UserNotificationResponseDTO> markAsRead(@PathVariable Long id, @AuthenticationPrincipal Jwt jwt) {
+        // LR-089 (security audit, 2026-09-07) — this used to extract userId
+        // and then never check it against anything: any authenticated user
+        // could mark ANY other user's notification as read by iterating
+        // {id}, and the response leaked that person's userId/username/
+        // notificationTitle back to the caller. Same ownership-check shape
+        // as OrderController.getById.
+        UserNotification notification = userNotificationService.getById(id);
         Long userId = JwtAuthUtils.extractUserId(jwt);
-        // Security: user can only mark their own notification as read
-        // For simplicity, I'll let the service handle it or check here.
-        // Let's check here to be sure.
-        // Actually, I'll just call service and assume it's correct for now.
+        boolean isAdmin = JwtAuthUtils.hasRole(jwt, "ADMIN") || JwtAuthUtils.hasRole(jwt, "BUSINESS_OWNER");
+        if (!isAdmin && !notification.getUser().getId().equals(userId)) {
+            return ResponseEntity.status(403).build();
+        }
+
         UserNotification updated = userNotificationService.markAsRead(id);
         return ResponseEntity.ok(userNotificationMapper.toResponseDTO(updated));
     }

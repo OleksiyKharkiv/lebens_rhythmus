@@ -129,13 +129,13 @@
 		<dl class="mt-6 grid grid-cols-2 gap-4 text-sm text-paper-dim">
 			{#if course.teacher}
 				<div>
-					<dt class="font-semibold text-paper">Kursleitung</dt>
+					<dt class="font-semibold text-paper">{m.courses_teacher_label()}</dt>
 					<dd>{course.teacher.firstName} {course.teacher.lastName}</dd>
 				</div>
 			{/if}
 			{#if course.ageGroupName}
 				<div>
-					<dt class="font-semibold text-paper">Altersgruppe</dt>
+					<dt class="font-semibold text-paper">{m.courses_age_group_label()}</dt>
 					<dd>{course.ageGroupName}</dd>
 				</div>
 			{/if}

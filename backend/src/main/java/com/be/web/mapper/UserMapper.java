@@ -16,8 +16,11 @@ import java.util.stream.Collectors;
 @Component
 public class UserMapper {
 
+    // LR-089 — no .role(...) here on purpose. Role is never client-supplied
+    // at registration; UserService.createUser() defaults a null role to
+    // Role.USER. See UserRegistrationDTO's own comment for the incident.
     public User toEntity(UserRegistrationDTO dto) {
-        return User.builder().email(dto.getEmail()).password(dto.getPassword()).firstName(dto.getFirstName()).lastName(dto.getLastName()).phone(dto.getPhone()).birthDate(dto.getBirthDate()).role(dto.getRole()).address(dto.getAddress()).city(dto.getCity()).zipCode(dto.getZipCode()).country(dto.getCountry()).acceptedTerms(dto.isAcceptedTerms()).privacyPolicyAccepted(dto.isPrivacyPolicyAccepted()).build();
+        return User.builder().email(dto.getEmail()).password(dto.getPassword()).firstName(dto.getFirstName()).lastName(dto.getLastName()).phone(dto.getPhone()).birthDate(dto.getBirthDate()).address(dto.getAddress()).city(dto.getCity()).zipCode(dto.getZipCode()).country(dto.getCountry()).acceptedTerms(dto.isAcceptedTerms()).privacyPolicyAccepted(dto.isPrivacyPolicyAccepted()).build();
     }
 
     public void updateEntityFromDTO(UserUpdateDTO dto, User user) {

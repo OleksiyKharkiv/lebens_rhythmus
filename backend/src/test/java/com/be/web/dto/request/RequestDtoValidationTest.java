@@ -1,6 +1,5 @@
 package com.be.web.dto.request;
 
-import com.be.domain.entity.enums.Role;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -45,7 +44,6 @@ class RequestDtoValidationTest {
                 .password("password123")
                 .firstName("Alice")
                 .lastName("Schmidt")
-                .role(Role.USER)
                 .acceptedTerms(true)
                 .privacyPolicyAccepted(true);
     }
