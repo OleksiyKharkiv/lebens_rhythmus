@@ -2,6 +2,38 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-09-07 — feat: LR-074 закрыт — мульти-day расписание Workshop прямо в форме создания
+
+### Область (`frontend-svelte/src/routes/admin/workshops/+page.svelte`, `frontend-svelte/messages/{de,en,uk}.json`)
+
+- **feat** — единственная пара `Start`/`Ende` в форме Workshop заменена
+  на "Количество дней" (0–10) → генерирует N под-форм (Start/Ende как
+  `datetime-local`, точность до минуты, + выбор `Venue`). Бэкенд и
+  API-клиент под это уже существовали (`SessionController`/
+  `replaceSessions`, помечены в коде как "New in LR-074") — реализация
+  переиспользует уже рабочий, идентичный по структуре паттерн с
+  `admin/groups/+page.svelte`, а не пишет параллельную логику с нуля.
+  Страница управляет одной "основной" `Group` воркшопа (создаёт при
+  первом сохранении) — тот же MVP-паттерн, что уже у `admin/courses`
+  (LR-081/082); воркшопу с несколькими группами/датами по-прежнему
+  доступна отдельная страница `admin/groups`.
+- **fix (найдено на этапе Architecture Pre-Check, не постфактум)** —
+  `Workshop.startDate`/`endDate` по-прежнему читаются
+  `WorkshopService.listWorkshops(upcoming=true)` для публичного списка
+  "предстоящих" — Workshop, в отличие от Course (LR-ADR-023), не
+  "schedule-free". Явное решение (подтверждено владельцем): эти поля
+  теперь вычисляются автоматически как min/max введённых дней при
+  сохранении, не вводятся руками — иначе новые воркшопы молча пропадали
+  бы из публичного списка.
+- **docs** — убран `admin_workshop_venue_moved_note` (все 3 языка) —
+  текст стал не просто неиспользуемым, а фактически неверным: venue
+  снова можно задавать прямо в форме воркшопа, по каждому дню отдельно,
+  а не только через отдельную страницу групп.
+- **verify** — `npm run check` 1168 файлов/0 ошибок, `npm test` 13/13.
+  Backend не поднят в этой сессии — живая проверка в браузере
+  невозможна, как и весь этот блок сессии; owner тестирует сам в проде
+  после деплоя.
+
 ## 2026-09-07 — security: LR-089 закрыт — ДВЕ реальные дыры найдены и исправлены (одна критическая)
 
 ### Область (`backend/.../{web/dto/request/UserRegistrationDTO.java,web/mapper/UserMapper.java,web/controller/UserNotificationController.java,service/UserNotificationService.java}` + тесты)

@@ -230,7 +230,6 @@
 	"admin_workshop_title": "Назва",
 	"admin_workshop_description": "Опис",
 	"admin_workshop_teacher": "Викладач",
-	"admin_workshop_venue_moved_note": "Місце проведення тепер вказується для кожної групи окремо, не для всього воркшопу — дивись розділ «Групи».",
 	"admin_workshop_start": "Початок",
 	"admin_workshop_end": "Кінець",
 	"admin_workshop_max_participants": "Макс. учасників",

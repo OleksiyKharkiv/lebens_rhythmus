@@ -230,7 +230,6 @@
 	"admin_workshop_title": "Title",
 	"admin_workshop_description": "Description",
 	"admin_workshop_teacher": "Teacher",
-	"admin_workshop_venue_moved_note": "The venue is now set per session, not for the whole workshop — see \"Groups\".",
 	"admin_workshop_start": "Start",
 	"admin_workshop_end": "End",
 	"admin_workshop_max_participants": "Max participants",

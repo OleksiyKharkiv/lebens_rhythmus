@@ -230,7 +230,6 @@
 	"admin_workshop_title": "Titel",
 	"admin_workshop_description": "Beschreibung",
 	"admin_workshop_teacher": "Lehrkraft",
-	"admin_workshop_venue_moved_note": "Der Veranstaltungsort wird jetzt pro Termin festgelegt, nicht mehr für den ganzen Workshop — siehe „Gruppen“.",
 	"admin_workshop_start": "Start",
 	"admin_workshop_end": "Ende",
 	"admin_workshop_max_participants": "Max. Teilnehmer",
