@@ -3,6 +3,16 @@ backend/.gradle/buildOutputCleanup/buildOutputCleanup.lock
 backend/.gradle/file-system.probe
 node_modules
 HELP.md
+
+### Env files (security checklist Tier 0.3, 2026-09-10) ###
+# Never committed — backend/.env historically was (commit daf36dc,
+# removed in 67d2bdc) — that local dev Postgres password should be
+# treated as burned and rotated, see docs/security audit notes.
+# .git/info/exclude is NOT a substitute for this: it's local-only, never
+# shared with a fresh clone/CI runner/deploy host.
+.env
+.env.*
+*.env
 ### OS specific ###
 .DS_Store
 Thumbs.db

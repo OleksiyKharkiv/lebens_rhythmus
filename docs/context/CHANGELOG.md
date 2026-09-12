@@ -2,6 +2,35 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-09-10 — security: Tier 0 универсального security-чеклиста (2 находки, обе исправлены)
+
+### Область (`.gitignore`, `backend/src/main/java/com/be/service/{LogNotificationService.java,EnrollmentService.java}`)
+
+Прогнали `docs/security/vulnerability-checklist.md` (портированный из numi
+чек-лист) Tier 0 против LR/tlab29.com, каждый пункт — с независимой
+проверкой `architect-reviewer`. 4 пункта из 6 (0.1 F12/live, 0.2 хардкод
+секретов, 0.4 verbose errors, 0.6 CI/CD→бандл) — чисто, подтверждено
+дважды (свой аудит + ревьювер), включая живые проверки на api.tlab29.com.
+
+- **security (0.3)** — `backend/.env` был закоммичен (`daf36dc`, пароль
+  Postgres), позже удалён (`67d2bdc`) — прод не задет (реальный пароль
+  идёт из K8s Secret `lr-db-credentials`, независимо от файла), но
+  `.gitignore` не покрывал `.env` вообще, а `backend/compose.yaml`
+  реально использует этот же файл для локальной разработки сегодня.
+  **Fix:** `.env`/`.env.*`/`*.env` добавлены в `.gitignore`. Локальный
+  dev-пароль Postgres из этого файла считать сожжённым — сменить.
+  `.git/info/exclude` (единственная существовавшая защита) не
+  расшаривается ни с одним другим клоном/CI/деплой-хостом — не замена
+  для реального `.gitignore`.
+- **security (0.5/4.3)** — `LogNotificationService` писал email
+  пользователя в лог на `INFO` безусловно, на каждую регистрацию/отмену
+  (`com.be`-пакет по умолчанию `INFO` в проде с LR-034 — не подавляется).
+  **Fix:** email убран из обоих `log.info(...)` и из собираемого
+  `msg`-текста в `EnrollmentService.notify()` — везде заменён на
+  `user.getId()`, этого достаточно для корреляции событий в ops-логе.
+- **verify** — `./gradlew compileJava compileTestJava` + `test --tests
+  "com.be.service.*"` — BUILD SUCCESSFUL, зелено.
+
 ## 2026-09-07 — feat: LR-074 закрыт — мульти-day расписание Workshop прямо в форме создания
 
 ### Область (`frontend-svelte/src/routes/admin/workshops/+page.svelte`, `frontend-svelte/messages/{de,en,uk}.json`)

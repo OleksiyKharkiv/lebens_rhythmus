@@ -192,8 +192,12 @@ public class EnrollmentService {
     private void notify(Workshop workshop, Course course, Group group, User user, EnrollmentStatus status, Order order) {
         try {
             String target = workshop != null ? workshop.getWorkshopName() : (course != null ? course.getTitleDe() : "?");
-            String msg = String.format("New enrollment: user=%s (%d) for %s group=%s order=%s",
-                    user.getEmail(), user.getId(), target,
+            // Security checklist Tier 0.5/4.3 (2026-09-10) — this used to
+            // include user.getEmail() here; user id is enough to correlate
+            // in an ops log, an email address isn't (DSGVO data-minimization,
+            // not just "PII touched a log" — this fires on every enrollment).
+            String msg = String.format("New enrollment: user=%d for %s group=%s order=%s",
+                    user.getId(), target,
                     group != null ? group.getId() : "n/a",
                     order != null ? order.getOrderNumber() : "n/a");
             notificationService.notifyEnrollment(workshop, course, group, user, status, msg);
