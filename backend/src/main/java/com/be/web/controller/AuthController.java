@@ -10,7 +10,9 @@ import com.be.web.dto.response.UserLoginResponseDTO;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +35,21 @@ public class AuthController {
                                                       HttpServletRequest request) {
         log.debug("POST /api/auth/login Origin={}", request.getHeader("Origin"));
         UserLoginResponseDTO response = authService.authenticate(loginRequest);
-        return ResponseEntity.ok(response);
+
+        long maxAge = response.getExpiresIn() != null ? response.getExpiresIn() : 86400L;
+        boolean secure = request.isSecure() || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
+
+        ResponseCookie cookie = ResponseCookie.from("authToken", response.getToken())
+                .httpOnly(true)
+                .secure(secure)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(maxAge)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(response);
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
@@ -54,5 +70,22 @@ public class AuthController {
     public ResponseEntity<Void> resendVerification(@Valid @RequestBody ResendVerificationRequestDTO dto) {
         authService.resendVerification(dto.getEmail());
         return ResponseEntity.ok().build();
+    }
+
+    @PostMapping(value = "/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request) {
+        log.debug("POST /api/v1/auth/logout");
+        boolean secure = request.isSecure() || "https".equalsIgnoreCase(request.getHeader("X-Forwarded-Proto"));
+        ResponseCookie cookie = ResponseCookie.from("authToken", "")
+                .httpOnly(true)
+                .secure(secure)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(0)
+                .build();
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .build();
     }
 }

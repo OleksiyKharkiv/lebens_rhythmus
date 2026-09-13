@@ -26,6 +26,7 @@
 	import Card from '$lib/components/Card.svelte';
 	import Input from '$lib/components/Input.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import Select from '$lib/components/Select.svelte';
 
 	let groups = $state<GroupDTO[] | null>(null);
 	let workshops = $state<WorkshopListItem[]>([]);
@@ -274,19 +275,18 @@
 		</div>
 		<div class="mt-4 grid gap-4 sm:grid-cols-2">
 			<div>
-				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gWorkshop">{m.admin_group_workshop()}</label>
-				<select
+				<Select
 					id="gWorkshop"
+					label={m.admin_group_workshop()}
 					value={form.workshop?.id ?? ''}
 					disabled={editingId !== null}
-					onchange={(e) => (form.workshop = e.currentTarget.value ? { id: Number(e.currentTarget.value) } : null)}
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold disabled:opacity-50"
+					onchange={(val) => (form.workshop = val ? { id: Number(val) } : null)}
 				>
 					<option value="">—</option>
 					{#each workshops as w (w.id)}
 						<option value={w.id}>{w.title}</option>
 					{/each}
-				</select>
+				</Select>
 				{#if editingId !== null}
 					<!-- GroupService.update() deliberately never reassigns workshop
 					     (LR-009 — open question about existing enrollments) — a
@@ -295,60 +295,56 @@
 				{/if}
 			</div>
 			<div>
-				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gActivity">{m.admin_group_activity()}</label>
-				<select
+				<Select
 					id="gActivity"
+					label={m.admin_group_activity()}
 					value={form.activity?.id ?? ''}
-					onchange={(e) => (form.activity = e.currentTarget.value ? { id: Number(e.currentTarget.value) } : null)}
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+					onchange={(val) => (form.activity = val ? { id: Number(val) } : null)}
 				>
 					<option value="">—</option>
 					{#each activities as a (a.id)}
 						<option value={a.id}>{a.titleDe}</option>
 					{/each}
-				</select>
+				</Select>
 			</div>
 			<div>
-				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gTeacher">{m.admin_workshop_teacher()}</label>
-				<select
+				<Select
 					id="gTeacher"
+					label={m.admin_workshop_teacher()}
 					value={form.teacher?.id ?? ''}
-					onchange={(e) => (form.teacher = e.currentTarget.value ? { id: Number(e.currentTarget.value) } : null)}
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+					onchange={(val) => (form.teacher = val ? { id: Number(val) } : null)}
 				>
 					<option value="">—</option>
 					{#each teachers as t (t.id)}
 						<option value={t.id}>{t.firstName} {t.lastName}</option>
 					{/each}
-				</select>
+				</Select>
 			</div>
 			<div>
-				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gVenue">{m.admin_group_venue()}</label>
-				<select
+				<Select
 					id="gVenue"
+					label={m.admin_group_venue()}
 					value={form.venue?.id ?? ''}
-					onchange={(e) => (form.venue = e.currentTarget.value ? { id: Number(e.currentTarget.value) } : null)}
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+					onchange={(val) => (form.venue = val ? { id: Number(val) } : null)}
 				>
 					<option value="">—</option>
 					{#each venues as v (v.id)}
 						<option value={v.id}>{v.name}{v.room ? ` — ${v.room}` : ''}</option>
 					{/each}
-				</select>
+				</Select>
 			</div>
 			<div>
-				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gAgeGroup">{m.admin_group_age_group()}</label>
-				<select
+				<Select
 					id="gAgeGroup"
+					label={m.admin_group_age_group()}
 					value={form.ageGroup?.id ?? ''}
-					onchange={(e) => (form.ageGroup = e.currentTarget.value ? { id: Number(e.currentTarget.value) } : null)}
-					class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+					onchange={(val) => (form.ageGroup = val ? { id: Number(val) } : null)}
 				>
 					<option value="">—</option>
 					{#each ageGroups as a (a.id)}
 						<option value={a.id}>{a.titleDe} ({a.minAge}–{a.maxAge})</option>
 					{/each}
-				</select>
+				</Select>
 			</div>
 			<div>
 				<label class="mt-4 block text-sm text-paper-dim first:mt-0" for="gCapacity">{m.admin_group_capacity()}</label>
@@ -405,18 +401,17 @@
 							/>
 						</div>
 						<div>
-							<label class="block text-sm text-paper-dim" for={`gDayVenue${i}`}>{m.admin_group_day_venue()}</label>
-							<select
+							<Select
 								id={`gDayVenue${i}`}
+								label={m.admin_group_day_venue()}
 								value={day.venueId ?? ''}
-								onchange={(e) => (days[i].venueId = e.currentTarget.value ? Number(e.currentTarget.value) : null)}
-								class="mt-1 w-full rounded-lg border border-ink-line bg-ink px-4 py-2.5 text-paper outline-none focus:border-gold"
+								onchange={(val) => (days[i].venueId = val ? Number(val) : null)}
 							>
 								<option value="">—</option>
 								{#each venues as v (v.id)}
 									<option value={v.id}>{v.name}{v.room ? ` — ${v.room}` : ''}</option>
 								{/each}
-							</select>
+							</Select>
 						</div>
 					</div>
 				</div>

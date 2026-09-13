@@ -39,6 +39,7 @@ export class ApiError extends Error {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 	const res = await fetch(`${API_BASE_URL}${path}`, {
 		...options,
+		credentials: 'include',
 		headers: { 'Content-Type': 'application/json', ...(options.headers ?? {}) }
 	});
 	const text = await res.text();
@@ -120,6 +121,16 @@ export function clearSession() {
 	localStorage.removeItem('authToken');
 	localStorage.removeItem('tokenExpiry');
 	localStorage.removeItem('userData');
+}
+
+export async function logout(): Promise<void> {
+	try {
+		await request<void>('/auth/logout', { method: 'POST' });
+	} catch {
+		// Network/server errors should not prevent local session clearance
+	} finally {
+		clearSession();
+	}
 }
 
 /**

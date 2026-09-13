@@ -11,6 +11,7 @@
 	} from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
+	import Select from '$lib/components/Select.svelte';
 
 	const roles: Role[] = ['USER', 'TEACHER', 'BUSINESS_OWNER', 'CONTENT_MANAGER', 'ADMIN'];
 
@@ -96,16 +97,17 @@
 						<td class="py-2 pr-4">{u.firstName} {u.lastName}</td>
 						<td class="py-2 pr-4 text-paper-dim">{u.email}</td>
 						<td class="py-2 pr-4">
-							<select
+							<Select
 								value={u.role}
 								disabled={busyId === u.id}
-								onchange={(e) => handleRoleChange(u, e.currentTarget.value as Role)}
-								class="rounded-lg border border-ink-line bg-ink px-2 py-1 text-paper outline-none focus:border-gold"
+								ariaLabel="Role"
+								class="px-2 py-1"
+								onchange={(val) => handleRoleChange(u, val as Role)}
 							>
 								{#each roles as r (r)}
 									<option value={r}>{r}</option>
 								{/each}
-							</select>
+							</Select>
 						</td>
 						<td class="py-2 pr-4">
 							<span class={u.enabled ? 'text-teal' : 'text-error'}>

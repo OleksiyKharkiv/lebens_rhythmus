@@ -411,6 +411,80 @@ h4 {
 	}
 }
 
+/* Direction cards typography (LR-105):
+   Hand-ordered breakpoint ladder per RESPONSIVE_SCALING_PLAYBOOK.md §3.
+   Calibrates mobile (<640px) to 1.25rem (title) / 1.125rem (body) to avoid awkward wrapping on 360-390px screens,
+   while preserving Olena's requested 1.5rem / 1.375rem base from 640px upwards.
+   Note: The 1024px tier is intentionally omitted here to preserve the existing flat scaling behavior
+   between 640px and 1366px from the original design (unlike hero/page titles which step at 1024px). */
+.direction-card-title {
+	font-size: 1.25rem; /* mobile <640px */
+}
+@media (min-width: 640px) {
+	.direction-card-title {
+		font-size: 1.5rem; /* tablet & desktop base requested 2026-08-19 */
+	}
+}
+@media (min-width: 1366px) {
+	.direction-card-title {
+		font-size: 1.5625rem;
+	}
+}
+@media (min-width: 1440px) {
+	.direction-card-title {
+		font-size: 1.625rem;
+	}
+}
+@media (min-width: 1920px) {
+	.direction-card-title {
+		font-size: 1.75rem;
+	}
+}
+@media (min-width: 2560px) {
+	.direction-card-title {
+		font-size: 1.875rem;
+	}
+}
+@media (min-width: 3840px) {
+	.direction-card-title {
+		font-size: 2.125rem;
+	}
+}
+
+.direction-card-desc {
+	font-size: 1.125rem; /* mobile <640px */
+}
+@media (min-width: 640px) {
+	.direction-card-desc {
+		font-size: 1.375rem; /* tablet & desktop base requested 2026-08-19 */
+	}
+}
+@media (min-width: 1366px) {
+	.direction-card-desc {
+		font-size: 1.4375rem;
+	}
+}
+@media (min-width: 1440px) {
+	.direction-card-desc {
+		font-size: 1.5rem;
+	}
+}
+@media (min-width: 1920px) {
+	.direction-card-desc {
+		font-size: 1.625rem;
+	}
+}
+@media (min-width: 2560px) {
+	.direction-card-desc {
+		font-size: 1.75rem;
+	}
+}
+@media (min-width: 3840px) {
+	.direction-card-desc {
+		font-size: 2rem;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	* {
 		transition: none !important;

@@ -16,6 +16,7 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.security.oauth2.server.resource.web.BearerTokenResolver;
 import org.springframework.security.web.SecurityFilterChain;
 
 import javax.crypto.SecretKey;
@@ -42,6 +43,14 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * LR-108: Dual-mode bearer token resolver (Authorization header + HttpOnly SameSite cookie).
+     */
+    @Bean
+    public BearerTokenResolver bearerTokenResolver() {
+        return new CookieBearerTokenResolver();
     }
 
     /**
@@ -132,7 +141,8 @@ public class SecurityConfig {
                                 "/api/v1/auth/login",
                                 "/api/v1/auth/register",
                                 "/api/v1/auth/verify-email",
-                                "/api/v1/auth/resend-verification"
+                                "/api/v1/auth/resend-verification",
+                                "/api/v1/auth/logout"
                         ).permitAll()
 
                         // ===== PUBLIC READ =====
@@ -157,8 +167,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
-                .oauth2ResourceServer(o ->
-                        o.jwt(j -> j.jwtAuthenticationConverter(jwtAuthConverter))
+                .oauth2ResourceServer(o -> o
+                        .bearerTokenResolver(bearerTokenResolver())
+                        .jwt(j -> j.jwtAuthenticationConverter(jwtAuthConverter))
                 )
                 .build();
     }

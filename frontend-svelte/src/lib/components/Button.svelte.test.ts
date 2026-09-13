@@ -18,12 +18,13 @@ describe('Button', () => {
 	});
 
 	it('disables and shows the busy indicator while busy', () => {
-		const { getByRole } = render(Button, {
+		const { getByRole, getByTestId } = render(Button, {
 			props: { busy: true, children: textSnippet('Anmelden') }
 		});
 		const button = getByRole('button');
 		expect(button).toBeDisabled();
-		expect(button).toHaveTextContent('…');
+		expect(button).toHaveAttribute('aria-busy', 'true');
+		expect(getByTestId('spinner')).toBeInTheDocument();
 	});
 
 	it('applies the gold variant by default', () => {

@@ -15,7 +15,7 @@
 	// dynamically localized string (see docs/tickets/archive.md).
 	import { locales, localizeHref, getLocale } from '$lib/paraglide/runtime';
 	import * as m from '$lib/paraglide/messages.js';
-	import { isAuthenticated, clearSession, getStoredRole } from '$lib/api';
+	import { isAuthenticated, logout, getStoredRole } from '$lib/api';
 	import './layout.css';
 
 	let { children } = $props();
@@ -83,8 +83,8 @@
 		theme = localStorage.getItem('lr-theme') === 'light' ? 'light' : 'dark';
 	});
 
-	function handleLogout() {
-		clearSession();
+	async function handleLogout() {
+		await logout();
 		loggedIn = false;
 		window.location.href = localizeHref('/');
 	}

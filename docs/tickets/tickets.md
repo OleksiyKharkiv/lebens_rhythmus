@@ -54,7 +54,7 @@
 
 **Спринт "Плановое / бэклог"** — реальная работа, не срочная:
 LR-018, LR-032, LR-040, LR-042 (после продуктового решения), LR-043,
-LR-044, LR-005, LR-010, LR-009, LR-104 [ЗАКРЫТ 2026-09-13], LR-105, LR-106, LR-108.
+LR-044, LR-005, LR-010, LR-009, LR-104 [ЗАКРЫТ 2026-09-13], LR-105 [ЗАКРЫТ 2026-09-13], LR-106 [ЗАКРЫТ 2026-09-13], LR-108 [ЗАКРЫТ 2026-09-13], LR-109.
 LR-016/LR-017 — сознательно отложены самим заказчиком, не пере-приоритизировать
 без его запроса.
 
@@ -2009,7 +2009,7 @@ Paraglide JS переключается на язык по умолчанию (`
 ## LR-105 — Адаптивная калибровка шрифта мобильных экранов внутри системы брейкпоинтов
 
 **Tier:** LOW (CSS)  
-**Статус:** Open · спринт "Плановое / бэклог" (P3)  
+**Статус:** Closed · Done (2026-09-13)  
 **Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.5, консенсус ревью)
 
 ### Контекст и проблема
@@ -2028,17 +2028,18 @@ Paraglide JS переключается на язык по умолчанию (`
 ## LR-106 — Повышение доступности (A11y) и унификация компонентов ввода
 
 **Tier:** LOW (a11y / UI-компоненты)  
-**Статус:** Open · спринт "Плановое / бэклог" (P4)  
+**Статус:** Closed · Done (2026-09-13)  
 **Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.6)
 
 ### Что сделать (DoD)
-1. Убрать `tabindex="-1"` с кнопки пароля в `Input.svelte`, добавить динамический переводимый `aria-label`.
+1. Убрать `tabindex="-1"` с кнопки пароля в `Input.svelte`, добавить динамический переводимый `aria-label`. (Закрыто в LR-103)
 2. В `Button.svelte` добавить атрибут `aria-busy={busy}` и заменить текстовое троеточие на аккуратный SVG-спиннер с сохранением фиксированной высоты кнопки.
-3. Заменить сырые теги `<select>` в админке на переиспользуемый компонент `Select.svelte`.
+3. Заменить сырые теги `<select>` в админке на переиспользуемый компонент `Select.svelte` (включая выбор роли пользователя в `admin/users` и все 6 полей в `admin/groups`).
 
 **Затрагиваемые файлы:**
 - `frontend-svelte/src/lib/components/Input.svelte`
 - `frontend-svelte/src/lib/components/Button.svelte`
+- `frontend-svelte/src/lib/components/Select.svelte`
 - `frontend-svelte/src/routes/admin/users/+page.svelte`
 - `frontend-svelte/src/routes/admin/groups/+page.svelte`
 
@@ -2068,14 +2069,36 @@ Paraglide JS переключается на язык по умолчанию (`
 ## LR-108 — Архитектурная подготовка миграции JWT из `localStorage` в `HttpOnly SameSite Cookies`
 
 **Tier:** HIGH (безопасность сессий, XSS-защита)  
-**Статус:** Open · спринт "Плановое / бэклог" (P3)  
+**Статус:** Closed · Done (2026-09-13)  
 **Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.5)
 
 ### Что сделать (DoD)
-1. Провести Architecture Pre-Check по переводу сессий на `Set-Cookie: authToken=...; HttpOnly; Secure; SameSite=Lax`.
-2. Настроить фильтр Spring Security на чтение JWT как из заголовка `Authorization`, так и из Cookie.
+1. Провести Architecture Pre-Check по переводу сессий на `Set-Cookie: authToken=...; HttpOnly; Secure; SameSite=Lax` (`docs/architecture/JWT-COOKIE-MIGRATION-PRECHECK.md`).
+2. Настроить фильтр Spring Security на чтение JWT как из заголовка `Authorization`, так и из Cookie (`CookieBearerTokenResolver`).
+3. Поддержать установку cookie в `/api/v1/auth/login` и сброс cookie в `/api/v1/auth/logout`.
 
 **Затрагиваемые файлы:**
-- `backend/src/main/java/com/be/web/controller/AuthController.java`
+- `backend/src/main/java/com/be/config/CookieBearerTokenResolver.java`
 - `backend/src/main/java/com/be/config/SecurityConfig.java`
+- `backend/src/main/java/com/be/web/controller/AuthController.java`
 - `frontend-svelte/src/lib/api.ts`
+- `docs/architecture/JWT-COOKIE-MIGRATION-PRECHECK.md`
+
+---
+
+## LR-109 — Добавление HSTS (Strict-Transport-Security) через Traefik Middleware
+
+**Tier:** LOW (инфра / HTTP заголовки безопасности)  
+**Статус:** Open · спринт "Плановое / бэклог" (P3)  
+**Источник:** ревью плана LR-108 (2026-09-13)
+
+### Контекст и проблема
+В кластере настроен принудительный редирект HTTP -> HTTPS (`lr-dev-redirect-to-https@kubernetescrd` middleware). Однако заголовок `Strict-Transport-Security` не отдается ни Ingress, ни Nginx. Это оставляет небольшое окно уязвимости Man-in-the-Middle при первом обращении браузера по незашифрованному HTTP до получения редиректа.
+
+### Что сделать (DoD)
+1. В Helm-чарте `devops/helm/lr-app/templates/` объявить Traefik middleware для HSTS (headers middleware: `stsSeconds: 31536000`, `stsIncludeSubdomains: true`, `stsPreload: true`).
+2. Подключить middleware к Ingress аннотацией `traefik.ingress.kubernetes.io/router.middlewares`.
+
+**Затрагиваемые файлы:**
+- `devops/helm/lr-app/templates/middleware-headers.yaml` (новый)
+- `devops/helm/lr-app/templates/ingress.yaml`
