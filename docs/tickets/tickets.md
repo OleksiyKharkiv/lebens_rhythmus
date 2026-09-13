@@ -1818,3 +1818,26 @@ implementation-time тихо — зафиксировать явно в Architec
 
 ---
 
+## LR-098 — Регрессионные тесты на 4 teacher-scoping IDOR-фикса (LR-024 + Tier 1.1)
+
+**Tier:** LOW (только тесты, логика уже исправлена и в проде/готова к пушу)
+**Статус:** Open · backlog
+**Источник:** universal vulnerability checklist, Tier 1.1, 2026-09-13
+
+Ни у одного из 4 эндпоинтов, где TEACHER-роль была ограничена "только
+свои группы" (`WorkshopController.byTeacher`, `GroupController.
+getGroupsByTeacher`, `EnrollmentController.participantsForGroup` — все
+три LR-024; `ParticipantController.getById`/`.getAll()` — Tier 1.1,
+2026-09-13) — **нет регрессионного теста**, который бы упал без фикса
+и прошёл с ним (методология самого чек-листа, шаг 5). Фикс проверен
+вручную/через `architect-reviewer` на чтение кода, не автотестом.
+
+**Сделать:** для каждого из 4 — MockMvc/service-layer тест: teacher A
+(с назначенной группой) не может увидеть данные teacher B (другая
+группа/участник/воркшоп); admin/business_owner по-прежнему видит всё.
+Мутационная проверка (шаг 3 методологии): временно откатить проверку в
+коде, убедиться, что тест реально падает — не просто "тест зелёный,
+потому что ничего не проверяет".
+
+---
+

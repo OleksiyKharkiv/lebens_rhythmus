@@ -32,6 +32,13 @@ public class ParticipantService {
         return participantRepository.findAll();
     }
 
+    // Security check Tier 1.1 (2026-09-13) — scoped variant for a caller
+    // whose real role is TEACHER, same reasoning as the repository method.
+    @Transactional(readOnly = true)
+    public List<Participant> getAllForTeacher(Long teacherId) {
+        return participantRepository.findByGroup_Teacher_Id(teacherId);
+    }
+
     @Transactional(readOnly = true)
     public Participant getById(Long id) {
         return participantRepository.findById(id)

@@ -2,6 +2,42 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-09-13 — security: Tier 1 чеклиста (IDOR в `ParticipantController`, найдено и исправлено)
+
+### Область (`backend/src/main/java/com/be/{web/controller/ParticipantController.java,service/ParticipantService.java,domain/repository/ParticipantRepository.java}`, `docs/tickets/tickets.md`)
+
+Tier 1 (Broken authorization) чеклиста, каждый пункт — с независимой
+проверкой `architect-reviewer` (второй прогон, свежий, без знания о
+первом).
+
+- **security (1.1, найдено+исправлено)** — `ParticipantController.
+  getAll()`/`getById()` были TEACHER-доступны без scoping-проверки —
+  тот же класс бага, что LR-024 уже закрыл в трёх других местах
+  (`WorkshopController.byTeacher`, `GroupController.getGroupsByTeacher`,
+  `EnrollmentController.participantsForGroup`), но этот, четвёртый,
+  тогда пропустили. `Participant` хранит зашифрованные PII ребёнка
+  (firstName/lastName/phone) — любой TEACHER мог прочитать участников
+  ЛЮБОЙ группы, не только своей. Исправлено тем же паттерном:
+  `ParticipantRepository.findByGroup_Teacher_Id`, `ParticipantService.
+  getAllForTeacher`, controller-проверка владения (403 при чужой
+  группе, ADMIN/BUSINESS_OWNER не затронуты). Ревьювер независимо
+  пере-прошёл весь `hasRole('TEACHER')` по всему дереву контроллеров —
+  пятого пропущенного места не нашёл.
+- **1.2 (mass assignment)** — ✅ чисто, LR-089 уже исчерпывающе покрыл
+  (27 DTO); ревьювер сверил ещё 4 DTO не из первого прохода + git-лог
+  с даты закрытия LR-089 на предмет новых полей — дрейфа не найдено.
+- **1.3 (dead authorization)** — ✅ чисто, осиротевших
+  permission-функций/невключённых custom SpEL в `@PreAuthorize` не
+  найдено (79 вхождений по всему дереву, все — стандартные
+  `hasRole`/`isAuthenticated`).
+- **docs** — `LR-098` заведён: ни у одного из всех 4 teacher-scoping
+  фиксов (3 старых + этот) нет регрессионного теста, который бы падал
+  без фикса — методология самого чек-листа явно требует этого шага,
+  не сделан ни разу до сих пор.
+- **verify** — `./gradlew compileJava compileTestJava` + `test --tests
+  "com.be.service.*" --tests "com.be.web.controller.*"` — BUILD
+  SUCCESSFUL.
+
 ## 2026-09-10 — security: Tier 0 универсального security-чеклиста (2 находки, обе исправлены)
 
 ### Область (`.gitignore`, `backend/src/main/java/com/be/service/{LogNotificationService.java,EnrollmentService.java}`)
