@@ -1,3 +1,5 @@
+import { localizeHref } from '$lib/paraglide/runtime';
+
 // Thin client for the Spring Boot backend (separate app, see
 // backend/src/main/java/com/be/web/controller/AuthController.java).
 // Mirrors the contract the old static frontend used against the same API.
@@ -160,7 +162,9 @@ async function authRequest<T>(path: string, options: RequestInit = {}): Promise<
 	} catch (err) {
 		if (err instanceof ApiError && err.status === 401) {
 			clearSession();
-			window.location.href = '/login';
+			window.location.href = localizeHref('/login');
+		} else if (err instanceof ApiError && err.status === 403) {
+			window.location.href = localizeHref('/dashboard');
 		}
 		throw err;
 	}
@@ -754,6 +758,11 @@ export interface TeacherInfoDTO {
 // @PreAuthorize of its own.
 export function getTeachers() {
 	return authRequest<TeacherInfoDTO[]>('/teachers');
+}
+
+// LR-099 — self-scoped teacher profile resolution without leaking all teachers' PII
+export function getTeacherMe() {
+	return authRequest<TeacherInfoDTO>('/teachers/me');
 }
 
 // LR-073 — admin CRUD for the Teacher entity itself (distinct from the

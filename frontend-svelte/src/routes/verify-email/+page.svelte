@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
-	import { resolve } from '$app/paths';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import * as m from '$lib/paraglide/messages.js';
 	import { verifyEmail } from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
@@ -31,12 +31,12 @@
 			<p class="mt-4 text-paper-dim">{m.verify_email_loading()}</p>
 		{:else if status === 'success'}
 			<p class="mt-4 text-success">{m.verify_email_success()}</p>
-			<a href={resolve('/login')} class="mt-6 inline-block text-teal underline hover:no-underline">
+			<a href={localizeHref('/login')} class="mt-6 inline-block text-teal underline hover:no-underline">
 				{m.verify_email_go_to_login()}
 			</a>
 		{:else}
 			<p class="mt-4 text-error">{m.verify_email_error()}</p>
-			<a href={resolve('/login')} class="mt-6 inline-block text-teal underline hover:no-underline">
+			<a href={localizeHref('/login')} class="mt-6 inline-block text-teal underline hover:no-underline">
 				{m.verify_email_go_to_login()}
 			</a>
 		{/if}

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import { isAuthenticated, submitFeedback, ApiError } from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
@@ -16,7 +17,7 @@
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		if (!isAuthenticated()) {
-			window.location.href = '/login';
+			window.location.href = localizeHref('/login');
 			return;
 		}
 		error = '';

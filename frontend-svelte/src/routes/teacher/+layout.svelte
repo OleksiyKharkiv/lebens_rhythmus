@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import { isAuthenticated, getStoredRole } from '$lib/api';
 
 	let { children } = $props();
@@ -10,12 +11,12 @@
 	// endpoint (hasRole('TEACHER') or BUSINESS_OWNER/ADMIN).
 	$effect(() => {
 		if (!isAuthenticated()) {
-			window.location.href = '/login';
+			window.location.href = localizeHref('/login');
 			return;
 		}
 		const role = getStoredRole();
 		if (role !== 'TEACHER' && role !== 'BUSINESS_OWNER' && role !== 'ADMIN') {
-			window.location.href = '/dashboard';
+			window.location.href = localizeHref('/dashboard');
 			return;
 		}
 		ready = true;

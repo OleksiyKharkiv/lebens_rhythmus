@@ -24,6 +24,9 @@
 **Спринт "Немедленно"** — активный прод-риск прямо сейчас, просроченный
 дедлайн, или HIGH-тикет, застрявший на блокере, который стоит
 целенаправленно снять:
+- **LR-099** — [ЗАКРЫТ 2026-09-13] утечка PII преподавателей и площадок (`GET /teachers`, `GET /venues`), изоляция `GET /teachers/me`, 403-редирект (P0).
+- **LR-102** — [ЗАКРЫТ 2026-09-13] Silent Locale Drop: сохранение языка через `localizeHref` во всех внутренних ссылках и auth-редиректах (P1).
+- **LR-100** — [ЗАКРЫТ 2026-09-13] защитные HTTP Security Headers в `frontend-svelte/nginx.conf` (CSP с sha256 темы, X-Frame-Options, etc.) (P1).
 - **LR-003** — бэкапы Postgres: дедлайн (2026-08-05) уже прошёл, ноль
   бэкапов для данных несовершеннолетних.
 - **LR-033** — CORS смешивает прод/dev origins в живом прод-конфиге.
@@ -35,6 +38,9 @@
 
 **Спринт "Ближайшее"** — высокая ценность, без внешних блокеров (или
 блокер снят прямо сейчас):
+- **LR-101** — ужесточение CORS: удаление незащищенного HTTP и сужение методов/заголовков.
+- **LR-103** — локализованные поля DTO в курсах и вынос хардкод-строк в i18n-словари.
+- **LR-107** — устранение клиентского N+1: эндпоинт `GET /api/v1/users/me/media`.
 - **LR-022 п.6** — финальная верификация аудита. Гейт ("после закрытия
   LR-024..LR-030, LR-021") **уже выполнен** — все эти тикеты закрыты.
   Готово к старту, просто не было замечено как разблокированное до этой
@@ -48,8 +54,9 @@
 
 **Спринт "Плановое / бэклог"** — реальная работа, не срочная:
 LR-018, LR-032, LR-040, LR-042 (после продуктового решения), LR-043,
-LR-044, LR-005, LR-010, LR-009. LR-016/LR-017 — сознательно отложены
-самим заказчиком, не пере-приоритизировать без его запроса.
+LR-044, LR-005, LR-010, LR-009, LR-104, LR-105, LR-106, LR-108.
+LR-016/LR-017 — сознательно отложены самим заказчиком, не пере-приоритизировать
+без его запроса.
 
 **Заблокировано** (не может продвинуться без внешнего события —
 не игнорировать, просто не в фокусе, пока блокер не снят):
@@ -1841,3 +1848,234 @@ getGroupsByTeacher`, `EnrollmentController.participantsForGroup` — все
 
 ---
 
+## LR-099 — Устранение утечки PII: изоляция `GET /teachers/me`, закрытие `GET /venues` и `GET /teachers` под ADMIN, редирект при 403
+
+**Tier:** HIGH (авторизация, защита PII по DSGVO)  
+**Статус:** Closed · Done (2026-09-13)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.1, §2.2, консенсус ревью)
+
+### Контекст и проблема
+1. `TeacherController` (`GET /teachers`) и `VenueController` (`GET /venues`, `GET /venues/{id}`) не имеют аннотаций `@PreAuthorize` на бэкенде. Любой авторизованный пользователь (роль `USER`) может получить массив `TeacherInfoDTO` и `VenueDTO` с личными телефонами, email-адресами и статусами преподавателей и контактными данными площадок в нарушение DSGVO.
+2. Фронтенд (`teacher/+page.svelte`) для поиска своего ID скачивает всех учителей и фильтрует их на клиенте через `allTeachers.find(...)`.
+3. В `src/lib/api.ts` метод `authRequest` перехватывает только статус 401, а при статусе 403 Forbidden не делает редирект, оставляя пользователя на экранах админки.
+
+### Что сделать (DoD)
+1. **Backend:**
+   - Создать эндпоинт `GET /api/v1/teachers/me` (возвращает `TeacherInfoDTO` только текущего авторизованного преподавателя).
+   - Защитить полные листинги `GET /api/v1/teachers` и `GET /api/v1/venues` аннотацией `@PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")`.
+2. **Frontend:**
+   - В `teacher/+page.svelte` заменить вызов `getTeachers()` на вызов `getTeacherMe()`.
+   - В `src/lib/api.ts` внутри `authRequest` добавить обработку статуса 403: принудительный переход на `/dashboard` (`goto(localizeHref('/dashboard'))`) с очисткой состояния несанкционированного доступа.
+3. Написать MockMvc/интеграционные тесты на ограничение доступа роли `USER` к закрытым эндпоинтам.
+
+**Затрагиваемые файлы:**
+- `backend/src/main/java/com/be/web/controller/TeacherController.java`
+- `backend/src/main/java/com/be/web/controller/VenueController.java`
+- `backend/src/main/java/com/be/service/TeacherService.java`
+- `frontend-svelte/src/lib/api.ts`
+- `frontend-svelte/src/routes/teacher/+page.svelte`
+- `frontend-svelte/src/routes/admin/+layout.svelte`
+
+---
+
+## LR-100 — Добавление HTTP Security Headers в `nginx.conf` фронтенда
+
+**Tier:** INFRA / HIGH (защита от Clickjacking, XSS, MIME-sniffing)  
+**Статус:** Closed · Done (2026-09-13)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.3)
+
+### Контекст и проблема
+В `frontend-svelte/nginx.conf` настроена раздача статики и SPA-fallback, но полностью отсутствуют защитные HTTP-заголовки. Сайт уязвим к встраиванию в iframe сторонними ресурсами (Clickjacking) и атакам через некорректную интерпретацию MIME-типов браузером.
+
+### Что сделать (DoD)
+1. Добавить в блок `server` в `frontend-svelte/nginx.conf` стандартный комплект заголовков:
+   - `add_header X-Frame-Options "DENY" always;`
+   - `add_header X-Content-Type-Options "nosniff" always;`
+   - `add_header Referrer-Policy "strict-origin-when-cross-origin" always;`
+   - `add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;`
+   - `add_header Content-Security-Policy "default-src 'self'; connect-src 'self' https://api.tlab29.com https://api.stripe.com; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; font-src 'self'; script-src 'self'; frame-ancestors 'none';" always;`
+2. Проверить локальную сборку Docker-образа фронтенда и синтаксис конфигурации Nginx (`nginx -t`).
+
+**Затрагиваемые файлы:**
+- `frontend-svelte/nginx.conf`
+
+---
+
+## LR-101 — Ужесточение CORS: удаление незащищенного HTTP и сужение методов
+
+**Tier:** HIGH (CORS hygiene, сетевой периметр)  
+**Статус:** Open · спринт "Ближайшее" (P1)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.4)
+
+### Контекст и проблема
+В `CorsProperties.java` в список доверенных продакшн-источников включен `http://tlab29.com` (небезопасный протокол HTTP) наряду с HTTPS при включенном `allowCredentials = true`. В `WebMvcConfig.java` выставлены `allowedMethods("*")` и `allowedHeaders("*")`.
+
+### Что сделать (DoD)
+1. Удалить `http://tlab29.com` из списка `allowedOrigins` по умолчанию.
+2. В `WebMvcConfig.java` ограничить разрешенные HTTP-методы: `GET, POST, PUT, DELETE, PATCH, OPTIONS`.
+3. Ограничить `allowedHeaders` до используемых заголовков: `Authorization, Content-Type, Accept, Origin, X-Requested-With`.
+4. Обновить тесты `CorsPropertiesTest.java`.
+
+**Затрагиваемые файлы:**
+- `backend/src/main/java/com/be/config/CorsProperties.java`
+- `backend/src/main/java/com/be/config/WebMvcConfig.java`
+- `backend/src/test/java/com/be/config/CorsPropertiesTest.java`
+
+---
+
+## LR-102 — Ликвидация сброса языка (Silent Locale Drop) во всех внутренних ссылках и 401-хендлере
+
+**Tier:** LOW (фронтенд-шаблоны)  
+**Статус:** Closed · Done (2026-09-13)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.1, консенсус ревью)
+
+### Контекст и проблема
+Paraglide JS переключается на язык по умолчанию (`de`), если URL не содержит префикса (`/en/..` или `/uk/..`). На ключевых страницах обнаружены голые ссылки без обертки `localizeHref`:
+- `src/routes/courses/+page.svelte:70`: `<a href={`/courses/${c.id}`}>`
+- `src/routes/workshops/+page.svelte:76, 102`: `<a href={`/workshops/${w.id}`}>`
+- `src/routes/+page.svelte:29`: `href={resolve('/login')}` (главная кнопка регистрации в Hero)
+- `src/routes/verify-email/+page.svelte:34, 39`: `href={resolve('/login')}`
+- `src/lib/components/EnrollButton.svelte:39`: `window.location.href = `/login?returnTo=${returnTo}``
+- `src/lib/api.ts:163`: 401-хендлер `window.location.href = '/login'`
+При клике на любую из этих ссылок посетитель, выбравший английский или украинский язык, внезапно возвращается на немецкую версию сайта.
+
+### Что сделать (DoD)
+1. Заменить все указанные ссылки на `localizeHref('/courses/' + c.id)` и `localizeHref('/workshops/' + w.id)`.
+2. В `+page.svelte` и `verify-email/+page.svelte` заменить `resolve('/login')` на `localizeHref('/login')`.
+3. В `EnrollButton.svelte` формировать URL возврата с сохранением текущей локали через `localizeHref`.
+4. В `src/lib/api.ts` в 401-хендлере использовать `window.location.href = localizeHref('/login')`.
+5. Проверить сценарии переключения языка в браузере при навигации по детальным страницам курсов/воркшопов.
+
+**Затрагиваемые файлы:**
+- `frontend-svelte/src/routes/courses/+page.svelte`
+- `frontend-svelte/src/routes/workshops/+page.svelte`
+- `frontend-svelte/src/routes/+page.svelte`
+- `frontend-svelte/src/routes/verify-email/+page.svelte`
+- `frontend-svelte/src/lib/components/EnrollButton.svelte`
+- `frontend-svelte/src/lib/api.ts`
+
+---
+
+## LR-103 — Полноценный вывод мультиязычных полей DTO на страницах курсов и устранение хардкода строк
+
+**Tier:** LOW (фронтенд-компоненты и словари сообщений)  
+**Статус:** Open · спринт "Ближайшее" (P2)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.2)
+
+### Контекст и проблема
+1. Бэкенд передает мультиязычные поля для курсов (`titleDe/En/Ua`, `descriptionDe/En/Ua`, `formatDisclaimerDe/En/Ua`). Однако `courses/+page.svelte` и `courses/[id]/+page.svelte` жестко выводят только немецкие поля (`.titleDe`, `.descriptionDe`, `.formatDisclaimerDe`), игнорируя выбранную локаль.
+2. В коде страниц захардкожены немецкие строки (`login/+page.svelte`, `feedback/+page.svelte`, `workshops/+page.svelte`, `Input.svelte`).
+3. Форматирование дат в `scheduleUtils.ts` жестко зафиксировано на `'de-DE'`.
+
+### Что сделать (DoD)
+1. Создать хелпер `localizedField(item, fieldName)` в `$lib/i18nUtils.ts`, возвращающий перевод в соответствии с активной локалью `getLocale()`.
+2. Обновить шаблоны `courses/+page.svelte` и `courses/[id]/+page.svelte` для вывода локализованных полей с фоллбэком на немецкий при отсутствии перевода.
+3. Вынести захардкоженные строки в словари сообщений Paraglide (`messages/de.json`, `en.json`, `uk.json`).
+4. Сделать утилиту форматирования дат чувствительной к текущей локали.
+
+**Затрагиваемые файлы:**
+- `frontend-svelte/src/lib/i18nUtils.ts` (новый)
+- `frontend-svelte/src/routes/courses/+page.svelte`
+- `frontend-svelte/src/routes/courses/[id]/+page.svelte`
+- `frontend-svelte/src/routes/login/+page.svelte`
+- `frontend-svelte/src/routes/feedback/+page.svelte`
+- `frontend-svelte/src/routes/workshops/+page.svelte`
+- `frontend-svelte/src/lib/components/Input.svelte`
+- `frontend-svelte/messages/de.json`, `en.json`, `uk.json`
+
+---
+
+## LR-104 — Точечная замена редиректов на `goto()` с сохранением full-reload для смены сессии
+
+**Tier:** LOW (фронтенд-навигация)  
+**Статус:** Open · спринт "Плановое / бэклог" (P2)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.4, консенсус ревью)
+
+### Контекст и проблема
+При смене auth-состояния (401 в `api.ts`, логаут, кик неавторизованного) полный релод через `window.location.href = localizeHref(...)` архитектурно необходим, так как `localStorage` нереактивен и SvelteKit не перемонтирует корневой layout при `goto()` (`+layout.svelte:65-77`). Однако в случаях, когда пользователь уже залогинен, но пытается перейти в раздел не своей роли («не та роль» в `admin/+layout.svelte` и `teacher/+page.svelte`), полный релод страницы избыточен и ухудшает UX.
+
+### Что сделать (DoD)
+1. В ветках «не та роль» (`admin/+layout.svelte` и `teacher/+page.svelte`) заменить `window.location.href = '/dashboard'` на SvelteKit-роутер `goto(localizeHref('/dashboard'))`.
+2. Во всех остальных местах смены auth-состояния (`EnrollButton.svelte`, `feedback`, `api.ts`, логаут) сохранить `window.location.href`, убедившись, что путь всегда обернут в `localizeHref(...)`.
+
+**Затрагиваемые файлы:**
+- `frontend-svelte/src/routes/admin/+layout.svelte`
+- `frontend-svelte/src/routes/teacher/+page.svelte`
+- `frontend-svelte/src/routes/+layout.svelte`
+- `frontend-svelte/src/lib/api.ts`
+
+---
+
+## LR-105 — Адаптивная калибровка шрифта мобильных экранов внутри системы брейкпоинтов
+
+**Tier:** LOW (CSS)  
+**Статус:** Open · спринт "Плановое / бэклог" (P3)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.5, консенсус ревью)
+
+### Контекст и проблема
+Размер 22px (`text-[1.375rem]`) в карточках направлений главной страницы (`routes/+page.svelte`) был прямым запросом Олены от 2026-08-19 ("+0.5rem"). Однако на смартфонах с шириной экрана 360–390px 22px приводит к неэстетичным разрывам строк. Архитектура лестницы брейкпоинтов сохраняется, так как защищает от багов сортировки каскада в Tailwind v4 (`RESPONSIVE_SCALING_PLAYBOOK.md`).
+
+### Что сделать (DoD)
+1. Согласовать с владельцем проекта (Оленой) адаптивное уменьшение шрифта карточек направлений строго для мобильных экранов `<640px` (до `1.125rem` / 18px), сохраняя размер `1.375rem` для планшетов и десктопов.
+2. Внести правку внутрь принятой системы CSS-классов без нарушения каскада Tailwind v4.
+
+**Затрагиваемые файлы:**
+- `frontend-svelte/src/routes/+page.svelte`
+- `frontend-svelte/src/routes/layout.css`
+
+---
+
+## LR-106 — Повышение доступности (A11y) и унификация компонентов ввода
+
+**Tier:** LOW (a11y / UI-компоненты)  
+**Статус:** Open · спринт "Плановое / бэклог" (P4)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.6)
+
+### Что сделать (DoD)
+1. Убрать `tabindex="-1"` с кнопки пароля в `Input.svelte`, добавить динамический переводимый `aria-label`.
+2. В `Button.svelte` добавить атрибут `aria-busy={busy}` и заменить текстовое троеточие на аккуратный SVG-спиннер с сохранением фиксированной высоты кнопки.
+3. Заменить сырые теги `<select>` в админке на переиспользуемый компонент `Select.svelte`.
+
+**Затрагиваемые файлы:**
+- `frontend-svelte/src/lib/components/Input.svelte`
+- `frontend-svelte/src/lib/components/Button.svelte`
+- `frontend-svelte/src/routes/admin/users/+page.svelte`
+- `frontend-svelte/src/routes/admin/groups/+page.svelte`
+
+---
+
+## LR-107 — Ликвидация клиентского N+1: эндпоинт `GET /api/v1/users/me/media`
+
+**Tier:** MED (новый эндпоинт в API личного кабинета)  
+**Статус:** Open · спринт "Ближайшее" (P2)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.3)
+
+### Контекст и проблема
+На странице `dashboard/+page.svelte` фронтенд получает список бронирований пользователя и делает веер отдельных запросов `GET /api/v1/workshops/{id}`, чтобы собрать список прикрепленных файлов (`media`).
+
+### Что сделать (DoD)
+1. Реализовать на бэкенде эндпоинт `GET /api/v1/users/me/media`, возвращающий медиа-файлы тех курсов/воркшопов, где у пользователя есть активная запись.
+2. На фронтенде заменить `Promise.all(workshopIds.map(getWorkshop))` на единичный вызов `getMyMedia()`.
+
+**Затрагиваемые файлы:**
+- `backend/src/main/java/com/be/web/controller/UserController.java`
+- `backend/src/main/java/com/be/service/UserService.java`
+- `frontend-svelte/src/lib/api.ts`
+- `frontend-svelte/src/routes/dashboard/+page.svelte`
+
+---
+
+## LR-108 — Архитектурная подготовка миграции JWT из `localStorage` в `HttpOnly SameSite Cookies`
+
+**Tier:** HIGH (безопасность сессий, XSS-защита)  
+**Статус:** Open · спринт "Плановое / бэклог" (P3)  
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.5)
+
+### Что сделать (DoD)
+1. Провести Architecture Pre-Check по переводу сессий на `Set-Cookie: authToken=...; HttpOnly; Secure; SameSite=Lax`.
+2. Настроить фильтр Spring Security на чтение JWT как из заголовка `Authorization`, так и из Cookie.
+
+**Затрагиваемые файлы:**
+- `backend/src/main/java/com/be/web/controller/AuthController.java`
+- `backend/src/main/java/com/be/config/SecurityConfig.java`
+- `frontend-svelte/src/lib/api.ts`

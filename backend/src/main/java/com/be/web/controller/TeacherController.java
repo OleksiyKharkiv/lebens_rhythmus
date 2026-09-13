@@ -1,5 +1,6 @@
 package com.be.web.controller;
 
+import com.be.config.JwtAuthUtils;
 import com.be.domain.entity.Teacher;
 import com.be.service.TeacherService;
 import com.be.web.dto.TeacherInfoDTO;
@@ -8,6 +9,8 @@ import com.be.web.mapper.TeacherMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +29,7 @@ public class TeacherController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
     public ResponseEntity<List<TeacherInfoDTO>> getAll() {
         List<Teacher> teachers = teacherService.getAll();
         return ResponseEntity.ok(teachers.stream()
@@ -34,9 +38,24 @@ public class TeacherController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
     public ResponseEntity<TeacherInfoDTO> getById(@PathVariable Long id) {
         Teacher teacher = teacherService.getById(id);
         return ResponseEntity.ok(teacherMapper.toInfoDTO(teacher));
+    }
+
+    @GetMapping("/me")
+    @PreAuthorize("hasRole('TEACHER') or hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
+    public ResponseEntity<TeacherInfoDTO> getMe(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = JwtAuthUtils.extractUserId(jwt);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+        return teacherService.resolveTeacherIdForUser(userId)
+                .map(teacherService::getById)
+                .map(teacherMapper::toInfoDTO)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping

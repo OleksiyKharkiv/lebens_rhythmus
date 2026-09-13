@@ -16,12 +16,12 @@
 	// what actually enforces access.
 	$effect(() => {
 		if (!isAuthenticated()) {
-			window.location.href = '/login';
+			window.location.href = localizeHref('/login');
 			return;
 		}
 		const role = getStoredRole();
 		if (role !== 'ADMIN' && role !== 'BUSINESS_OWNER') {
-			window.location.href = '/dashboard';
+			window.location.href = localizeHref('/dashboard');
 			return;
 		}
 		ready = true;

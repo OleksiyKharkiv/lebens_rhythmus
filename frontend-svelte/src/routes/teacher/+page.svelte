@@ -1,11 +1,11 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
 	import {
-		getCurrentUser,
+		getTeacherMe,
 		getWorkshopsByTeacherId,
-		getTeachers,
 		getGroupsByTeacherId,
 		getGroupParticipants,
+		ApiError,
 		type WorkshopListItem,
 		type GroupDTO,
 		type EnrollmentAdminDTO
@@ -20,26 +20,10 @@
 	let participants = $state<Record<number, EnrollmentAdminDTO[]>>({});
 
 	$effect(() => {
-		getCurrentUser()
-			.then(async (user) => {
-				// Group.teacher (and, since LR-072, Workshop.teacher too) is a
-				// Teacher entity FK, a SEPARATE id space from User — there is no
-				// link field between the two today (real gap, LR-ADR-004
-				// territory). Interim workaround, confirmed with the product
-				// owner 2026-07-23: resolve by matching email against
-				// GET /teachers. Fragile if emails ever diverge between the two
-				// records — a proper User->Teacher FK is tracked as follow-up
-				// tech debt, not solved here. Workshops moved behind this same
-				// resolution (LR-072) — passing user.id used to silently fail
-				// the backend's self-scoping check (wrong id space).
-				const allTeachers = await getTeachers();
-				const myTeacherRow = allTeachers.find((t) => t.email === user.email);
-				if (!myTeacherRow) {
-					teacherRowMissing = true;
-					workshops = [];
-					groups = [];
-					return;
-				}
+		// LR-099 — self-scoped teacher profile resolution via GET /teachers/me.
+		// Avoids over-fetching all teachers and exposing their personal PII.
+		getTeacherMe()
+			.then((myTeacherRow) => {
 				getWorkshopsByTeacherId(myTeacherRow.id)
 					.then((data) => (workshops = data))
 					.catch(() => (error = true));
@@ -47,7 +31,15 @@
 					.then((data) => (groups = data))
 					.catch(() => (error = true));
 			})
-			.catch(() => (error = true));
+			.catch((err) => {
+				if (err instanceof ApiError && err.status === 404) {
+					teacherRowMissing = true;
+					workshops = [];
+					groups = [];
+					return;
+				}
+				error = true;
+			});
 	});
 
 	async function toggleParticipants(groupId: number) {

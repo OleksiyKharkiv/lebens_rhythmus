@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import * as m from '$lib/paraglide/messages.js';
 	import { isAuthenticated, enrollInWorkshop, enrollInCourse, ApiError, type EnrollmentDTO } from '$lib/api';
 	import Button from './Button.svelte';
@@ -36,7 +37,7 @@
 			// own auth redirect: we're leaving the current (unauthenticated)
 			// session state behind entirely, not doing an SPA-internal move.
 			const returnTo = encodeURIComponent(page.url.pathname);
-			window.location.href = `/login?returnTo=${returnTo}`;
+			window.location.href = localizeHref(`/login?returnTo=${returnTo}`);
 			return;
 		}
 

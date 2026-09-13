@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import {
 		isAuthenticated,
 		getMyEnrollments,
@@ -22,7 +23,7 @@
 	// browser, same reasoning as +layout.svelte's loggedIn check.
 	$effect(() => {
 		if (!isAuthenticated()) {
-			window.location.href = '/login';
+			window.location.href = localizeHref('/login');
 			return;
 		}
 		ready = true;

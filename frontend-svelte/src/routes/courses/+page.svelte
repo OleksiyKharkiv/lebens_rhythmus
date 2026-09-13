@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import { getCourses, isAuthenticated, type CourseListItem, type EnrollmentDTO } from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import EnrollButton from '$lib/components/EnrollButton.svelte';
@@ -67,7 +68,7 @@
 					{/if}
 					<div class="mt-4 flex items-center justify-between gap-2">
 						<a
-							href={`/courses/${c.id}`}
+							href={localizeHref(`/courses/${c.id}`)}
 							class="rounded-full border border-ink-line px-4 py-2 text-sm text-paper transition-colors hover:border-gold"
 						>
 							{m.workshops_details()}

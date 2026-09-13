@@ -26,6 +26,7 @@ public class VenueController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
     public ResponseEntity<List<VenueResponseDTO>> getAll() {
         List<Venue> venues = venueService.getAll();
         return ResponseEntity.ok(venues.stream()
@@ -34,6 +35,7 @@ public class VenueController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('BUSINESS_OWNER')")
     public ResponseEntity<VenueResponseDTO> getById(@PathVariable Long id) {
         Venue venue = venueService.getById(id);
         return ResponseEntity.ok(venueMapper.toResponseDTO(venue));

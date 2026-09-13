@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import Card from '$lib/components/Card.svelte';
 	import Button from '$lib/components/Button.svelte';
 </script>
@@ -31,7 +32,7 @@
 		<h2 class="section-title font-display font-semibold text-paper">{m.corporate_cta_title()}</h2>
 		<p class="mt-2 text-paper-dim">{m.corporate_cta_body()}</p>
 		<div class="mx-auto mt-6 max-w-xs">
-			<Button onclick={() => (window.location.href = '/contact')}>{m.corporate_cta_button()}</Button>
+			<Button onclick={() => (window.location.href = localizeHref('/contact'))}>{m.corporate_cta_button()}</Button>
 		</div>
 	</div>
 </section>

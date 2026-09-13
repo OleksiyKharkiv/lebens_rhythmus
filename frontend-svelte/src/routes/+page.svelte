@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { resolve } from '$app/paths';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import * as m from '$lib/paraglide/messages.js';
 
 	const directions = [
@@ -26,7 +26,7 @@
 			{m.home_hero_tagline()}
 		</p>
 		<a
-			href={resolve('/login')}
+			href={localizeHref('/login')}
 			class="mt-10 inline-block rounded-full bg-gold px-8 py-3.5 font-display font-semibold text-ink transition-colors hover:bg-gold-deep"
 		>
 			{m.home_cta_register()}

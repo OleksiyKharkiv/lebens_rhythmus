@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
+	import { localizeHref } from '$lib/paraglide/runtime';
 	import { getWorkshops, isAuthenticated, type WorkshopListItem, type EnrollmentDTO } from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import EnrollButton from '$lib/components/EnrollButton.svelte';
@@ -73,7 +74,7 @@
 					</p>
 					<div class="mt-4 flex items-center justify-between gap-2">
 						<a
-							href={`/workshops/${w.id}`}
+							href={localizeHref(`/workshops/${w.id}`)}
 							class="rounded-full border border-ink-line px-4 py-2 text-sm text-paper transition-colors hover:border-gold"
 						>
 							{m.workshops_details()}
@@ -99,7 +100,7 @@
 								<!-- 2+ active groups — no single date to enroll into
 								     directly, send the user to pick one. -->
 								<a
-									href={`/workshops/${w.id}`}
+									href={localizeHref(`/workshops/${w.id}`)}
 									class="rounded-full bg-teal px-4 py-2 text-sm font-semibold text-ink transition-colors hover:opacity-90"
 								>
 									{m.workshops_choose_date()}
