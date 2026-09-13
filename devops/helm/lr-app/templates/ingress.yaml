@@ -5,7 +5,17 @@ metadata:
   namespace: lr-dev
   annotations:
     traefik.ingress.kubernetes.io/router.entrypoints: web,websecure
-    traefik.ingress.kubernetes.io/router.middlewares: lr-dev-redirect-to-https@kubernetescrd
+    # DO NOT attach a redirect-to-https middleware here. Origin traffic
+    # arrives via Cloudflare Tunnel (cloudflared -> Traefik's `web`
+    # entrypoint over plain http://localhost:8000, see
+    # devops/cloud_flare/README.md) — Traefik can never observe that the
+    # original browser request was HTTPS, so a redirectScheme middleware
+    # on this router unconditionally 301s every request back to https,
+    # which the tunnel then re-delivers as http again: an infinite loop
+    # (prod outage 2026-09-13, ERR_TOO_MANY_REDIRECTS, introduced by
+    # LR-101 attaching exactly this middleware). HTTPS enforcement for
+    # this topology belongs at the Cloudflare edge (SSL/TLS -> Edge
+    # Certificates -> "Always Use HTTPS", already enabled), not here.
 spec:
   ingressClassName: traefik
   rules:

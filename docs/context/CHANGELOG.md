@@ -2,6 +2,41 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-09-13 — infra: прод-инцидент — редирект-петля на tlab29.com (ERR_TOO_MANY_REDIRECTS), причина и фикс
+
+### Область (`devops/helm/lr-app/templates/{ingress.yaml,middleware-redirect.yaml}`)
+
+Реализация LR-101 добавила Traefik-middleware `redirect-to-https`
+(`redirectScheme`) и привязала его к `lr-ingress` — идея была "довесить"
+HTTPS-энфорсмент к CORS/security-тикету, план ревьювером на этот пункт
+не проверялся отдельно (в план LR-101 эта инфра-правка не входила).
+Результат — полная недоступность tlab29.com сразу после деплоя.
+
+- **root cause** — `tlab29.com`/`api.tlab29.com` обслуживаются через
+  Cloudflare Tunnel (`devops/cloud_flare/README.md`): `cloudflared`
+  доставляет трафик до Traefik локально, `service: http://localhost:8000`
+  — то есть на `web`-энтрипоинте Traefik ВСЕГДА видит обычный HTTP,
+  независимо от того, что было у браузера (Cloudflare обрывает TLS на
+  своей грани, до туннеля). `redirectScheme` middleware на этом роутере
+  безусловно шлёт 301 на `https://`, который через тот же туннель снова
+  приходит как http — бесконечная петля. Живая проверка (`curl -H
+  "Host: tlab29.com" http://<node>:30080/` в обход Cloudflare) подтвердила
+  301 напрямую от Traefik, независимо от каких-либо настроек Cloudflare.
+- **fix** — аннотация `router.middlewares` убрана из `lr-ingress`,
+  `middleware-redirect.yaml` удалён целиком (не оставлен неиспользуемым —
+  висящий-но-неприкреплённый middleware в чарте это "заряженное ружьё",
+  ровно так эта петля и появилась). На месте — явный комментарий в
+  `ingress.yaml`, почему сюда нельзя вешать HTTPS-redirect middleware.
+- **правило на будущее** — при Cloudflare Tunnel-топологии HTTPS-энфорсмент
+  для браузера — обязанность грани Cloudflare (SSL/TLS → Edge
+  Certificates → "Always Use HTTPS", уже включено), не origin/Ingress:
+  origin не может отличить исходную схему запроса от того, что реально
+  видит на своём проводе.
+- **verify** — `curl -H "Host: tlab29.com" http://127.0.0.1:30080/`
+  на ВМ200 напрямую в Traefik (в обход Cloudflare) — было `301
+  Moved Permanently`, после фикса и `helm upgrade` через CI — `200`;
+  `https://tlab29.com` через реальный Cloudflare — без петли.
+
 ## 2026-09-13 — security: Tier 1 чеклиста (IDOR в `ParticipantController`, найдено и исправлено)
 
 ### Область (`backend/src/main/java/com/be/{web/controller/ParticipantController.java,service/ParticipantService.java,domain/repository/ParticipantRepository.java}`, `docs/tickets/tickets.md`)
