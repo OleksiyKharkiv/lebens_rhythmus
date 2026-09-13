@@ -287,5 +287,13 @@
 	"teacher_my_groups": "Мої групи",
 	"teacher_no_teacher_row": "До вашого акаунту ще не прив'язано профіль викладача. Зверніться до адміністрації.",
 	"teacher_show_participants": "Показати учасників",
-	"teacher_hide_participants": "Сховати учасників"
+	"teacher_hide_participants": "Сховати учасників",
+
+	"workshops_start_label": "Початок:",
+	"feedback_error_send": "Помилка при надсиланні.",
+	"login_invalid_credentials": "Неправильний email або пароль.",
+	"register_terms_required": "Будь ласка, прийміть умови.",
+	"register_passwords_mismatch": "Паролі не співпадають.",
+	"input_hide_password": "Сховати пароль",
+	"input_show_password": "Показати пароль"
 }

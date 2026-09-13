@@ -87,7 +87,7 @@
 			} else {
 				loginError =
 					err instanceof ApiError && err.status === 401
-						? 'E-Mail oder Passwort falsch.'
+						? m.login_invalid_credentials()
 						: (err as Error).message;
 			}
 		} finally {
@@ -122,11 +122,11 @@
 		e.preventDefault();
 		regError = '';
 		if (!acceptTerms || !acceptPrivacy) {
-			regError = 'Bitte Bedingungen akzeptieren.';
+			regError = m.register_terms_required();
 			return;
 		}
 		if (regPassword !== regConfirm) {
-			regError = 'Passwörter stimmen nicht überein.';
+			regError = m.register_passwords_mismatch();
 			return;
 		}
 		regBusy = true;

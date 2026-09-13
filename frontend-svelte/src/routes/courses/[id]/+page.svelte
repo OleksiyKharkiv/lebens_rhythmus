@@ -2,7 +2,8 @@
 	import { page } from '$app/state';
 	import * as m from '$lib/paraglide/messages.js';
 	import { getCourse, isAuthenticated, type CourseDetail, type EnrollmentDTO } from '$lib/api';
-	import { countSessions, formatDateDE } from '$lib/scheduleUtils';
+	import { getLocalizedField } from '$lib/i18nUtils';
+	import { countSessions, formatDate } from '$lib/scheduleUtils';
 	import EnrollButton from '$lib/components/EnrollButton.svelte';
 	import ErrorText from '$lib/components/ErrorText.svelte';
 
@@ -45,7 +46,7 @@
 </script>
 
 <svelte:head>
-	<title>{m.site_name()} — {course?.titleDe ?? m.courses_title()}</title>
+	<title>{m.site_name()} — {course ? getLocalizedField(course, 'title') : m.courses_title()}</title>
 </svelte:head>
 
 <section class="mx-auto max-w-4xl px-6 py-16 sm:py-24">
@@ -54,7 +55,7 @@
 	{:else if course === null}
 		<p class="text-paper-dim">{m.state_loading()}</p>
 	{:else}
-		<h1 class="page-title font-display font-semibold text-paper">{course.titleDe}</h1>
+		<h1 class="page-title font-display font-semibold text-paper">{getLocalizedField(course, 'title')}</h1>
 
 		<!-- backgroundImageUrl (added 2026-08-14) — falls back to the page's
 		     normal background when unset, per spec. whitespace-pre-line
@@ -65,8 +66,8 @@
 			class="mt-4 rounded-lg {course.backgroundImageUrl ? 'bg-cover bg-center p-6' : ''}"
 			style={course.backgroundImageUrl ? `background-image: url('${course.backgroundImageUrl}')` : undefined}
 		>
-			{#if course.descriptionDe}
-				<p class="lead-text whitespace-pre-line leading-relaxed text-paper-dim">{course.descriptionDe}</p>
+			{#if getLocalizedField(course, 'description')}
+				<p class="lead-text whitespace-pre-line leading-relaxed text-paper-dim">{getLocalizedField(course, 'description')}</p>
 			{/if}
 		</div>
 
@@ -75,8 +76,8 @@
 		{#if course.scheduleStartDate && course.scheduleEndDate && sessionCount !== null}
 			<div class="mt-6">
 				<p class="text-paper">
-					{m.courses_duration_label()} {m.courses_duration_from()} {formatDateDE(course.scheduleStartDate)}
-					{m.courses_duration_to()} {formatDateDE(course.scheduleEndDate)}
+					{m.courses_duration_label()} {m.courses_duration_from()} {formatDate(course.scheduleStartDate)}
+					{m.courses_duration_to()} {formatDate(course.scheduleEndDate)}
 				</p>
 				<p class="text-paper">{sessionCount} {m.courses_sessions_suffix()}</p>
 			</div>
@@ -145,9 +146,9 @@
 		     (docs/compliance/tlab29-zfu-compliance-brief.md) — rendered
 		     as-is, not paraphrased per page, so the site stays consistent
 		     with the letter to ZFU. -->
-		{#if course.formatDisclaimerDe}
+		{#if getLocalizedField(course, 'formatDisclaimer')}
 			<div class="mt-8 rounded-lg border border-ink-line bg-ink px-5 py-4">
-				<p class="whitespace-pre-line text-sm leading-relaxed text-paper-dim">{course.formatDisclaimerDe}</p>
+				<p class="whitespace-pre-line text-sm leading-relaxed text-paper-dim">{getLocalizedField(course, 'formatDisclaimer')}</p>
 			</div>
 		{/if}
 	{/if}

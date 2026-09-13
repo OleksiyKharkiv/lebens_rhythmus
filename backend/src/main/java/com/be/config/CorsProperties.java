@@ -19,7 +19,6 @@ public class CorsProperties {
     // the env var override is for.
     private List<String> allowedOrigins = List.of(
             "https://tlab29.com",
-            "http://tlab29.com",
             "https://www.tlab29.com",
             "https://api.tlab29.com");
 

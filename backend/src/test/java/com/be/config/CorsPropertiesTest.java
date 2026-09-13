@@ -36,6 +36,13 @@ class CorsPropertiesTest {
             assertThat(corsProperties.getAllowedOrigins())
                     .contains("https://tlab29.com", "https://api.tlab29.com");
         }
+
+        // LR-101 — verify no unencrypted http origins remain in the default prod list
+        @Test
+        void doesNotIncludeInsecureHttpOrigins() {
+            assertThat(corsProperties.getAllowedOrigins())
+                    .noneMatch(origin -> origin.startsWith("http://"));
+        }
     }
 
     @Nested

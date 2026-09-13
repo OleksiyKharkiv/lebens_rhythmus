@@ -1,4 +1,5 @@
 import type { IsoDayOfWeek, RecurrenceDay } from './api';
+import { getLocale } from '$lib/paraglide/runtime';
 
 const ISO_WEEKDAY_TO_JS: Record<IsoDayOfWeek, number> = {
 	SUNDAY: 0,
@@ -29,11 +30,18 @@ export function countSessions(startDate: string, endDate: string, days: Recurren
 	return count;
 }
 
-export function formatDateDE(iso: string) {
-	return new Date(`${iso}T00:00:00Z`).toLocaleDateString('de-DE', {
+// LR-103 — formats ISO date according to the active or specified locale
+export function formatDate(iso: string, locale?: string): string {
+	const currentLocale = locale ?? getLocale();
+	const intlLocale = currentLocale === 'uk' ? 'uk-UA' : currentLocale === 'en' ? 'en-US' : 'de-DE';
+	return new Date(`${iso}T00:00:00Z`).toLocaleDateString(intlLocale, {
 		day: '2-digit',
 		month: '2-digit',
 		year: 'numeric',
 		timeZone: 'UTC'
 	});
+}
+
+export function formatDateDE(iso: string): string {
+	return formatDate(iso, 'de');
 }

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { isAuthenticated, getStoredRole } from '$lib/api';
 
@@ -16,7 +17,7 @@
 		}
 		const role = getStoredRole();
 		if (role !== 'TEACHER' && role !== 'BUSINESS_OWNER' && role !== 'ADMIN') {
-			window.location.href = localizeHref('/dashboard');
+			goto(localizeHref('/dashboard'));
 			return;
 		}
 		ready = true;

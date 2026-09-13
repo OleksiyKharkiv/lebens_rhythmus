@@ -46,4 +46,22 @@ describe('Input', () => {
 		const optional = render(Input, { props: { id: 'b', label: 'Feld' } });
 		expect(optional.queryByText('*')).not.toBeInTheDocument();
 	});
+
+	it('toggles password visibility and has accessible button without tabindex=-1', async () => {
+		const user = userEvent.setup();
+		const { getByLabelText, getByRole } = render(Input, {
+			props: { id: 'pwd', label: 'Password', type: 'password' }
+		});
+		const input = getByLabelText(/Password/);
+		expect(input).toHaveAttribute('type', 'password');
+
+		const toggleBtn = getByRole('button');
+		expect(toggleBtn).not.toHaveAttribute('tabindex', '-1');
+
+		await user.click(toggleBtn);
+		expect(input).toHaveAttribute('type', 'text');
+
+		await user.click(toggleBtn);
+		expect(input).toHaveAttribute('type', 'password');
+	});
 });

@@ -6,6 +6,7 @@ import com.be.service.UserService;
 import com.be.web.dto.request.UserPasswordUpdateDTO;
 import com.be.web.dto.request.UserUpdateDTO;
 import com.be.web.dto.response.UserBasicDTO;
+import com.be.web.dto.response.UserMediaDTO;
 import com.be.web.dto.response.UserProfileDTO;
 import com.be.web.mapper.UserMapper;
 import jakarta.validation.Valid;
@@ -45,6 +46,21 @@ public class UserController {
 
         UserProfileDTO profile = userService.getUserProfile(userId);
         return ResponseEntity.ok(profile);
+    }
+
+    /**
+     * GET /api/v1/users/me/media
+     * Returns media files of workshops the user is actively enrolled in (LR-107).
+     */
+    @GetMapping("/me/media")
+    public ResponseEntity<List<UserMediaDTO>> getCurrentUserMedia(@AuthenticationPrincipal Jwt jwt) {
+        Long userId = extractUserIdFromJwt(jwt);
+        if (userId == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        List<UserMediaDTO> media = userService.getUserMedia(userId);
+        return ResponseEntity.ok(media);
     }
 
     /**

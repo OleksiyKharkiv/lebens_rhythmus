@@ -5,17 +5,18 @@
 		isAuthenticated,
 		getMyEnrollments,
 		getMyPayments,
-		getWorkshop,
+		getMyMedia,
 		type EnrollmentDTO,
 		type PaymentDTO,
-		type WorkshopFileDTO
+		type UserMediaDTO
 	} from '$lib/api';
+	import { getLocale } from '$lib/paraglide/runtime';
 	import Card from '$lib/components/Card.svelte';
 
 	let ready = $state(false);
 	let enrollments = $state<EnrollmentDTO[] | null>(null);
 	let payments = $state<PaymentDTO[] | null>(null);
-	let media = $state<(WorkshopFileDTO & { workshopTitle: string })[] | null>(null);
+	let media = $state<UserMediaDTO[] | null>(null);
 	let error = $state(false);
 
 	// adapter-static prerenders this route with no window/localStorage at
@@ -28,29 +29,21 @@
 		}
 		ready = true;
 
-		Promise.all([getMyEnrollments(), getMyPayments()])
-			.then(async ([enrollmentData, paymentData]) => {
+		// LR-107 — parallel fetch with dedicated getMyMedia endpoint (eliminates client-side N+1)
+		Promise.all([getMyEnrollments(), getMyPayments(), getMyMedia()])
+			.then(([enrollmentData, paymentData, mediaData]) => {
 				enrollments = enrollmentData;
 				payments = paymentData;
-
-				// No dedicated "my media" endpoint exists yet — files live on
-				// WorkshopDetail (LR-ADR-016 scoped this as photos/videos from
-				// classes the user is enrolled in, not a separate media store).
-				// LR-084 — workshopId is now nullable (Course enrollments have
-				// none); Course has no equivalent media feature yet, so those
-				// rows are simply excluded here, not an oversight.
-				const workshopIds = [...new Set(enrollmentData.map((e) => e.workshopId).filter((id) => id !== null))];
-				const details = await Promise.all(workshopIds.map((id) => getWorkshop(id).catch(() => null)));
-				media = details
-					.filter((d) => d !== null)
-					.flatMap((d) => d!.files.map((f) => ({ ...f, workshopTitle: d!.title })));
+				media = mediaData;
 			})
 			.catch(() => (error = true));
 	});
 
 	function formatDate(d: string | null) {
 		if (!d) return '—';
-		return new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+		const loc = getLocale();
+		const intlLocale = loc === 'uk' ? 'uk-UA' : loc === 'en' ? 'en-US' : 'de-DE';
+		return new Date(d).toLocaleDateString(intlLocale, { day: '2-digit', month: '2-digit', year: 'numeric' });
 	}
 </script>
 

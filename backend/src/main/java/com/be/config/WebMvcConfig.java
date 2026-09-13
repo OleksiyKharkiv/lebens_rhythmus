@@ -18,8 +18,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         .stream()
                         .map(String::trim)
                         .toArray(String[]::new))
-                .allowedMethods("*")
-                .allowedHeaders("*")
+                // LR-101 — restrict wildcard methods and headers to prevent unauthorized preflight exploitation
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS")
+                .allowedHeaders("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")
                 .allowCredentials(corsProperties.isAllowCredentials())
                 .maxAge(corsProperties.getMaxAge());
     }

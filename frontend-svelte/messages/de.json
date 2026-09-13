@@ -287,5 +287,13 @@
 	"teacher_my_groups": "Meine Gruppen",
 	"teacher_no_teacher_row": "Für dein Konto wurde noch kein Lehrkraft-Profil verknüpft. Bitte an die Administration wenden.",
 	"teacher_show_participants": "Teilnehmer anzeigen",
-	"teacher_hide_participants": "Teilnehmer ausblenden"
+	"teacher_hide_participants": "Teilnehmer ausblenden",
+
+	"workshops_start_label": "Start:",
+	"feedback_error_send": "Fehler beim Senden.",
+	"login_invalid_credentials": "E-Mail oder Passwort falsch.",
+	"register_terms_required": "Bitte Bedingungen akzeptieren.",
+	"register_passwords_mismatch": "Passwörter stimmen nicht überein.",
+	"input_hide_password": "Passwort verbergen",
+	"input_show_password": "Passwort anzeigen"
 }

@@ -1,11 +1,16 @@
 package com.be.service;
 
 import com.be.domain.entity.User;
+import com.be.domain.entity.WorkshopFile;
+import com.be.domain.entity.enums.EnrollmentStatus;
 import com.be.domain.entity.enums.Role;
 import com.be.domain.repository.UserRepository;
+import com.be.domain.repository.WorkshopFileRepository;
 import com.be.web.dto.request.UserUpdateDTO;
+import com.be.web.dto.response.UserMediaDTO;
 import com.be.web.dto.response.UserProfileDTO;
 import com.be.web.mapper.UserMapper;
+import com.be.web.mapper.WorkshopFileMapper;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +26,24 @@ public class UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
+    private final WorkshopFileRepository workshopFileRepository;
+    private final WorkshopFileMapper workshopFileMapper;
 
     public UserService(UserRepository userRepository, UserMapper userMapper, PasswordEncoder passwordEncoder) {
+        this(userRepository, userMapper, passwordEncoder, null, null);
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    public UserService(UserRepository userRepository,
+                       UserMapper userMapper,
+                       PasswordEncoder passwordEncoder,
+                       WorkshopFileRepository workshopFileRepository,
+                       WorkshopFileMapper workshopFileMapper) {
         this.userRepository = userRepository;
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
+        this.workshopFileRepository = workshopFileRepository;
+        this.workshopFileMapper = workshopFileMapper;
     }
 
     // ========== CRUD OPERATIONS ==========
@@ -203,5 +221,16 @@ public class UserService {
 
     public long getUserCountByRole(Role role) {
         return userRepository.countByRole(role);
+    }
+
+    // LR-107 — fetches media files for workshops the user is actively enrolled in
+    public List<UserMediaDTO> getUserMedia(Long userId) {
+        List<WorkshopFile> files = workshopFileRepository.findMediaByUserIdAndStatusIn(
+                userId,
+                List.of(EnrollmentStatus.CONFIRMED, EnrollmentStatus.PENDING)
+        );
+        return files.stream()
+                .map(workshopFileMapper::toUserMediaDTO)
+                .toList();
     }
 }

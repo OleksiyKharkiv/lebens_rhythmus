@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { HTMLInputAttributes } from 'svelte/elements';
+	import * as m from '$lib/paraglide/messages.js';
 
 	let {
 		id,
@@ -48,9 +49,8 @@
 		/>
 		<button
 			type="button"
-			tabindex="-1"
 			onclick={() => (revealed = !revealed)}
-			aria-label={revealed ? 'Passwort verbergen' : 'Passwort anzeigen'}
+			aria-label={revealed ? m.input_hide_password() : m.input_show_password()}
 			class="absolute right-3 top-1/2 -translate-y-1/2 text-paper-dim hover:text-paper"
 		>
 			{#if revealed}

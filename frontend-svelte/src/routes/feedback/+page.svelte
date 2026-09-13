@@ -28,7 +28,7 @@
 			content = '';
 			rating = '';
 		} catch (err) {
-			error = err instanceof ApiError ? err.message : 'Fehler beim Senden.';
+			error = err instanceof ApiError ? err.message : m.feedback_error_send();
 		} finally {
 			busy = false;
 		}

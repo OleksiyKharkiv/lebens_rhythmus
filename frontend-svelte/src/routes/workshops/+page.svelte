@@ -1,6 +1,6 @@
 <script lang="ts">
 	import * as m from '$lib/paraglide/messages.js';
-	import { localizeHref } from '$lib/paraglide/runtime';
+	import { localizeHref, getLocale } from '$lib/paraglide/runtime';
 	import { getWorkshops, isAuthenticated, type WorkshopListItem, type EnrollmentDTO } from '$lib/api';
 	import Card from '$lib/components/Card.svelte';
 	import EnrollButton from '$lib/components/EnrollButton.svelte';
@@ -21,7 +21,9 @@
 
 	function formatDate(d: string | null) {
 		if (!d) return null;
-		return new Date(d).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: 'numeric' });
+		const loc = getLocale();
+		const intlLocale = loc === 'uk' ? 'uk-UA' : loc === 'en' ? 'en-US' : 'de-DE';
+		return new Date(d).toLocaleDateString(intlLocale, { day: '2-digit', month: '2-digit', year: 'numeric' });
 	}
 
 	// A Workshop can have multiple Groups (sessions/dates), unlike Course's
@@ -66,7 +68,7 @@
 					{#if w.shortDescription}<p class="lead-text mt-2 text-paper-dim">{w.shortDescription}</p>{/if}
 					<dl class="mt-4 space-y-1 text-sm text-paper-dim">
 						{#if w.startDate}
-							<div><dt class="inline font-semibold text-paper">Start:</dt> <dd class="inline">{formatDate(w.startDate)}</dd></div>
+							<div><dt class="inline font-semibold text-paper">{m.workshops_start_label()}</dt> <dd class="inline">{formatDate(w.startDate)}</dd></div>
 						{/if}
 					</dl>
 					<p class="mt-2 font-display text-teal">

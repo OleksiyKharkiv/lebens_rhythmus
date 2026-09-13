@@ -388,6 +388,21 @@ export function getMyPayments() {
 	return authRequest<PaymentDTO[]>('/payments/me');
 }
 
+// LR-107 — media files from workshops the user is actively enrolled in
+export interface UserMediaDTO {
+	id: number;
+	filename: string;
+	url: string;
+	contentType?: string;
+	fileSize?: number;
+	workshopId?: number;
+	workshopTitle?: string;
+}
+
+export function getMyMedia() {
+	return authRequest<UserMediaDTO[]>('/users/me/media');
+}
+
 // ---------- Admin panel + teacher dashboard (LR-ADR-004) ----------
 // Mirrors real backend DTOs (verified against source, not the old static
 // site's JS — that JS had several stale/wrong payload shapes, see

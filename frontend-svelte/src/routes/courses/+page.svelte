@@ -2,6 +2,7 @@
 	import * as m from '$lib/paraglide/messages.js';
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import { getCourses, isAuthenticated, type CourseListItem, type EnrollmentDTO } from '$lib/api';
+	import { getLocalizedField } from '$lib/i18nUtils';
 	import Card from '$lib/components/Card.svelte';
 	import EnrollButton from '$lib/components/EnrollButton.svelte';
 	import ErrorText from '$lib/components/ErrorText.svelte';
@@ -49,7 +50,8 @@
 		<div class="mt-10 grid gap-6 sm:grid-cols-2">
 			{#each courses as c (c.id)}
 				<Card>
-					<h2 class="list-card-title font-display font-semibold text-paper">{c.titleDe}</h2>
+					<h2 class="list-card-title font-display font-semibold text-paper">{getLocalizedField(c, 'title')}</h2>
+					<!-- LR-103 note: CourseListDTO currently only has shortDescriptionDe from backend -->
 					{#if c.shortDescriptionDe}<p class="lead-text mt-2 text-paper-dim">{c.shortDescriptionDe}</p>{/if}
 					{#if c.teacher}
 						<p class="mt-2 text-sm text-paper-dim">

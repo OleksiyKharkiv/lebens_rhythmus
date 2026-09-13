@@ -4,6 +4,7 @@ import com.be.config.CorsProperties;
 import com.be.config.SecurityConfig;
 import com.be.service.UserService;
 import com.be.web.mapper.UserMapper;
+import com.be.web.dto.response.UserMediaDTO;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.junit.jupiter.api.Test;
 import org.mockito.Answers;
@@ -15,9 +16,14 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -74,6 +80,38 @@ class UserControllerTest {
     @Test
     void reactivateUser_unauthenticated_isUnauthorized() throws Exception {
         mockMvc.perform(put("/api/v1/users/7/reactivate"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // LR-107 — /users/me/media tests
+    @Test
+    void getCurrentUserMedia_authenticated_returnsOkAndMedia() throws Exception {
+        UserMediaDTO mediaItem = UserMediaDTO.builder()
+                .id(101L)
+                .filename("rehearsal.mp4")
+                .url("https://cdn.tlab29.com/rehearsal.mp4")
+                .contentType("video/mp4")
+                .fileSize(1024L)
+                .workshopId(5L)
+                .workshopTitle("Theater Workshop")
+                .build();
+
+        when(userService.getUserMedia(42L)).thenReturn(List.of(mediaItem));
+
+        mockMvc.perform(get("/api/v1/users/me/media")
+                        .with(jwt().jwt(j -> j.claim("id", 42L))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(101))
+                .andExpect(jsonPath("$[0].filename").value("rehearsal.mp4"))
+                .andExpect(jsonPath("$[0].url").value("https://cdn.tlab29.com/rehearsal.mp4"))
+                .andExpect(jsonPath("$[0].workshopTitle").value("Theater Workshop"));
+
+        verify(userService).getUserMedia(42L);
+    }
+
+    @Test
+    void getCurrentUserMedia_unauthenticated_isUnauthorized() throws Exception {
+        mockMvc.perform(get("/api/v1/users/me/media"))
                 .andExpect(status().isUnauthorized());
     }
 }

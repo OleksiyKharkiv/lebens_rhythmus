@@ -287,5 +287,13 @@
 	"teacher_my_groups": "My groups",
 	"teacher_no_teacher_row": "No teacher profile is linked to your account yet. Please contact the administration.",
 	"teacher_show_participants": "Show participants",
-	"teacher_hide_participants": "Hide participants"
+	"teacher_hide_participants": "Hide participants",
+
+	"workshops_start_label": "Start:",
+	"feedback_error_send": "Error sending feedback.",
+	"login_invalid_credentials": "Incorrect email or password.",
+	"register_terms_required": "Please accept the terms and conditions.",
+	"register_passwords_mismatch": "Passwords do not match.",
+	"input_hide_password": "Hide password",
+	"input_show_password": "Show password"
 }

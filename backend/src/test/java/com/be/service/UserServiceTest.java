@@ -31,6 +31,10 @@ class UserServiceTest {
     private UserMapper userMapper;
     @Mock
     private PasswordEncoder passwordEncoder;
+    @Mock
+    private com.be.domain.repository.WorkshopFileRepository workshopFileRepository;
+    @Mock
+    private com.be.web.mapper.WorkshopFileMapper workshopFileMapper;
 
     @Test
     void searchUsers_matchesFirstOrLastName_caseInsensitive() {
@@ -87,5 +91,28 @@ class UserServiceTest {
         User saved = service.createUser(user);
 
         assertThat(saved.getRole()).isEqualTo(Role.TEACHER);
+    }
+
+    // LR-107 — getUserMedia returns media for active enrollments
+    @Test
+    void getUserMedia_returnsActiveWorkshopMedia() {
+        UserService service = new UserService(userRepository, userMapper, passwordEncoder, workshopFileRepository, workshopFileMapper);
+
+        com.be.domain.entity.WorkshopFile wf = new com.be.domain.entity.WorkshopFile();
+        com.be.web.dto.response.UserMediaDTO dto = com.be.web.dto.response.UserMediaDTO.builder()
+                .id(1L)
+                .filename("photo.jpg")
+                .build();
+
+        when(workshopFileRepository.findMediaByUserIdAndStatusIn(
+                org.mockito.ArgumentMatchers.eq(123L),
+                org.mockito.ArgumentMatchers.anyCollection()))
+                .thenReturn(List.of(wf));
+        when(workshopFileMapper.toUserMediaDTO(wf)).thenReturn(dto);
+
+        List<com.be.web.dto.response.UserMediaDTO> result = service.getUserMedia(123L);
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getFilename()).isEqualTo("photo.jpg");
     }
 }
