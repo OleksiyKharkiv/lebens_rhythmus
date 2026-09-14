@@ -1,7 +1,7 @@
 # Сет-предложение тикетов-кандидатов в бэклог (tickets.md)
 **Версия:** 1.1 (скорректированная по итогам совместного ревью Antigravity + Claude Code + `architect-reviewer`)  
 **Дата:** 2026-09-13  
-**Основание:** Аналитический отчет `docs/repotrs/analysis-report-ag.md` v1.1  
+**Основание:** Аналитический отчет `docs/reports/analysis-report-ag.md` v1.1  
 **Диапазон номеров:** `LR-099` .. `LR-108`
 
 ---
@@ -25,7 +25,7 @@
 **Раздел:** Безопасность и авторизация  
 **Приоритет:** P0 (Критический — закрыть немедленно)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.1, §2.2)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §2.1, §2.2)
 
 #### Контекст и проблема
 1. `TeacherController` (`GET /teachers`) и `VenueController` (`GET /venues`, `GET /venues/{id}`) не имеют аннотаций `@PreAuthorize` на бэкенде. Любой авторизованный пользователь (роль `USER`) может получить массив `TeacherInfoDTO` и `VenueDTO` с личными телефонами, email-адресами и статусами преподавателей и контактными данными площадок.
@@ -56,7 +56,7 @@
 **Раздел:** Безопасность / Инфраструктура  
 **Приоритет:** P1 (Высокий — топ-3)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.3)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §2.3)
 
 #### Контекст и проблема
 В `frontend-svelte/nginx.conf` настроена раздача статики и SPA-fallback, но полностью отсутствуют защитные HTTP-заголовки. Сайт уязвим к встраиванию в iframe сторонними ресурсами (Clickjacking) и атакам через некорректную интерпретацию MIME-типов.
@@ -81,7 +81,7 @@
 **Раздел:** Безопасность и авторизация  
 **Приоритет:** P1 (Высокий)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.4)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §2.4)
 
 #### Контекст и проблема
 В `CorsProperties.java` в список доверенных продакшн-источников включен `http://tlab29.com` (небезопасный протокол HTTP) наряду с HTTPS при включенном `allowCredentials = true`. В `WebMvcConfig.java` выставлены `allowedMethods("*")` и `allowedHeaders("*")`.
@@ -106,7 +106,7 @@
 **Раздел:** Фронтенд / UX  
 **Приоритет:** P1 (Критический для UX — топ-3)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.1)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.1)
 
 #### Контекст и проблема
 Paraglide JS переключается на язык по умолчанию (`de`), если URL не содержит префикса (`/en/..` или `/uk/..`). На ключевых страницах обнаружены голые ссылки без обертки `localizeHref`:
@@ -141,7 +141,7 @@ Paraglide JS переключается на язык по умолчанию (`
 **Раздел:** Фронтенд / i18n  
 **Приоритет:** P2 (Средний)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.2)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.2)
 
 #### Контекст и проблема
 1. Бэкенд передает мультиязычные поля для курсов (`titleDe/En/Ua`, `descriptionDe/En/Ua`, `formatDisclaimerDe/En/Ua`). Однако `courses/+page.svelte` и `courses/[id]/+page.svelte` жестко выводят только немецкие поля (`.titleDe`, `.descriptionDe`, `.formatDisclaimerDe`), игнорируя локаль пользователя.
@@ -176,7 +176,7 @@ Paraglide JS переключается на язык по умолчанию (`
 **Раздел:** Фронтенд  
 **Приоритет:** P2 (Средний)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.4)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.4)
 
 #### Контекст и проблема
 При смене auth-состояния (401 в `api.ts`, логаут, кик неавторизованного) полный релод через `window.location.href = localizeHref(...)` архитектурно необходим, так как `localStorage` нереактивен и SvelteKit не перемонтирует корневой layout при `goto()` (задокументировано в `+layout.svelte:65-77`). Однако в случаях, когда пользователь уже залогинен, но пытается перейти в раздел не своей роли («не та роль» в `admin/+layout.svelte` и `teacher/+page.svelte`), полный релод избыточен.
@@ -199,7 +199,7 @@ Paraglide JS переключается на язык по умолчанию (`
 **Раздел:** Фронтенд / Стили  
 **Приоритет:** P3 (Средний)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.5)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.5)
 
 #### Контекст и проблема
 Размер 22px (`text-[1.375rem]`) в карточках направлений главной страницы (`routes/+page.svelte`) был прямым запросом Олены от 2026-08-19 ("+0.5rem"). Однако на смартфонах с шириной экрана 360–390px 22px приводит к неэстетичным разрывам строк. Архитектура лестницы брейкпоинтов сохраняется, так как защищает от багов сортировки каскада в Tailwind v4 (`RESPONSIVE_SCALING_PLAYBOOK.md`).
@@ -220,7 +220,7 @@ Paraglide JS переключается на язык по умолчанию (`
 **Раздел:** Фронтенд / Доступность  
 **Приоритет:** P4 (Низкий)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.6)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.6)
 
 #### Что сделать (DoD)
 1. Убрать `tabindex="-1"` с кнопки пароля в `Input.svelte`, добавить динамический переводимый `aria-label`.
@@ -243,7 +243,7 @@ Paraglide JS переключается на язык по умолчанию (`
 **Раздел:** Бэкенд  
 **Приоритет:** P2 (Средний)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.3)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.3)
 
 #### Контекст и проблема
 На странице `dashboard/+page.svelte` фронтенд получает список бронирований пользователя и делает веер отдельных запросов `GET /api/v1/workshops/{id}`, чтобы собрать список прикрепленных файлов (`media`).
@@ -266,7 +266,7 @@ Paraglide JS переключается на язык по умолчанию (`
 **Раздел:** Безопасность и авторизация  
 **Приоритет:** P3 (Плановое улучшение)  
 **Статус:** Proposed  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.5)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §2.5)
 
 #### Что сделать (DoD)
 1. Провести Architecture Pre-Check по переводу сессий на `Set-Cookie: authToken=...; HttpOnly; Secure; SameSite=Lax`.

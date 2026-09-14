@@ -8,9 +8,33 @@
 
 ## Инфраструктура
 
+**Traefik Ingress для tlab29.com/api.tlab29.com — НИКОГДА не вешать
+HTTPS-redirect middleware** (`redirectScheme` или аналог). Сайт за
+Cloudflare Tunnel — `cloudflared` доставляет трафик на Traefik всегда как
+обычный HTTP (TLS обрывается на грани Cloudflare, до туннеля), origin не
+может знать исходную схему запроса. Любой такой redirect безусловно шлёт
+301 на https, туннель доставляет его обратно как http — бесконечная петля
+(`ERR_TOO_MANY_REDIRECTS`, прод-инцидент 2026-09-13, введено scope creep
+внутри CORS-тикета LR-101, исправлено `5354c52`). HTTPS для браузера —
+обязанность Cloudflare (Edge Certificates → Always Use HTTPS), не Ingress.
+Полный разбор + топологический чеклист — `docs/context/CODING_PROTOCOL.md`
+§4c.
+
+**CSP `script-src` в `frontend-svelte/nginx.conf` — НЕ hash-pinning.**
+`adapter-static`'s бутстрап-скрипт в `index.html` содержит случайный
+`__sveltekit_<token>`, регенерируемый на каждую сборку (не производный от
+контента — проверено: два билда одного коммита дали разные токены).
+Cloudflare отдельно инжектит на грани свой Bot Fight Mode скрипт со
+случайным токеном на каждый запрос. Оба невозможно захешировать статически
+— `sha256-` allowlist ломает старт приложения при первой же пересборке
+(прод-инцидент 2026-09-13, исправлено `239ed1b`, `script-src 'self'
+'unsafe-inline'`). Настоящий фикс — нативный SvelteKit `kit.csp` (тикет
+LR-110) + отдельное решение по Cloudflare-скрипту (тикет LR-111), не
+руками скопированный хеш.
+
 **Сеть VM после power outage не поднимается сама.** Все VM кроме, возможно,
 уже пропатченных через `rc.local` — теряют сетевой интерфейс после грязного
-шатдауна хоста. Recovery — см. `docs/ops/infra-fix-shutdown.md`, не изобретать
+шатдауна хоста. Recovery — см. `docs/runbooks/infra-fix-shutdown.md`, не изобретать
 заново.
 
 **NAT-правило на gateway-core (VM100) не персистентно.** После ребута

@@ -79,6 +79,52 @@ sudo chown $(id -u):$(id -g) ~/.kube/config
 ⚠️ **Никогда `sudo kubectl`** — у root свой (отсутствующий) kubeconfig, будет
 та же ошибка по другой причине. Просто `kubectl` без sudo.
 
+### Браузер: `ERR_TOO_MANY_REDIRECTS` на tlab29.com/api.tlab29.com
+
+Значит: кто-то повесил HTTPS-redirect middleware на Traefik Ingress. Не
+чинить со стороны Cloudflare — источник на origin. Быстрая проверка в
+обход Cloudflare, напрямую в Traefik:
+```bash
+curl -v -H "Host: tlab29.com" http://127.0.0.1:30080/
+```
+Если `301 Moved Permanently` с `Location: https://...` — подтверждено.
+Фикс:
+```bash
+kubectl get ingress -n lr-dev lr-ingress -o yaml | grep middlewares
+# если есть traefik.ingress.kubernetes.io/router.middlewares —
+# убрать эту аннотацию из devops/helm/lr-app/templates/ingress.yaml,
+# удалить связанный Middleware-манифест (redirectScheme), закоммитить,
+# запушить — деплой через обычный CI (deploy-dev), не ручной kubectl patch.
+```
+Почему это в принципе происходит и почему сюда больше не вешать такой
+redirect — `docs/context/CODING_PROTOCOL.md` §4c, `docs/context/
+KNOWN_ISSUES.md`. Прод-инцидент и разбор — `docs/context/CHANGELOG.md`
+2026-09-13, коммит `5354c52`.
+
+### Белый экран / приложение не монтируется, консоль браузера — CSP violation на инлайн-скрипт
+
+Симптом: страница грузится (HTML пришёл), но сам SvelteKit-апп не
+стартует; в консоли — `Executing inline script violates ... script-src`.
+Значит: CSP в `frontend-svelte/nginx.conf` захешировал inline-скрипты по
+`sha256-`, а реальный скрипт (бутстрап SvelteKit и/или Cloudflare Bot
+Fight Mode) не совпадает с зашитым хешем. Быстрая проверка:
+```bash
+# открыть DevTools → Console на упавшей странице, читать точный текст
+# violation — там указано, какая директива и какой скрипт заблокирован
+```
+Фикс (временный, разблокировать сайт немедленно):
+```nginx
+# в обоих add_header Content-Security-Policy блоках nginx.conf:
+# script-src 'self' 'sha256-...' 'sha256-...'  →  script-src 'self' 'unsafe-inline'
+# (нельзя просто добавить 'unsafe-inline' рядом с хешами — браузер по
+# спеке игнорирует 'unsafe-inline' при наличии hash-источника в той же
+# директиве, нужна полная замена)
+```
+Настоящий фикс — не хеш-пиннинг вручную, а нативный SvelteKit `kit.csp`
+(тикет `LR-110`) + решение по Cloudflare-скрипту (тикет `LR-111`). Полный
+разбор — `docs/context/CODING_PROTOCOL.md` §4c, `docs/context/
+CHANGELOG.md` 2026-09-13, коммит `239ed1b`.
+
 ### После restore/swap `numi.sqlite`-подобной операции с `lr-postgres`
 
 LR использует PostgreSQL, не SQLite — но тот же класс ошибки владения файлами

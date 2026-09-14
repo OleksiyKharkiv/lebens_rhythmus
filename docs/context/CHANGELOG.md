@@ -2,6 +2,99 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-09-14 — docs: докаудит `docs/` + AI-артефактов, устранение разрыва контекста между Claude Code и Antigravity
+
+### Область (`docs/`, `AGENTS.md`, `CLAUDE.md`, `docs/context/{CODING_PROTOCOL,KNOWN_ISSUES,PROJECT_INDEX}.md`, `docs/tickets/tickets.md`, `.gitignore`-эквивалент через `git rm --cached`)
+
+Совместный аудит (Claude + Antigravity, оба прогона сверены `architect-reviewer`)
+по итогам двух прод-инцидентов днём ранее (redirect-петля + CSP
+hash-pinning). Найденная сквозная причина обоих: у Antigravity нет
+`AGENTS.md`/`GEMINI.md` (авто-загружаемый файл конвенции для этого
+инструмента) — вероятно, работала без единого файла контекста об этом
+проекте; у Claude Code же единственный файл с нужным знанием
+(`devops/cloud_flare/README.md`) не был нигде процитирован из
+always/on-demand графа контекста, а backend-ориентированный Architecture
+Pre-Check в `CODING_PROTOCOL.md` не имел пункта про сетевую топологию
+вообще. Ревьювер отдельно поправил первоначальную гипотезу "нужно сделать
+`INFRA-LR.md` always-loaded" — реальный разрыв точнее: (а) контент-пробел
+(ни `INFRA-LR.md`, ни `infra-fix-shutdown.md` вообще не упоминали CSP до
+сегодня), (б) LR-101 сделал scope creep (правка Ingress-middleware) внутри
+CORS-тикета без ретайринга на INFRA и без отдельного ревью именно этого
+пункта.
+
+- **docs (structure)** — `docs/README.md`: добавлена строка `security/`
+  (отсутствовала в таблице структуры вообще), новые строки `reports/`
+  (замороженные AI-аудиты, не живые доки) и `delete_candidats/`
+  (временный накопитель).
+- **docs (dead links)** — `docs/context/KNOWN_ISSUES.md:13`
+  (**always-loaded**), `docs/context/PROJECT_INDEX.md`, `docs/tickets/
+  tickets.md`: `docs/ops/infra-fix-shutdown.md` → `docs/runbooks/
+  infra-fix-shutdown.md` (путь не существует с 2026-07-20, ссылка
+  пережила реорганизацию на ~1.5 месяца незамеченной). 21 вхождение
+  `docs/repotrs/` → `docs/reports/` по всему репо (папка переименована
+  Antigravity, внутренние ссылки на старый путь — нет).
+- **docs (garbage, moved not deleted)** — `docs/ideas.txt`, `DTOs.txt`,
+  `Auth_algorithm.txt`, `folder_structure.txt`, `23_10_2025_MVP_tickets` →
+  `docs/delete_candidats/` (`git mv`, история сохранена) — описывают
+  снесённый по `LR-ADR-001` статический MPA-фронтенд, не текущую
+  архитектуру. Ревьювер поправил моё первоначальное обоснование: это НЕ
+  нарушение Правила 4 `docs/README.md` (то узко про тикет-трекеры,
+  применимо только к `23_10_2025_MVP_tickets`), причина — просто
+  устаревшая архитектура.
+- **docs (duplication)** — `docs/context/PROJECT_INDEX.md` §8: добавлена
+  явная пометка SUPERSEDED (таблица ADR дублирует
+  `docs/architecture/decisions.md`, канонический источник с 2026-07-20 —
+  раньше это было известно только из отдельной заметки в `CLAUDE.md`, не
+  из самого файла).
+- **git hygiene** — `backend/.gradle/*` (4 файла) были закоммичены до
+  появления правила в `.gitignore`, правило с тех пор ничего не делало;
+  `git rm --cached -r backend/.gradle` — теперь `.gitignore` реально
+  работает.
+- **AGENTS.md (новый)** — корневой файл для Antigravity, самодостаточный
+  (не полагается на непроверенный `@file`-синтаксис Claude Code): язык,
+  тир-система, workflow, и явно — оба сегодняшних инцидента с конкретным
+  "почему" и "что вместо этого", не общие рекомендации. Зарегистрирован
+  как языковое исключение (английский) в `CLAUDE.md`, симметрично самому
+  `CLAUDE.md`.
+- **CODING_PROTOCOL.md** — новый §4c "Топологический чеклист"
+  (MANDATORY для диффов, трогающих Ingress/Traefik/nginx.conf/CSP/CORS):
+  явные пункты про схему запроса при Cloudflare Tunnel, инвентарь
+  инлайн-скриптов при правке CSP, пересборку вместо предположения, и
+  re-tier при выходе диффа за исходный DoD тикета. Два новых пункта в
+  🚫 ЗАПРЕЩЁННЫЕ ПАТТЕРНЫ (HTTPS-redirect на Traefik при Cloudflare
+  Tunnel; статический sha256-pinning в CSP для этой SPA).
+- **KNOWN_ISSUES.md** — оба сегодняшних инцидента добавлены как
+  компактные "не наступать снова" записи (были только в CHANGELOG —
+  grep-only, не always-loaded, следующая сессия могла не увидеть).
+- **runbooks/infra-fix-shutdown.md** — два новых раздела в "Быстрая
+  диагностика по симптому": `ERR_TOO_MANY_REDIRECTS` и "белый
+  экран/CSP violation" — с точной командой диагностики и временным фиксом.
+- **LR-109 (уже существовал, не новый)** — контекст обновлён: ссылался на
+  уже удалённый redirect-middleware как на факт; добавлена топологическая
+  оговорка — HSTS через Traefik-middleware на `websecure` рискует
+  повторить сегодняшнюю ошибку (browser-facing HTTPS-логика на origin,
+  который может вообще не видеть реального HTTPS-трафика от туннеля) —
+  DoD помечен черновиком, требующим подтверждения топологии перед
+  реализацией.
+- **Новые тикеты:** `LR-110` (нативный SvelteKit `kit.csp` hash mode,
+  MED/P3), `LR-111` (аудит Cloudflare Bot Fight Mode / решение по
+  `'unsafe-inline'`, LOW/P3), `LR-112` (полная актуализация
+  `PROJECT_INDEX.md`, MED/P2).
+- **Не тронуто сознательно** — `docs/adr/`, `docs/strategy/`, `docs/user/`
+  (пустые, но намеренные reserved-плейсхолдеры по `docs/README.md`'s
+  собственному описанию, не git-tracked); `docs/architecture/
+  ARCHITECTURE_OLD.md` (явно помечен и объяснён как исторический
+  baseline, не мусор); `docs/context/project-audit-2026-08-14.md`
+  (самоопределён как живой статус-документ — ревьювер отклонил
+  предложение переносить его в `docs/reports/`, та папка для
+  замороженных снимков, не для живых доков).
+- **verify** — каждый пункт плана независимо перепроверен
+  `architect-reviewer` (свежий прогон, без знания о первом) перед
+  применением; ревьювер поймал и поправил 3 неточности в изначальном
+  плане (см. выше) и нашёл ещё 2 находки, не замеченные ни Antigravity,
+  ни первым проходом Claude (`.gradle/`-трекинг, стухшая ссылка на
+  `docs/ops/`).
+
 ## 2026-09-13 — security: прод-инцидент №2 — CSP `script-src` хэш-пиннинг заблокировал старт приложения
 
 ### Область (`frontend-svelte/nginx.conf`)
@@ -2469,7 +2562,7 @@ roundtable-log.md`. Два параллельных агента для инве
   верифицированы и исправлены построчным чтением кода. Build tool
   подтверждён (Gradle, не Maven), отсутствие Flyway/Liquibase
   подтверждено, ссылки на несуществующие пути (`docs/README.md` →
-  реально `docs_README.md`, `docs/ops/infra-fix-shutdown.md` → файла не
+  реально `docs_README.md`, `docs/runbooks/infra-fix-shutdown.md` → файла не
   было) исправлены.
 - **docs** — реорганизация: `docs/ops/` (пустая директория-заглушка)
   упразднена в пользу разделения `docs/infra/` (справочник по топологии)

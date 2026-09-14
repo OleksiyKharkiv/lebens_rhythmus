@@ -147,7 +147,7 @@ DEBT-2  caddy.service остался в системе VM100 неиспольз�
 DEBT-3  MetalLB не назначает ExternalIP для Traefik — LoadBalancer сервисы
         не работают, используется NodePort как обходной путь
 DEBT-4  Нет qemu-guest-agent на VM100/200/300 — усложняет recovery
-        (см. docs/ops/infra-fix-shutdown.md)
+        (см. docs/runbooks/infra-fix-shutdown.md)
 DEBT-5  GitLab registry token — не автоматизировано обновление, истекает
         молча и роняет image pull в кластере
 ```
@@ -167,6 +167,13 @@ POST /auth/... (?)        — вероятно есть login endpoint (JwtUtils
 ---
 
 ## 8. Инфраструктурные ADR (подтверждено по факту эксплуатации)
+
+> ⚠️ **SUPERSEDED — не редактировать эту таблицу дальше.** Канонический
+> источник ADR с 2026-07-20 — `docs/architecture/decisions.md` (см. его
+> собственную шапку и `CLAUDE.md`'s "Read on demand"). Таблица ниже
+> продублирована туда же для целостности и оставлена как есть по факту
+> эксплуатации на момент написания — новые ADR добавлять только в
+> `decisions.md`, не сюда.
 
 | ID | Решение | Причина |
 |----|---------|---------|

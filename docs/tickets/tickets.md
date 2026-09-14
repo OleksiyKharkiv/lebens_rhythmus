@@ -845,7 +845,7 @@ outage) · **Статус:** Open · требует живого доступа 
 
 Без `qemu-guest-agent` гипервизор не может корректно определить
 готовность/состояние гостевой VM (graceful shutdown, IP-репортинг) —
-усложняет и удлиняет recovery по `docs/ops/infra-fix-shutdown.md` в
+усложняет и удлиняет recovery по `docs/runbooks/infra-fix-shutdown.md` в
 реальном инциденте. Установить на все три VM основного k3s-кластера.
 
 ---
@@ -1852,7 +1852,7 @@ getGroupsByTeacher`, `EnrollmentController.participantsForGroup` — все
 
 **Tier:** HIGH (авторизация, защита PII по DSGVO)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.1, §2.2, консенсус ревью)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §2.1, §2.2, консенсус ревью)
 
 ### Контекст и проблема
 1. `TeacherController` (`GET /teachers`) и `VenueController` (`GET /venues`, `GET /venues/{id}`) не имеют аннотаций `@PreAuthorize` на бэкенде. Любой авторизованный пользователь (роль `USER`) может получить массив `TeacherInfoDTO` и `VenueDTO` с личными телефонами, email-адресами и статусами преподавателей и контактными данными площадок в нарушение DSGVO.
@@ -1882,7 +1882,7 @@ getGroupsByTeacher`, `EnrollmentController.participantsForGroup` — все
 
 **Tier:** INFRA / HIGH (защита от Clickjacking, XSS, MIME-sniffing)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.3)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §2.3)
 
 ### Контекст и проблема
 В `frontend-svelte/nginx.conf` настроена раздача статики и SPA-fallback, но полностью отсутствуют защитные HTTP-заголовки. Сайт уязвим к встраиванию в iframe сторонними ресурсами (Clickjacking) и атакам через некорректную интерпретацию MIME-типов браузером.
@@ -1905,7 +1905,7 @@ getGroupsByTeacher`, `EnrollmentController.participantsForGroup` — все
 
 **Tier:** HIGH (CORS hygiene, сетевой периметр)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.4)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §2.4)
 
 ### Контекст и проблема
 В `CorsProperties.java` в список доверенных продакшн-источников включен `http://tlab29.com` (небезопасный протокол HTTP) наряду с HTTPS при включенном `allowCredentials = true`. В `WebMvcConfig.java` выставлены `allowedMethods("*")` и `allowedHeaders("*")`.
@@ -1927,7 +1927,7 @@ getGroupsByTeacher`, `EnrollmentController.participantsForGroup` — все
 
 **Tier:** LOW (фронтенд-шаблоны)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.1, консенсус ревью)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.1, консенсус ревью)
 
 ### Контекст и проблема
 Paraglide JS переключается на язык по умолчанию (`de`), если URL не содержит префикса (`/en/..` или `/uk/..`). На ключевых страницах обнаружены голые ссылки без обертки `localizeHref`:
@@ -1960,7 +1960,7 @@ Paraglide JS переключается на язык по умолчанию (`
 
 **Tier:** LOW (фронтенд-компоненты и словари сообщений)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.2)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.2)
 
 ### Контекст и проблема
 1. Бэкенд передает мультиязычные поля для курсов (`titleDe/En/Ua`, `descriptionDe/En/Ua`, `formatDisclaimerDe/En/Ua`). Однако `courses/+page.svelte` и `courses/[id]/+page.svelte` жестко выводят только немецкие поля (`.titleDe`, `.descriptionDe`, `.formatDisclaimerDe`), игнорируя выбранную локаль.
@@ -1989,7 +1989,7 @@ Paraglide JS переключается на язык по умолчанию (`
 
 **Tier:** LOW (фронтенд-навигация)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.4, консенсус ревью)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.4, консенсус ревью)
 
 ### Контекст и проблема
 При смене auth-состояния (401 в `api.ts`, логаут, кик неавторизованного) полный релод через `window.location.href = localizeHref(...)` архитектурно необходим, так как `localStorage` нереактивен и SvelteKit не перемонтирует корневой layout при `goto()` (`+layout.svelte:65-77`). Однако в случаях, когда пользователь уже залогинен, но пытается перейти в раздел не своей роли («не та роль» в `admin/+layout.svelte` и `teacher/+page.svelte`), полный релод страницы избыточен и ухудшает UX.
@@ -2010,7 +2010,7 @@ Paraglide JS переключается на язык по умолчанию (`
 
 **Tier:** LOW (CSS)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.5, консенсус ревью)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.5, консенсус ревью)
 
 ### Контекст и проблема
 Размер 22px (`text-[1.375rem]`) в карточках направлений главной страницы (`routes/+page.svelte`) был прямым запросом Олены от 2026-08-19 ("+0.5rem"). Однако на смартфонах с шириной экрана 360–390px 22px приводит к неэстетичным разрывам строк. Архитектура лестницы брейкпоинтов сохраняется, так как защищает от багов сортировки каскада в Tailwind v4 (`RESPONSIVE_SCALING_PLAYBOOK.md`).
@@ -2029,7 +2029,7 @@ Paraglide JS переключается на язык по умолчанию (`
 
 **Tier:** LOW (a11y / UI-компоненты)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.6)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.6)
 
 ### Что сделать (DoD)
 1. Убрать `tabindex="-1"` с кнопки пароля в `Input.svelte`, добавить динамический переводимый `aria-label`. (Закрыто в LR-103)
@@ -2049,7 +2049,7 @@ Paraglide JS переключается на язык по умолчанию (`
 
 **Tier:** MED (новый эндпоинт в API личного кабинета)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §3.3)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §3.3)
 
 ### Контекст и проблема
 На странице `dashboard/+page.svelte` фронтенд получает список бронирований пользователя и делает веер отдельных запросов `GET /api/v1/workshops/{id}`, чтобы собрать список прикрепленных файлов (`media`).
@@ -2070,7 +2070,7 @@ Paraglide JS переключается на язык по умолчанию (`
 
 **Tier:** HIGH (безопасность сессий, XSS-защита)  
 **Статус:** Closed · Done (2026-09-13)  
-**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/repotrs/analysis-report-ag.md` §2.5)
+**Источник:** аудит фронтенда Antigravity 2026-09-13 (`docs/reports/analysis-report-ag.md` §2.5)
 
 ### Что сделать (DoD)
 1. Провести Architecture Pre-Check по переводу сессий на `Set-Cookie: authToken=...; HttpOnly; Secure; SameSite=Lax` (`docs/architecture/JWT-COOKIE-MIGRATION-PRECHECK.md`).
@@ -2086,19 +2086,155 @@ Paraglide JS переключается на язык по умолчанию (`
 
 ---
 
-## LR-109 — Добавление HSTS (Strict-Transport-Security) через Traefik Middleware
+## LR-109 — Добавление HSTS (Strict-Transport-Security)
 
-**Tier:** LOW (инфра / HTTP заголовки безопасности)  
+**Tier:** INFRA / LOW (HTTP заголовки безопасности — но см. топологическую оговорку ниже, почему не чистый LOW)  
 **Статус:** Open · спринт "Плановое / бэклог" (P3)  
 **Источник:** ревью плана LR-108 (2026-09-13)
 
 ### Контекст и проблема
-В кластере настроен принудительный редирект HTTP -> HTTPS (`lr-dev-redirect-to-https@kubernetescrd` middleware). Однако заголовок `Strict-Transport-Security` не отдается ни Ingress, ни Nginx. Это оставляет небольшое окно уязвимости Man-in-the-Middle при первом обращении браузера по незашифрованному HTTP до получения редиректа.
+> ⚠️ **Обновлено 2026-09-14, докаудит.** Оригинальный контекст ссылался на
+> `lr-dev-redirect-to-https@kubernetescrd` middleware как на существующий
+> факт — этот middleware **удалён** 2026-09-14 (прод-инцидент,
+> `ERR_TOO_MANY_REDIRECTS`, см. `docs/context/CHANGELOG.md`, коммит
+> `5354c52`). Актуальная схема: форс-редирект HTTP→HTTPS для браузеров
+> сейчас обеспечивает Cloudflare edge ("Always Use HTTPS", включено), не
+> Traefik/Ingress — Cloudflare Tunnel доставляет трафик на Traefik всегда
+> как обычный HTTP (см. `docs/context/CODING_PROTOCOL.md` §4c).
 
-### Что сделать (DoD)
-1. В Helm-чарте `devops/helm/lr-app/templates/` объявить Traefik middleware для HSTS (headers middleware: `stsSeconds: 31536000`, `stsIncludeSubdomains: true`, `stsPreload: true`).
-2. Подключить middleware к Ingress аннотацией `traefik.ingress.kubernetes.io/router.middlewares`.
+Заголовка `Strict-Transport-Security` сейчас нет нигде — ни на Cloudflare
+edge, ни на origin. Это оставляет окно MITM/downgrade на самом первом
+plaintext-запросе до срабатывания редиректа на грани Cloudflare, и не
+защищает non-browser клиентов, не следующих редиректам.
 
-**Затрагиваемые файлы:**
+**Топологическая оговорка (обязательно решить перед реализацией, не
+переносить в DoD молча):** Cloudflare Tunnel по конфигу шлёт трафик на
+Traefik's `web`-энтрипоинт (`http://localhost:8000`) — `websecure`
+(:8443) в этой топологии, скорее всего, вообще не получает реального
+трафика от туннеля (не подтверждено — см. LR-BUG-06 в `INFRA-LR.md`,
+точный origin-адрес в `cloudflared config.yml` не задокументирован).
+HSTS-заголовок, выставленный Traefik-middleware'ом на entrypoint, который
+не видит реального HTTPS-трафика, ничего не даст браузеру — сам браузер
+получает ответы от Cloudflare edge, не напрямую от Traefik. **По той же
+логике, что уже дважды сегодня ломала прод (browser-facing HTTPS-поведение
+— обязанность грани Cloudflare, не origin, при этой топологии) — HSTS,
+скорее всего, тоже нужно включать в Cloudflare dashboard (SSL/TLS → Edge
+Certificates → HSTS), не через Traefik middleware.** Проверить это
+явно перед реализацией, не копировать DoD ниже как есть без подтверждения.
+
+### Что сделать (DoD) — черновик, требует подтверждения топологии выше
+1. Проверить в Cloudflare dashboard, есть ли нативная настройка HSTS на
+   уровне Edge Certificates — если да, включить там, задача закрывается
+   без единой строки кода в этом репозитории.
+2. Только если Cloudflare-edge-опция недоступна/недостаточна: Traefik
+   middleware для HSTS (`stsSeconds: 31536000`, `stsIncludeSubdomains:
+   true`, `stsPreload: true`) на `websecure`-энтрипоинте — но сначала
+   подтвердить (см. LR-BUG-06), что туннель реально когда-либо шлёт
+   трафик на этот энтрипоинт, иначе middleware мёртв с рождения.
+
+**Затрагиваемые файлы (если пойдём путём 2):**
 - `devops/helm/lr-app/templates/middleware-headers.yaml` (новый)
 - `devops/helm/lr-app/templates/ingress.yaml`
+
+---
+
+## LR-110 — Нативный SvelteKit `kit.csp` (hash mode) вместо ручного sha256-пиннинга
+
+**Tier:** MED (SEC & FRONTEND)  
+**Статус:** Open · спринт "Ближайшее" (P3)  
+**Источник:** прод-инцидент 2026-09-14 (`ERR_TOO_MANY_REDIRECTS`-соседний
+инцидент, CSP заблокировал старт приложения), докаудит того же дня
+
+### Контекст и проблема
+`frontend-svelte/nginx.conf`'s CSP `script-src` сейчас — `'self'
+'unsafe-inline'` (временный фикс, коммит `239ed1b`). Причина: `index.html`
+содержит инлайн-бутстрап-скрипт SvelteKit (`__sveltekit_<random>` —
+случайный токен на каждую сборку, не производный от контента) — вручную
+скопированный sha256-хеш для него не может быть актуальным дольше одного
+деплоя. `'unsafe-inline'` — ослабление CSP на неопределённый срок, не
+целевое состояние.
+
+### Что сделать (DoD)
+1. Настроить `kit.csp` (`mode: 'hash'`) в `svelte.config.js` — SvelteKit
+   сам считает хеш собственного бутстрап-скрипта на этапе сборки.
+2. Определить механизм передачи актуального хеша в
+   `frontend-svelte/nginx.conf` (варианты: SvelteKit генерирует
+   `<meta http-equiv="Content-Security-Policy">` прямо в `index.html`, и
+   тогда `script-src` в nginx-заголовке можно убрать/ослабить в пользу
+   meta-тега; либо CI-шаг, читающий посчитанный хеш из билда и
+   подставляющий его в конфиг перед сборкой Docker-образа) — выбрать один,
+   не оставлять оба источника правды одновременно.
+3. Учесть: `frame-ancestors` не работает через `<meta>`-тег (спека CSP) —
+   этот и любые другие header-only директивы остаются в nginx-заголовке
+   независимо от выбранного варианта.
+4. Живая проверка в браузере (не только `npm run build` локально) перед
+   пушем — см. `docs/context/CODING_PROTOCOL.md` §4c.
+
+**Затрагиваемые файлы:**
+- `frontend-svelte/svelte.config.js`
+- `frontend-svelte/nginx.conf`
+
+---
+
+## LR-111 — Аудит Cloudflare Edge-политик (Bot Fight Mode) и решение по `'unsafe-inline'`
+
+**Tier:** LOW (INFRA & SEC)  
+**Статус:** Open · спринт "Плановое / бэклог" (P3)  
+**Источник:** прод-инцидент 2026-09-14, докаудит того же дня
+
+### Контекст и проблема
+Помимо бутстрап-скрипта SvelteKit (см. LR-110), CSP-инцидент 2026-09-14
+показал: Cloudflare сам инжектит на грани скрипт
+(`/cdn-cgi/challenge-platform/...`, похоже на Bot Fight Mode) с
+рандомизированным на каждый ЗАПРОС токеном — этот скрипт в принципе
+невозможно захешировать статически ни при каком билде, это решение вне
+контроля этого репозитория.
+
+### Что сделать (DoD)
+1. Проверить в Cloudflare dashboard, какая именно функция вставляет этот
+   скрипт (Bot Fight Mode / Super Bot Fight Mode / другое) и решить:
+   выключить её (если не нужна для этого сайта), или смириться с тем, что
+   `script-src` для `tlab29.com` не может быть строже `'unsafe-inline'`,
+   пока эта функция включена.
+2. Зафиксировать итоговое решение и его обоснование в
+   `docs/security/ARCHITECTURE.md` (правило файла — обновлять в том же
+   диффе при любом security-решении).
+
+**Затрагиваемые файлы:**
+- Cloudflare dashboard (вне репозитория)
+- `docs/security/ARCHITECTURE.md`
+
+---
+
+## LR-112 — Полная актуализация `docs/context/PROJECT_INDEX.md`
+
+**Tier:** MED (DOCS & ARCH)  
+**Статус:** Open · спринт "Ближайшее" (P2)  
+**Источник:** докаудит `docs/` 2026-09-14 (структура документации + связи AI-артефактов)
+
+### Контекст и проблема
+`PROJECT_INDEX.md` — драфт 0.1.0 от 2026-07-20, составлен без доступа к
+коду (по логам/kubectl), с тех пор ни разу не переписан целиком (только
+точечные патч-заметки сверху). Самый цитируемый файл в графе AI-контекста
+("Read on demand" №1 в `CLAUDE.md`) и при этом самый устаревший:
+§2 (стек) описывает давно снесённый статический фронтенд вместо
+SvelteKit, §3 (файловая карта) не знает о `frontend-svelte/`,
+`devops/helm/lr-app/`, `.gitlab-ci.yml`, §5 (архитектурные инварианты)
+всё ещё помечены "ПРЕДПОЛАГАЕМЫЕ, не верифицированы" несмотря на десятки
+реальных `architect-reviewer`-сверок с тех пор, §9 просит формализовать
+`DATENSCHUTZ.md` "до конца августа 2026" — срок уже прошёл.
+
+### Что сделать (DoD)
+1. Переписать §1-12 против реального текущего кода/CI/`decisions.md`, не
+   патчить точечно поверх устаревшего текста.
+2. §5 — пройти реальную сверку слоёв через `architect-reviewer`, снять
+   пометку "ПРЕДПОЛАГАЕМЫЕ" по факту, а не по умолчанию.
+3. §8 — заменить дублирующуюся ADR-таблицу на прямую ссылку на
+   `docs/architecture/decisions.md` (таблица уже помечена SUPERSEDED
+   докаудитом 2026-09-14, эта задача — довести дело до конца, не оставлять
+   дубликат данных болтаться).
+4. §9 — либо статус `DATENSCHUTZ.md` обновлён по факту (создан/новый
+   срок), либо явно отмечено как просроченный TODO с текущей датой.
+
+**Затрагиваемые файлы:**
+- `docs/context/PROJECT_INDEX.md`
