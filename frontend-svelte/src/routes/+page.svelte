@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { localizeHref } from '$lib/paraglide/runtime';
 	import * as m from '$lib/paraglide/messages.js';
+	import PhotoCarousel from '$lib/components/PhotoCarousel.svelte';
 
 	const directions = [
 		{ title: m.home_direction_theatre, desc: m.home_direction_theatre_desc },
@@ -33,16 +34,9 @@
 		</a>
 	</div>
 
-	<!-- Placeholder hero visual — swap for Olena's real photo/video once
-	     content is supplied (LR-ADR-019: she maintains content herself). -->
-	<div class="relative aspect-square w-full max-w-md justify-self-center lg:justify-self-end">
-		<div
-			class="hero-glow absolute inset-0 rounded-[2.5rem]"
-			style="background: radial-gradient(circle at 30% 30%, var(--color-teal) 0%, transparent 55%),
-			                    radial-gradient(circle at 75% 70%, var(--color-gold) 0%, transparent 55%),
-			                    var(--color-ink-soft);"
-		></div>
-		<div class="absolute inset-0 rounded-[2.5rem] border border-ink-line"></div>
+	<!-- Hero Photo Carousel (Olena's classes & theatre performances) -->
+	<div class="w-full max-w-lg justify-self-center lg:justify-self-end">
+		<PhotoCarousel />
 	</div>
 </section>
 
@@ -88,22 +82,5 @@
 	   no second blurred layer. */
 	:global(:root:not([data-theme='light'])) .hero-text {
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.75);
-	}
-
-	.hero-glow {
-		animation: drift 24s ease-in-out infinite alternate;
-	}
-	@keyframes drift {
-		from {
-			filter: saturate(1);
-		}
-		to {
-			filter: saturate(1.15);
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.hero-glow {
-			animation: none;
-		}
 	}
 </style>

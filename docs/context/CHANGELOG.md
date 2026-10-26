@@ -2,6 +2,24 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-10-26 — feat: интерактивная фотокарусель занятий Олены на главной странице
+
+### Область (`frontend-svelte/src/lib/components/PhotoCarousel.svelte*`, `frontend-svelte/src/routes/+page.svelte`, `frontend-svelte/messages/*`, `frontend-svelte/static/images/carousel/*`)
+
+Реализация интерактивной фотокарусели в Hero-секции главной страницы по паттерну проекта Numi с адаптацией под Svelte 5 runes и дизайн-систему TLab29.
+
+- **frontend (assets)** — `frontend-svelte/static/images/carousel/`: добавлены 4 оптимизированных фотографии занятий театральной студии. Стартовым кадром назначен `01-theatre-action.png` (оранжевый чемодан справа).
+- **frontend (component)** — `frontend-svelte/src/lib/components/PhotoCarousel.svelte`: новый компонент карусели на Svelte 5 runes (`$state`).
+  - Бесшовная круговая лента (infinite circular tape) с клонами граничных слайдов и незаметным сбросом позиции на `transitionend`.
+  - Мобильные жесты (горизонтальный свайп с порогом смещения).
+  - Instagram-style Tap-to-Pause (клик/тап переключает воспроизведение с всплывающим бейджем обратной связи).
+  - Пульт управления с эстетикой аудиоплеера (`REW`, `PLAY / PAUSE` со светящимся индикатором состояния, `FWD`).
+  - Индикаторы текущего кадра со встроенным анимированным прогресс-баром автопрокрутки.
+  - Поддержка доступности (ARIA carousel/tablist/tab, клавиатурная навигация, `prefers-reduced-motion`).
+- **frontend (routes)** — `frontend-svelte/src/routes/+page.svelte`: замена временного CSS-плейсхолдера Hero-секции на живой компонент `PhotoCarousel`.
+- **i18n** — `frontend-svelte/messages/{de,en,uk}.json`: добавлены переводы для заголовков, тегов слайдов, ARIA-меток и элементов управления карусели на 3 языках.
+- **tests** — `frontend-svelte/src/lib/components/PhotoCarousel.svelte.test.ts`: набор тестов Vitest на корректность рендеринга, стартовый кадр с чемоданом, доступность и интерактивное переключение слайдов.
+
 ## 2026-09-14 — docs: докаудит `docs/` + AI-артефактов, устранение разрыва контекста между Claude Code и Antigravity
 
 ### Область (`docs/`, `AGENTS.md`, `CLAUDE.md`, `docs/context/{CODING_PROTOCOL,KNOWN_ISSUES,PROJECT_INDEX}.md`, `docs/tickets/tickets.md`, `.gitignore`-эквивалент через `git rm --cached`)
