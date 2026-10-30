@@ -40,7 +40,7 @@
 	</div>
 </section>
 
-<section class="border-t border-ink-line bg-ink-soft/40 px-6 pt-10 sm:pt-12 pb-16 sm:pb-20">
+<section class="border-t border-ink-line bg-ink-soft/40 px-6 pt-6 640:pt-8 pb-16 640:pb-20">
 	<div class="home-content-container">
 		<h2 class="section-title font-display font-semibold text-paper">
 			{m.home_directions_title()}

@@ -10,25 +10,29 @@
 			id: 'theatre-action',
 			src: '/images/carousel/01-theatre-action.png',
 			title: () => m.home_carousel_slide1_title(),
-			tag: () => m.home_carousel_slide1_tag()
+			tag: () => m.home_carousel_slide1_tag(),
+			objectPosition: 'center 40%'
 		},
 		{
 			id: 'theatre-rehearsal',
 			src: '/images/carousel/02-theatre-rehearsal.jpg',
 			title: () => m.home_carousel_slide2_title(),
-			tag: () => m.home_carousel_slide2_tag()
+			tag: () => m.home_carousel_slide2_tag(),
+			objectPosition: 'center 80%'
 		},
 		{
 			id: 'theatre-ensemble',
 			src: '/images/carousel/03-theatre-ensemble.jpg',
 			title: () => m.home_carousel_slide3_title(),
-			tag: () => m.home_carousel_slide3_tag()
+			tag: () => m.home_carousel_slide3_tag(),
+			objectPosition: 'center 85%'
 		},
 		{
 			id: 'theatre-applause',
 			src: '/images/carousel/04-theatre-applause.jpg',
 			title: () => m.home_carousel_slide4_title(),
-			tag: () => m.home_carousel_slide4_tag()
+			tag: () => m.home_carousel_slide4_tag(),
+			objectPosition: 'center top'
 		}
 	];
 
@@ -321,7 +325,8 @@
 					<img
 						src={slide.src}
 						alt={slide.title()}
-						class="h-full w-full object-cover object-center select-none"
+						class="h-full w-full object-cover select-none"
+						style:object-position={slide.objectPosition ?? 'center'}
 						draggable="false"
 						loading={idx === 1 ? 'eager' : 'lazy'}
 					/>

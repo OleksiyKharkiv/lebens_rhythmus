@@ -575,19 +575,19 @@ h4 {
    Replaces excessive py-16 sm:py-24 (96px) with an ergonomic vertical rhythm that accounts
    for the sticky navbar and eliminates the 176px vertical void before Section 2. */
 .hero-section-padding {
-	padding-top: 2rem; /* 32px mobile */
-	padding-bottom: 2.5rem; /* 40px mobile */
+	padding-top: 1.125rem; /* ~18px mobile (halved) */
+	padding-bottom: 1.375rem; /* ~22px mobile (halved) */
 }
 @media (min-width: 640px) {
 	.hero-section-padding {
-		padding-top: 3rem; /* 48px tablet/desktop */
-		padding-bottom: 3.5rem; /* 56px */
+		padding-top: 1.5rem; /* 24px tablet/desktop (halved) */
+		padding-bottom: 1.875rem; /* 30px (halved) */
 	}
 }
 @media (min-width: 1440px) {
 	.hero-section-padding {
-		padding-top: 3.5rem; /* 56px widescreen */
-		padding-bottom: 4rem; /* 64px */
+		padding-top: 1.75rem; /* 28px widescreen (halved) */
+		padding-bottom: 2.125rem; /* 34px (halved) */
 	}
 }
 
