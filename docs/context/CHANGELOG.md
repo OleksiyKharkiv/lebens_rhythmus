@@ -2,6 +2,15 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-10-30 — fix(frontend): калибровка адаптивной сетки и паддингов Hero-секции на 2K/4K десктопах
+
+### Область (`frontend-svelte/src/routes/+page.svelte`, `frontend-svelte/src/routes/layout.css`)
+
+Устранение проблемы узкого отображения (1/3 экрана) и избыточных вертикальных паддингов Hero-секции и карусели на широкоформатных мониторах (QHD / 2560px, 4K) по фидбэку бета-тестеров.
+
+- **frontend (layout.css)** — добавлена семантическая лестница контейнеров `.hero-grid-container`, `.home-content-container`, обертки карусели `.hero-carousel-wrapper` и вертикальных отступов `.hero-section-padding` с ручной сортировкой `@media (min-width: ...)` по `RESPONSIVE_SCALING_PLAYBOOK.md` §3 (от 1024px до 3840px). На 2K ширина контейнера увеличена до 112.5rem (1800px), карусели — до 52rem (832px).
+- **frontend (+page.svelte)** — сняты жесткие классы-ограничители `max-w-5xl` и `max-w-lg`. Разметка переведена на адаптивные классы. Подзаголовок расширен до `max-w-xl 1920:max-w-2xl` для баланса длины строки. Вертикальный межсекционный разрыв сокращен со 176px до эргономичных ~100px.
+
 ## 2026-10-26 — feat: интерактивная фотокарусель занятий Олены на главной странице
 
 ### Область (`frontend-svelte/src/lib/components/PhotoCarousel.svelte*`, `frontend-svelte/src/routes/+page.svelte`, `frontend-svelte/messages/*`, `frontend-svelte/static/images/carousel/*`)

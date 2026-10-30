@@ -485,6 +485,112 @@ h4 {
 	}
 }
 
+
+/* Responsive container ladder for home page hero and content sections (LR-112 / Beta Feedback):
+   Extends 1024px tablet base to widescreen viewports (1366, 1440, 1920, 2560, 3840)
+   per RESPONSIVE_SCALING_PLAYBOOK.md §3 (plain CSS with ascending @media blocks to eliminate
+   Tailwind v4 variant sorting conflicts). Keeps mobile/tablet (<1024px) 100% fluid. */
+.hero-grid-container,
+.home-content-container {
+	width: 100%;
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 100%;
+}
+@media (min-width: 1024px) {
+	.hero-grid-container,
+	.home-content-container {
+		max-width: 64rem; /* 1024px */
+	}
+}
+@media (min-width: 1366px) {
+	.hero-grid-container,
+	.home-content-container {
+		max-width: 75rem; /* 1200px */
+	}
+}
+@media (min-width: 1440px) {
+	.hero-grid-container,
+	.home-content-container {
+		max-width: 82.5rem; /* 1320px */
+	}
+}
+@media (min-width: 1920px) {
+	.hero-grid-container,
+	.home-content-container {
+		max-width: 96rem; /* 1536px */
+	}
+}
+@media (min-width: 2560px) {
+	.hero-grid-container,
+	.home-content-container {
+		max-width: 112.5rem; /* 1800px */
+	}
+}
+@media (min-width: 3840px) {
+	.hero-grid-container,
+	.home-content-container {
+		max-width: 135rem; /* 2160px */
+	}
+}
+
+/* Responsive carousel wrapper: allows photo carousel to scale with widescreen displays
+   while keeping mobile/tablet bounded to 32rem (512px). */
+.hero-carousel-wrapper {
+	width: 100%;
+	max-width: 32rem; /* mobile & tablet (<1024px) */
+}
+@media (min-width: 1024px) {
+	.hero-carousel-wrapper {
+		max-width: 36rem; /* 576px */
+	}
+}
+@media (min-width: 1366px) {
+	.hero-carousel-wrapper {
+		max-width: 40rem; /* 640px */
+	}
+}
+@media (min-width: 1440px) {
+	.hero-carousel-wrapper {
+		max-width: 44rem; /* 704px */
+	}
+}
+@media (min-width: 1920px) {
+	.hero-carousel-wrapper {
+		max-width: 48rem; /* 768px */
+	}
+}
+@media (min-width: 2560px) {
+	.hero-carousel-wrapper {
+		max-width: 52rem; /* 832px */
+	}
+}
+@media (min-width: 3840px) {
+	.hero-carousel-wrapper {
+		max-width: 58rem; /* 928px */
+	}
+}
+
+/* Hero vertical padding calibration:
+   Replaces excessive py-16 sm:py-24 (96px) with an ergonomic vertical rhythm that accounts
+   for the sticky navbar and eliminates the 176px vertical void before Section 2. */
+.hero-section-padding {
+	padding-top: 2rem; /* 32px mobile */
+	padding-bottom: 2.5rem; /* 40px mobile */
+}
+@media (min-width: 640px) {
+	.hero-section-padding {
+		padding-top: 3rem; /* 48px tablet/desktop */
+		padding-bottom: 3.5rem; /* 56px */
+	}
+}
+@media (min-width: 1440px) {
+	.hero-section-padding {
+		padding-top: 3.5rem; /* 56px widescreen */
+		padding-bottom: 4rem; /* 64px */
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	* {
 		transition: none !important;

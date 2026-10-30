@@ -14,7 +14,7 @@
 	<title>{m.site_name()} — {m.home_hero_title()}</title>
 </svelte:head>
 
-<section class="mx-auto grid max-w-5xl items-center gap-12 px-6 py-16 sm:py-24 lg:grid-cols-2 lg:gap-16">
+<section class="hero-grid-container hero-section-padding grid items-center gap-10 px-6 lg:grid-cols-2 lg:gap-14 1920:gap-20">
 	<div>
 		<!-- 2026-08-19 — refactored onto the shared .hero-title/.lead-text
 		     classes (layout.css) once the site-wide ladder rollout gave
@@ -23,7 +23,7 @@
 		<h1 class="hero-text hero-title font-display leading-tight font-semibold text-paper">
 			{m.home_hero_title()}
 		</h1>
-		<p class="hero-text lead-text mt-6 max-w-md text-paper-dim">
+		<p class="hero-text lead-text mt-6 max-w-xl 1920:max-w-2xl text-paper-dim">
 			{m.home_hero_tagline()}
 		</p>
 		<a
@@ -35,13 +35,13 @@
 	</div>
 
 	<!-- Hero Photo Carousel (Olena's classes & theatre performances) -->
-	<div class="w-full max-w-lg justify-self-center lg:justify-self-end">
+	<div class="hero-carousel-wrapper justify-self-center lg:justify-self-end">
 		<PhotoCarousel />
 	</div>
 </section>
 
-<section class="border-t border-ink-line bg-ink-soft/40 px-6 py-16 sm:py-20">
-	<div class="mx-auto max-w-5xl">
+<section class="border-t border-ink-line bg-ink-soft/40 px-6 pt-10 sm:pt-12 pb-16 sm:pb-20">
+	<div class="home-content-container">
 		<h2 class="section-title font-display font-semibold text-paper">
 			{m.home_directions_title()}
 		</h2>
