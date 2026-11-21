@@ -1336,3 +1336,18 @@ courseId`/`Performance.courseId` в `LR-ADR-021`) плюс новые поля
 *Конец Roundtable #8.*
 
 ---
+
+## Roundtable #14 — Театральная идентичность, ликвидация "AI-slop", 2K/4K масштабирование и редизайн Hero/Dashboard
+
+**Дата:** 2026-10-30  
+**Контекст:** Фидбэк бэта-тестеров, опыт проекта `numi` (`roundtable-13-typography-anti-ai-slop.md`), аудит UI/UX на экранах 2K/4K/Mobile.  
+**Полный документ:** [roundtable-14-theatre-ui-ux-anti-ai-slop.md](roundtable-14-theatre-ui-ux-anti-ai-slop.md)  
+**Участники:** Elena Rostova (Сценография/Art Direction), Rich Harris (Svelte Core), Figma & Canva Team (Дизайн-системы), Jakob Nielsen & Julie Zhuo (Эргономика и зрение), Robert C. Martin (Architect-Reviewer).  
+**Результаты:** 
+1. Шрифтовая триада сцены: замена детского `Quicksand` на благородный `Playfair Display` (Display) + `Plus Jakarta Sans` (Body) (100% self-hosted WOFF2).
+2. Очистка от AI-штампов: удаление неонового градиента и кассетного плеера `REW/FWD` из `PhotoCarousel.svelte`.
+3. Оптический контейнер 2K/4K: ограничение сетки `max-w` на `85rem` (1360px) с центрированием вместо бесконечного расползания.
+4. Уменьшение паддингов Hero в 1.6 раза для раскрытия секции «Unsere Angebote».
+5. Заведен тикет `LR-113` на полную локализацию страниц (DE, EN, UK).
+
+---

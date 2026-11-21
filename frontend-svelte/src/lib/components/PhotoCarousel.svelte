@@ -32,7 +32,7 @@
 			src: '/images/carousel/04-theatre-applause.jpg',
 			title: () => m.home_carousel_slide4_title(),
 			tag: () => m.home_carousel_slide4_tag(),
-			objectPosition: 'center top'
+			objectPosition: 'center 90%'
 		}
 	];
 
@@ -179,7 +179,7 @@
 	}
 
 	function handleMouseEnter() {
-		if (typeof window !== 'undefined' && window.matchMedia('(hover: hover)').matches) {
+		if (typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(hover: hover)').matches) {
 			isHovered = true;
 			stopAutoplay();
 		}
@@ -290,12 +290,36 @@
 			}
 		}}
 	>
-		<!-- Subtle ambient background glow -->
-		<div
-			class="absolute -inset-1 opacity-20 blur-xl pointer-events-none rounded-[2rem]"
-			style="background: radial-gradient(circle at 50% 50%, var(--color-gold) 0%, var(--color-teal) 60%, transparent 80%);"
-			aria-hidden="true"
-		></div>
+		<!-- Theatrical side navigation arrows (desktop & tablet) -->
+		<button
+			type="button"
+			class="carousel-nav-btn nav-btn-prev absolute left-3 top-1/2 -translate-y-1/2 z-10 hidden sm:flex items-center justify-center w-11 h-11 rounded-full bg-ink/75 hover:bg-ink text-paper/85 hover:text-gold border border-white/10 backdrop-blur-md shadow-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+			onclick={(e) => {
+				e.stopPropagation();
+				handleManualPrev();
+			}}
+			aria-label={m.home_carousel_prev()}
+			title={m.home_carousel_prev()}
+		>
+			<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<polyline points="15 18 9 12 15 6" />
+			</svg>
+		</button>
+
+		<button
+			type="button"
+			class="carousel-nav-btn nav-btn-next absolute right-3 top-1/2 -translate-y-1/2 z-10 hidden sm:flex items-center justify-center w-11 h-11 rounded-full bg-ink/75 hover:bg-ink text-paper/85 hover:text-gold border border-white/10 backdrop-blur-md shadow-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+			onclick={(e) => {
+				e.stopPropagation();
+				handleManualNext();
+			}}
+			aria-label={m.home_carousel_next()}
+			title={m.home_carousel_next()}
+		>
+			<svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<polyline points="9 18 15 12 9 6" />
+			</svg>
+		</button>
 
 		<!-- Floating Tap/Click Feedback Badge -->
 		{#if showTapFeedback}
@@ -360,73 +384,8 @@
 		</div>
 	</div>
 
-	<!-- Controls & Navigation Deck -->
-	<div class="mt-4 flex flex-col items-center gap-3 w-full">
-		<!-- Capsule Player Console (REW, PLAY/PAUSE with LED, FWD) -->
-		<div
-			class="player-deck inline-flex items-center rounded-full border border-ink-line bg-ink px-1.5 py-1 shadow-md"
-			role="toolbar"
-			aria-label="Player controls"
-		>
-			<!-- REW button -->
-			<button
-				type="button"
-				class="deck-btn"
-				onclick={handleManualPrev}
-				aria-label={m.home_carousel_prev()}
-				title={m.home_carousel_prev()}
-			>
-				<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-					<polygon points="11 19 2 12 11 5 11 19" fill="currentColor" />
-					<polygon points="22 19 13 12 22 5 22 19" fill="currentColor" />
-				</svg>
-				<span class="text-xs font-display font-semibold tracking-wider">REW</span>
-			</button>
-
-			<div class="deck-divider" aria-hidden="true"></div>
-
-			<!-- PLAY / PAUSE button with glowing status LED -->
-			<button
-				type="button"
-				class="deck-btn playpause-btn"
-				class:is-playing={isPlaying}
-				onclick={togglePlayPause}
-				aria-label={isPlaying ? m.home_carousel_pause() : m.home_carousel_play()}
-				title={isPlaying ? m.home_carousel_pause() : m.home_carousel_play()}
-			>
-				<span class="status-led" class:led-on={isPlaying} aria-hidden="true"></span>
-				{#if isPlaying}
-					<svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-						<rect x="6" y="4" width="4" height="16" rx="1.5" />
-						<rect x="14" y="4" width="4" height="16" rx="1.5" />
-					</svg>
-					<span class="text-xs font-display font-semibold tracking-wider">PAUSE</span>
-				{:else}
-					<svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-						<polygon points="6 4 20 12 6 20 6 4" />
-					</svg>
-					<span class="text-xs font-display font-semibold tracking-wider">PLAY</span>
-				{/if}
-			</button>
-
-			<div class="deck-divider" aria-hidden="true"></div>
-
-			<!-- FWD button -->
-			<button
-				type="button"
-				class="deck-btn"
-				onclick={handleManualNext}
-				aria-label={m.home_carousel_next()}
-				title={m.home_carousel_next()}
-			>
-				<span class="text-xs font-display font-semibold tracking-wider">FWD</span>
-				<svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-					<polygon points="13 19 22 12 13 5 13 19" fill="currentColor" />
-					<polygon points="2 19 11 12 2 5 2 19" fill="currentColor" />
-				</svg>
-			</button>
-		</div>
-
+	<!-- Controls & Navigation Deck (Theatrical Stage Controls) -->
+	<div class="mt-3.5 flex items-center justify-between gap-3 w-full px-1">
 		<!-- Step Dots Indicators with progress fill -->
 		<div
 			class="flex items-center gap-2"
@@ -436,7 +395,7 @@
 			{#each slides as slide, idx (slide.id)}
 				<button
 					type="button"
-					class="dot-pill relative overflow-hidden rounded-full border border-ink-line bg-ink px-3 py-1 text-xs font-display transition-colors"
+					class="dot-pill relative overflow-hidden rounded-full border border-ink-line bg-ink px-3.5 py-1 text-xs font-display transition-colors"
 					class:active={activeSlideIndex === idx}
 					onclick={() => selectSlide(idx)}
 					role="tab"
@@ -444,7 +403,7 @@
 					aria-label={m.home_carousel_step_aria({ num: idx + 1, total: slides.length, title: slide.title() })}
 					title="{slide.title()} ({idx + 1} / {slides.length})"
 				>
-					<span class="font-semibold text-paper-dim hover:text-paper" class:text-gold={activeSlideIndex === idx}>
+					<span class="font-medium text-paper-dim hover:text-paper" class:text-gold={activeSlideIndex === idx}>
 						{idx + 1}
 					</span>
 					{#if activeSlideIndex === idx && isPlaying && !isHovered}
@@ -452,6 +411,55 @@
 					{/if}
 				</button>
 			{/each}
+		</div>
+
+		<!-- Subtle Stage Controls: Pause/Play + Mobile Prev/Next -->
+		<div class="inline-flex items-center gap-1 rounded-full border border-ink-line bg-ink/80 px-2 py-1 shadow-sm">
+			<!-- Mobile Prev Arrow -->
+			<button
+				type="button"
+				class="sm:hidden flex items-center justify-center w-8 h-8 rounded-full text-paper-dim hover:text-gold transition-colors"
+				onclick={handleManualPrev}
+				aria-label={m.home_carousel_prev()}
+			>
+				<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="15 18 9 12 15 6" />
+				</svg>
+			</button>
+
+			<!-- Play/Pause Toggle -->
+			<button
+				type="button"
+				class="flex items-center gap-1.5 px-2.5 py-1 text-xs font-display font-medium text-paper-dim hover:text-gold transition-colors"
+				onclick={togglePlayPause}
+				aria-label={isPlaying ? m.home_carousel_pause() : m.home_carousel_play()}
+				title={isPlaying ? m.home_carousel_pause() : m.home_carousel_play()}
+			>
+				{#if isPlaying}
+					<svg class="w-3.5 h-3.5 text-gold" viewBox="0 0 24 24" fill="currentColor">
+						<rect x="6" y="4" width="4" height="16" rx="1.5" />
+						<rect x="14" y="4" width="4" height="16" rx="1.5" />
+					</svg>
+					<span class="tracking-wide text-[11px] uppercase">Pause</span>
+				{:else}
+					<svg class="w-3.5 h-3.5 text-teal" viewBox="0 0 24 24" fill="currentColor">
+						<polygon points="6 4 20 12 6 20 6 4" />
+					</svg>
+					<span class="tracking-wide text-[11px] uppercase">Play</span>
+				{/if}
+			</button>
+
+			<!-- Mobile Next Arrow -->
+			<button
+				type="button"
+				class="sm:hidden flex items-center justify-center w-8 h-8 rounded-full text-paper-dim hover:text-gold transition-colors"
+				onclick={handleManualNext}
+				aria-label={m.home_carousel_next()}
+			>
+				<svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+					<polyline points="9 18 15 12 9 6" />
+				</svg>
+			</button>
 		</div>
 	</div>
 </div>
@@ -513,52 +521,12 @@
 		}
 	}
 
-	/* Deck buttons & dividers */
-	.deck-btn {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		padding: 0.4rem 0.85rem;
-		border-radius: 9999px;
-		color: var(--color-paper-dim);
-		background: transparent;
-		transition: all 120ms ease;
-		cursor: pointer;
+	/* Navigation arrows hover & focus */
+	.carousel-nav-btn:hover {
+		transform: translateY(-50%) scale(1.06);
 	}
-
-	.deck-btn:hover {
-		color: var(--color-paper);
-		background: var(--color-ink-soft);
-	}
-
-	.deck-btn:active {
-		transform: scale(0.96);
-	}
-
-	.playpause-btn.is-playing {
-		color: var(--color-gold);
-		background: rgba(229, 169, 59, 0.1);
-	}
-
-	.deck-divider {
-		width: 1px;
-		height: 16px;
-		background: var(--color-ink-line);
-		margin: 0 0.1rem;
-	}
-
-	/* Glowing LED */
-	.status-led {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: #64748b;
-		transition: all 200ms ease;
-	}
-
-	.status-led.led-on {
-		background: var(--color-teal);
-		box-shadow: 0 0 8px var(--color-teal);
+	.carousel-nav-btn:active {
+		transform: translateY(-50%) scale(0.96);
 	}
 
 	/* Indicator dots */

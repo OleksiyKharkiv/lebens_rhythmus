@@ -22,16 +22,15 @@ describe('PhotoCarousel', () => {
 		expect(images[1].getAttribute('loading')).toBe('eager');
 	});
 
-	it('renders media console controls (REW, PLAY/PAUSE, FWD)', () => {
-		const { getByRole } = render(PhotoCarousel);
-		const toolbar = getByRole('toolbar', { name: /player controls/i });
-		expect(toolbar).toBeInTheDocument();
+	it('renders theatre navigation controls (previous, next, play/pause)', () => {
+		const { getAllByRole, getByRole } = render(PhotoCarousel);
+		const prevButtons = getAllByRole('button', { name: /vorheriges foto/i });
+		const nextButtons = getAllByRole('button', { name: /nächstes foto/i });
+		const playPauseBtn = getByRole('button', { name: /diashow anhalten|diashow abspielen/i });
 
-		const buttons = toolbar.querySelectorAll('button');
-		expect(buttons.length).toBe(3);
-		expect(buttons[0]).toHaveTextContent('REW');
-		expect(buttons[1]).toHaveTextContent('PAUSE');
-		expect(buttons[2]).toHaveTextContent('FWD');
+		expect(prevButtons.length).toBeGreaterThan(0);
+		expect(nextButtons.length).toBeGreaterThan(0);
+		expect(playPauseBtn).toBeInTheDocument();
 	});
 
 	it('renders 4 slide indicators with the first one active initially', () => {
@@ -47,25 +46,24 @@ describe('PhotoCarousel', () => {
 	it('toggles playback when PLAY/PAUSE button is clicked', async () => {
 		const user = userEvent.setup();
 		const { getByRole } = render(PhotoCarousel);
-		const toolbar = getByRole('toolbar', { name: /player controls/i });
-		const playPauseBtn = toolbar.querySelectorAll('button')[1];
+		const playPauseBtn = getByRole('button', { name: /diashow anhalten/i });
 
-		expect(playPauseBtn).toHaveTextContent('PAUSE');
+		expect(playPauseBtn).toHaveTextContent(/pause/i);
 
 		// Click to pause
 		await user.click(playPauseBtn);
-		expect(playPauseBtn).toHaveTextContent('PLAY');
+		expect(playPauseBtn).toHaveTextContent(/play/i);
 
 		// Click to resume play
 		await user.click(playPauseBtn);
-		expect(playPauseBtn).toHaveTextContent('PAUSE');
+		expect(playPauseBtn).toHaveTextContent(/pause/i);
 	});
 
-	it('advances active indicator when FWD button is clicked', async () => {
+	it('advances active indicator when Next button is clicked', async () => {
 		const user = userEvent.setup();
-		const { getAllByRole, getByRole } = render(PhotoCarousel);
-		const toolbar = getByRole('toolbar', { name: /player controls/i });
-		const fwdBtn = toolbar.querySelectorAll('button')[2];
+		const { getAllByRole } = render(PhotoCarousel);
+		const nextButtons = getAllByRole('button', { name: /nächstes foto/i });
+		const fwdBtn = nextButtons[0];
 
 		await user.click(fwdBtn);
 

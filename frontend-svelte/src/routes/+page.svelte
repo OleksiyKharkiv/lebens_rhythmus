@@ -14,7 +14,7 @@
 	<title>{m.site_name()} — {m.home_hero_title()}</title>
 </svelte:head>
 
-<section class="hero-grid-container hero-section-padding grid items-center gap-10 px-6 lg:grid-cols-2 lg:gap-14 1920:gap-20">
+<section class="hero-grid-container hero-section-padding grid items-center gap-8 px-6 lg:grid-cols-2 lg:gap-12">
 	<div>
 		<!-- 2026-08-19 — refactored onto the shared .hero-title/.lead-text
 		     classes (layout.css) once the site-wide ladder rollout gave
@@ -23,12 +23,12 @@
 		<h1 class="hero-text hero-title font-display leading-tight font-semibold text-paper">
 			{m.home_hero_title()}
 		</h1>
-		<p class="hero-text lead-text mt-6 max-w-xl 1920:max-w-2xl text-paper-dim">
+		<p class="hero-text lead-text mt-5 max-w-xl text-paper-dim">
 			{m.home_hero_tagline()}
 		</p>
 		<a
 			href={localizeHref('/login')}
-			class="mt-10 inline-block rounded-full bg-gold px-8 py-3.5 font-display font-semibold text-ink transition-colors hover:bg-gold-deep"
+			class="mt-8 inline-block rounded-full bg-gold px-8 py-3.5 font-display font-semibold text-ink transition-colors hover:bg-gold-deep"
 		>
 			{m.home_cta_register()}
 		</a>

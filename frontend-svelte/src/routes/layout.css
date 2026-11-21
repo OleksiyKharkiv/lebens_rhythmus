@@ -1,21 +1,24 @@
 @import 'tailwindcss';
 
 /* Self-hosted fonts (not Google Fonts CDN — avoids sending visitor IPs to
-   Google without consent, a known DSGVO issue for German sites; see LR-001). */
-@import '@fontsource/quicksand/500.css';
-@import '@fontsource/quicksand/600.css';
-@import '@fontsource/quicksand/700.css';
-@import '@fontsource/nunito-sans/400.css';
-@import '@fontsource/nunito-sans/600.css';
-@import '@fontsource/nunito-sans/800.css';
+   Google without consent, a known DSGVO issue for German sites; see LR-001, LR-ADR-014, LR-114).
+   Theatrical Triad: Playfair Display (dramatic editorial display) + Plus Jakarta Sans (humanist UI & body). */
+@import '@fontsource/playfair-display/500.css';
+@import '@fontsource/playfair-display/600.css';
+@import '@fontsource/playfair-display/700.css';
+@import '@fontsource/playfair-display/600-italic.css';
+@import '@fontsource/plus-jakarta-sans/400.css';
+@import '@fontsource/plus-jakarta-sans/500.css';
+@import '@fontsource/plus-jakarta-sans/600.css';
+@import '@fontsource/plus-jakarta-sans/700.css';
 
 /*
-  Lebens Rhythmus — design tokens (LR-ADR-014)
+  Lebens Rhythmus — design tokens (LR-ADR-014, LR-114)
   "elegant, inspiring, high-art" character delivered through a deep, warm
   ground (not black) + two vivid living accents (gold + teal) — restraint
   in the ground, vividness spent only on the accents.
-  "soft, kind, rounded, friendly letters" delivered through Quicksand
-  (rounded geometric display) + Nunito Sans (rounded-terminal body).
+  Authentic theatrical expression delivered through Playfair Display (dramatic
+  editorial serif) + Plus Jakarta Sans (warm humanist sans-serif).
   Motion kept to 1/5 per Olena's answer — no scroll choreography, only
   small hover/focus transitions.
 
@@ -46,8 +49,8 @@
 	--color-error-deep: #b23b32;
 	--color-success: var(--color-teal);
 
-	--font-display: 'Quicksand', sans-serif;
-	--font-body: 'Nunito Sans', sans-serif;
+	--font-display: 'Playfair Display', Georgia, serif;
+	--font-body: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
 
 	/* Breakpoint ladder — 2026-08-19, direct request, after a design
 	   review + architect-reviewer round on font sizing. Deliberately a
@@ -159,26 +162,34 @@ body {
    Safari. */
 :root[data-theme='light'] body {
 	background-image:
+		radial-gradient(circle at 75% 20%, transparent 0%, var(--color-ink) 70%),
 		linear-gradient(
-			color-mix(in srgb, var(--color-ink) 70%, transparent),
-			color-mix(in srgb, var(--color-ink) 70%, transparent)
+			to bottom,
+			color-mix(in srgb, var(--color-ink) 55%, transparent) 0%,
+			color-mix(in srgb, var(--color-ink) 85%, transparent) 45%,
+			var(--color-ink) 95%
 		),
 		url('/background-light.png');
 	background-repeat: no-repeat;
 	background-position: top center;
-	background-size: cover;
+	background-size: 100% auto;
+	background-color: var(--color-ink);
 }
 
 :root:not([data-theme='light']) body {
 	background-image:
+		radial-gradient(circle at 75% 20%, transparent 0%, var(--color-ink) 70%),
 		linear-gradient(
-			color-mix(in srgb, var(--color-ink) 70%, transparent),
-			color-mix(in srgb, var(--color-ink) 70%, transparent)
+			to bottom,
+			color-mix(in srgb, var(--color-ink) 50%, transparent) 0%,
+			color-mix(in srgb, var(--color-ink) 85%, transparent) 45%,
+			var(--color-ink) 95%
 		),
 		url('/background-dark.png');
 	background-repeat: no-repeat;
 	background-position: top center;
-	background-size: cover;
+	background-size: 100% auto;
+	background-color: var(--color-ink);
 }
 
 h1,
@@ -486,10 +497,9 @@ h4 {
 }
 
 
-/* Responsive container ladder for home page hero and content sections (LR-112 / Beta Feedback):
-   Extends 1024px tablet base to widescreen viewports (1366, 1440, 1920, 2560, 3840)
-   per RESPONSIVE_SCALING_PLAYBOOK.md §3 (plain CSS with ascending @media blocks to eliminate
-   Tailwind v4 variant sorting conflicts). Keeps mobile/tablet (<1024px) 100% fluid. */
+/* Responsive container ladder for home page hero and content sections (LR-112 / LR-114):
+   Caps expansion at 85rem (1360px) to prevent ocular strain (Foveal vision)
+   on 2K and 4K displays, preserving the Stage Bleed framing. Keeps mobile/tablet fluid. */
 .hero-grid-container,
 .home-content-container {
 	width: 100%;
@@ -512,30 +522,12 @@ h4 {
 @media (min-width: 1440px) {
 	.hero-grid-container,
 	.home-content-container {
-		max-width: 82.5rem; /* 1320px */
-	}
-}
-@media (min-width: 1920px) {
-	.hero-grid-container,
-	.home-content-container {
-		max-width: 96rem; /* 1536px */
-	}
-}
-@media (min-width: 2560px) {
-	.hero-grid-container,
-	.home-content-container {
-		max-width: 112.5rem; /* 1800px */
-	}
-}
-@media (min-width: 3840px) {
-	.hero-grid-container,
-	.home-content-container {
-		max-width: 135rem; /* 2160px */
+		max-width: 85rem; /* 1360px — ergonomic cap for 1440p, 2K, 4K */
 	}
 }
 
-/* Responsive carousel wrapper: allows photo carousel to scale with widescreen displays
-   while keeping mobile/tablet bounded to 32rem (512px). */
+/* Responsive carousel wrapper: allows photo carousel to scale harmoniously
+   without dwarfing adjacent headline copy on widescreen displays. */
 .hero-carousel-wrapper {
 	width: 100%;
 	max-width: 32rem; /* mobile & tablet (<1024px) */
@@ -552,42 +544,27 @@ h4 {
 }
 @media (min-width: 1440px) {
 	.hero-carousel-wrapper {
-		max-width: 44rem; /* 704px */
-	}
-}
-@media (min-width: 1920px) {
-	.hero-carousel-wrapper {
-		max-width: 48rem; /* 768px */
-	}
-}
-@media (min-width: 2560px) {
-	.hero-carousel-wrapper {
-		max-width: 52rem; /* 832px */
-	}
-}
-@media (min-width: 3840px) {
-	.hero-carousel-wrapper {
-		max-width: 58rem; /* 928px */
+		max-width: 42rem; /* 672px — balanced visual weight */
 	}
 }
 
-/* Hero vertical padding calibration:
-   Replaces excessive py-16 sm:py-24 (96px) with an ergonomic vertical rhythm that accounts
-   for the sticky navbar and eliminates the 176px vertical void before Section 2. */
+/* Hero vertical padding calibration (LR-114):
+   Compact vertical rhythm that ensures Section 2 ("Unsere Angebote") is visible
+   above the fold across common laptop and desktop viewports, removing excessive empty void. */
 .hero-section-padding {
-	padding-top: 1.125rem; /* ~18px mobile (halved) */
-	padding-bottom: 1.375rem; /* ~22px mobile (halved) */
+	padding-top: 0.75rem; /* ~12px mobile */
+	padding-bottom: 1rem; /* ~16px mobile */
 }
 @media (min-width: 640px) {
 	.hero-section-padding {
-		padding-top: 1.5rem; /* 24px tablet/desktop (halved) */
-		padding-bottom: 1.875rem; /* 30px (halved) */
+		padding-top: 1rem; /* 16px tablet */
+		padding-bottom: 1.25rem; /* 20px */
 	}
 }
 @media (min-width: 1440px) {
 	.hero-section-padding {
-		padding-top: 1.75rem; /* 28px widescreen (halved) */
-		padding-bottom: 2.125rem; /* 34px (halved) */
+		padding-top: 1.25rem; /* 20px desktop */
+		padding-bottom: 1.5rem; /* 24px */
 	}
 }
 
