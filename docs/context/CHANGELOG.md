@@ -2,6 +2,17 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-11-21 — fix(frontend): расширение масштаба карусели и адаптивной сетки десктопа (LR-114)
+
+### Область (`frontend-svelte/src/routes/+page.svelte`, `frontend-svelte/src/routes/layout.css`, `docs/decision-history/roundtable-14-theatre-ui-ux-anti-ai-slop.md`)
+
+Устранение проблемы миниатюрного отображения карусели Hero-секции и избыточных пустых полей (~30% экрана) на широкоформатных мониторах (1080p, 2K/4K).
+
+- **frontend (+page.svelte)** — сетка первого экрана переведена на асимметричную сценическую пропорцию `lg:grid-cols-[1fr_1.3fr]` (43% под текстовый блок, 57% под сценическую фотографию). Обертке карусели задано `w-full lg:justify-self-stretch`, обеспечивая ее естественное расширение на всю ширину колонки.
+- **frontend (layout.css)** — снято жесткое ограничение `max-w-42rem` (672px) с `.hero-carousel-wrapper`. На экранах $\ge 1024px$ карусель теперь свободно занимает 100% своей колонки (~850px на Full HD / 2K при высоте 570–645px). Контейнерная лестница `.hero-grid-container` и `.home-content-container` расширена до 102rem (1632px на 1920p) и 116rem (1856px на 2K/4K), убрав мертвые пустоты по бокам. Вертикальный ритм сбалансирован (`padding-top: 1.5rem–2rem; padding-bottom: 2rem–2.5rem`).
+- **docs (roundtable-14)** — добавлен кризисный пост-мортем по ликвидации эффекта «карманного Raspberry Pi» и восстановлению сценического размаха театрального лендинга.
+
+
 ## 2026-10-30 — fix(frontend): калибровка адаптивной сетки и паддингов Hero-секции на 2K/4K десктопах
 
 ### Область (`frontend-svelte/src/routes/+page.svelte`, `frontend-svelte/src/routes/layout.css`)

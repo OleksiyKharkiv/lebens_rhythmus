@@ -497,9 +497,9 @@ h4 {
 }
 
 
-/* Responsive container ladder for home page hero and content sections (LR-112 / LR-114):
-   Caps expansion at 85rem (1360px) to prevent ocular strain (Foveal vision)
-   on 2K and 4K displays, preserving the Stage Bleed framing. Keeps mobile/tablet fluid. */
+/* Responsive container ladder for home page hero and content sections (LR-114):
+   Generously scales across desktop (1366, 1440, 1920, 2560) viewports,
+   eliminating excessive blank flanks and giving the theatrical stage space to breathe. */
 .hero-grid-container,
 .home-content-container {
 	width: 100%;
@@ -510,61 +510,63 @@ h4 {
 @media (min-width: 1024px) {
 	.hero-grid-container,
 	.home-content-container {
-		max-width: 64rem; /* 1024px */
+		max-width: 68rem; /* 1088px */
 	}
 }
 @media (min-width: 1366px) {
 	.hero-grid-container,
 	.home-content-container {
-		max-width: 75rem; /* 1200px */
+		max-width: 82rem; /* 1312px */
 	}
 }
 @media (min-width: 1440px) {
 	.hero-grid-container,
 	.home-content-container {
-		max-width: 85rem; /* 1360px — ergonomic cap for 1440p, 2K, 4K */
+		max-width: 90rem; /* 1440px */
+	}
+}
+@media (min-width: 1920px) {
+	.hero-grid-container,
+	.home-content-container {
+		max-width: 102rem; /* 1632px */
+	}
+}
+@media (min-width: 2560px) {
+	.hero-grid-container,
+	.home-content-container {
+		max-width: 116rem; /* 1856px */
 	}
 }
 
-/* Responsive carousel wrapper: allows photo carousel to scale harmoniously
-   without dwarfing adjacent headline copy on widescreen displays. */
+/* Responsive carousel wrapper: on desktop the carousel is a bold, dominant stage photo
+   filling its column naturally rather than a shrunken miniature card. */
 .hero-carousel-wrapper {
 	width: 100%;
 	max-width: 32rem; /* mobile & tablet (<1024px) */
 }
 @media (min-width: 1024px) {
 	.hero-carousel-wrapper {
-		max-width: 36rem; /* 576px */
-	}
-}
-@media (min-width: 1366px) {
-	.hero-carousel-wrapper {
-		max-width: 40rem; /* 640px */
-	}
-}
-@media (min-width: 1440px) {
-	.hero-carousel-wrapper {
-		max-width: 42rem; /* 672px — balanced visual weight */
+		max-width: 100%; /* fills its 58-60% grid column fully on desktop! */
 	}
 }
 
 /* Hero vertical padding calibration (LR-114):
-   Compact vertical rhythm that ensures Section 2 ("Unsere Angebote") is visible
-   above the fold across common laptop and desktop viewports, removing excessive empty void. */
+   Balanced vertical rhythm that gives the stage presence while keeping Section 2 ("Unsere Angebote")
+   accessible on scroll without excessive voids. */
 .hero-section-padding {
-	padding-top: 0.75rem; /* ~12px mobile */
-	padding-bottom: 1rem; /* ~16px mobile */
+	padding-top: 1rem;
+	padding-bottom: 1.5rem;
 }
 @media (min-width: 640px) {
 	.hero-section-padding {
-		padding-top: 1rem; /* 16px tablet */
-		padding-bottom: 1.25rem; /* 20px */
+		padding-top: 1.5rem;
+		padding-bottom: 2rem;
 	}
 }
-@media (min-width: 1440px) {
+@media (min-width: 1024px) {
 	.hero-section-padding {
-		padding-top: 1.25rem; /* 20px desktop */
-		padding-bottom: 1.5rem; /* 24px */
+		padding-top: 2rem;
+		padding-bottom: 2.5rem;
 	}
 }
 
