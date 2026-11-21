@@ -293,7 +293,7 @@
 		<!-- Theatrical side navigation arrows (desktop & tablet) -->
 		<button
 			type="button"
-			class="carousel-nav-btn nav-btn-prev absolute left-3 top-1/2 -translate-y-1/2 z-10 hidden sm:flex items-center justify-center w-11 h-11 rounded-full bg-ink/75 hover:bg-ink text-paper/85 hover:text-gold border border-white/10 backdrop-blur-md shadow-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+			class="carousel-nav-btn nav-btn-prev absolute left-3 top-1/2 -translate-y-1/2 z-10 hidden sm:flex items-center justify-center w-11 h-11 rounded-full bg-ink/90 hover:bg-ink text-paper/90 hover:text-gold border border-white/15 shadow-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
 			onclick={(e) => {
 				e.stopPropagation();
 				handleManualPrev();
@@ -308,7 +308,7 @@
 
 		<button
 			type="button"
-			class="carousel-nav-btn nav-btn-next absolute right-3 top-1/2 -translate-y-1/2 z-10 hidden sm:flex items-center justify-center w-11 h-11 rounded-full bg-ink/75 hover:bg-ink text-paper/85 hover:text-gold border border-white/10 backdrop-blur-md shadow-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
+			class="carousel-nav-btn nav-btn-next absolute right-3 top-1/2 -translate-y-1/2 z-10 hidden sm:flex items-center justify-center w-11 h-11 rounded-full bg-ink/90 hover:bg-ink text-paper/90 hover:text-gold border border-white/15 shadow-lg transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-gold"
 			onclick={(e) => {
 				e.stopPropagation();
 				handleManualNext();
@@ -341,6 +341,7 @@
 		<div
 			class="carousel-track h-full"
 			class:no-transition={!withTransition}
+			class:is-animating={isAnimating}
 			style="transform: translateX(-{trackIndex * 100}%);"
 			ontransitionend={handleTransitionEnd}
 		>
@@ -355,15 +356,9 @@
 						loading={idx === 1 ? 'eager' : 'lazy'}
 					/>
 
-					<!-- Subtle Vignette & Gradient for text contrast -->
+					<!-- Slide Caption Overlay (100% crisp, no backdrop blur or whole-image dark veil) -->
 					<div
-						class="absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent pointer-events-none"
-						aria-hidden="true"
-					></div>
-
-					<!-- Slide Caption Overlay -->
-					<div
-						class="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex items-center justify-between gap-3 rounded-2xl bg-ink/75 backdrop-blur-md px-3.5 py-2.5 sm:px-4 sm:py-3 border border-white/10"
+						class="absolute bottom-3 left-3 right-3 sm:bottom-4 sm:left-4 sm:right-4 flex items-center justify-between gap-3 rounded-2xl bg-ink/90 px-3.5 py-2.5 sm:px-4 sm:py-3 border border-white/15 shadow-xl"
 					>
 						<div class="flex items-center gap-2.5 min-w-0">
 							<span
@@ -469,6 +464,9 @@
 		display: flex;
 		width: 100%;
 		transition: transform 700ms cubic-bezier(0.25, 1, 0.5, 1);
+	}
+
+	.carousel-track.is-animating {
 		will-change: transform;
 	}
 
@@ -480,6 +478,11 @@
 		width: 100%;
 	}
 
+	.carousel-slide img {
+		image-rendering: auto;
+		image-rendering: -webkit-optimize-contrast;
+	}
+
 	/* Tap / click pop feedback */
 	.tap-feedback-badge {
 		position: absolute;
@@ -489,8 +492,7 @@
 		width: 58px;
 		height: 58px;
 		border-radius: 50%;
-		background: rgba(15, 23, 42, 0.75);
-		backdrop-filter: blur(8px);
+		background: rgba(15, 23, 42, 0.9);
 		border: 1px solid rgba(255, 255, 255, 0.2);
 		color: #ffffff;
 		display: flex;

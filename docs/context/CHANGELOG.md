@@ -2,6 +2,20 @@
 > Формат: [дата] [тип] [файл/область] — описание
 > Типы: feat | fix | security | compliance | refactor | infra | docs
 
+## 2026-11-21 — fix(frontend): устранение размытия и затемняющих оверлеев на фотографиях карусели
+
+### Область (`frontend-svelte/src/lib/components/PhotoCarousel.svelte`, `frontend-svelte/static/images/carousel/03-theatre-ensemble.jpg`)
+
+Ликвидация причин оптического размытия и затемнения фотографий в фотокарусели Hero-секции.
+
+- **frontend (PhotoCarousel.svelte)**:
+  - Удален полноэкранный темный градиентный виньет (`absolute inset-0 bg-gradient-to-t from-ink/90 via-ink/20 to-transparent`), создававший мутную темную пелену поверх 70% площади каждого кадра.
+  - Удален `backdrop-blur-md` с плашки подписи слайда и боковых стрелок навигации, аппаратно размывавший нижнюю часть фотографий и боковые круговые области. Подложки переведены на четкий контрастный `bg-ink/90 border border-white/15 shadow-xl`.
+  - Удален `backdrop-filter: blur(8px)` с бейджа паузы/воспроизведения.
+  - Оптимизирован GPU-композитинг: постоянное свойство `will-change: transform` на `.carousel-track` переведено в динамический класс `.carousel-track.is-animating`, предотвращая билинейную субпиксельную интерполяцию текстур Chromium в статическом состоянии.
+  - Добавлено свойство `image-rendering: -webkit-optimize-contrast` для сохранения максимальной резкости при масштабировании кадров.
+- **assets (03-theatre-ensemble.jpg)** — выполнена бережная контурная нормализация (unsharp mask radius=1.2, percent=130, threshold=2) с микрокоррекцией контраста, подтянувшая резкость сжатого исходника мессенджера до эталонных 01, 02 и 04 кадров.
+
 ## 2026-11-21 — fix(frontend): расширение масштаба карусели и адаптивной сетки десктопа (LR-114)
 
 ### Область (`frontend-svelte/src/routes/+page.svelte`, `frontend-svelte/src/routes/layout.css`, `docs/decision-history/roundtable-14-theatre-ui-ux-anti-ai-slop.md`)
