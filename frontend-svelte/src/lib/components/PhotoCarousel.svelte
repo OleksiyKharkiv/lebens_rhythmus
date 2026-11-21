@@ -32,7 +32,7 @@
 			src: '/images/carousel/04-theatre-applause.jpg',
 			title: () => m.home_carousel_slide4_title(),
 			tag: () => m.home_carousel_slide4_tag(),
-			objectPosition: 'center 90%'
+			objectPosition: 'center'
 		}
 	];
 
