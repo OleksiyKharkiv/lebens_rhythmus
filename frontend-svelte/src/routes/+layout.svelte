@@ -13,7 +13,7 @@
 	// resolve(localizeHref(...)) attempt on this same file broke
 	// svelte-check because resolve() needs a literal route id, not a
 	// dynamically localized string (see docs/tickets/archive.md).
-	import { locales, localizeHref, getLocale } from '$lib/paraglide/runtime';
+	import { locales, localizeHref, getLocale, setLocale } from '$lib/paraglide/runtime';
 	import * as m from '$lib/paraglide/messages.js';
 	import { isAuthenticated, logout, getStoredRole } from '$lib/api';
 	import './layout.css';
@@ -202,7 +202,10 @@
 				<div class="flex items-center gap-2 border-l border-ink-line pl-6 text-sm">
 					{#each locales as locale (locale)}
 						<a
-							href={localizeHref(page.url.pathname, { locale })}
+							href={localizeHref(page.url.pathname + page.url.search, { locale })}
+							data-sveltekit-reload
+							hreflang={locale}
+							onclick={() => setLocale(locale)}
 							class={`transition-colors ${getLocale() === locale ? 'text-gold' : 'text-paper-dim hover:text-paper'}`}
 						>
 							{localeLabels[locale] ?? locale}
@@ -269,9 +272,14 @@
 					<div class="flex gap-4 text-sm">
 						{#each locales as locale (locale)}
 							<a
-								href={localizeHref(page.url.pathname, { locale })}
-								onclick={closeMobileMenu}
-								class="text-paper-dim"
+								href={localizeHref(page.url.pathname + page.url.search, { locale })}
+								data-sveltekit-reload
+								hreflang={locale}
+								onclick={() => {
+									closeMobileMenu();
+									setLocale(locale);
+								}}
+								class={`transition-colors ${getLocale() === locale ? 'text-gold font-medium' : 'text-paper-dim'}`}
 							>
 								{localeLabels[locale] ?? locale}
 							</a>
